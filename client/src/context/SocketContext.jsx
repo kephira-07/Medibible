@@ -6,8 +6,11 @@ export const SocketContext = createContext(null)
 
 export function SocketProvider({ children }) {
   const { token } = useAuth()
+  // En local (VITE_API_URL absent), io(undefined, ...) se connecte à la même
+  // origine que la page — géré par le proxy Vite. En production, VITE_API_URL
+  // pointe vers le serveur déployé, sur un domaine différent du client.
   // Instance stable sur toute la vie du composant (créée une seule fois via l'initialiseur useState)
-  const [socket] = useState(() => io({ autoConnect: false }))
+  const [socket] = useState(() => io(import.meta.env.VITE_API_URL || undefined, { autoConnect: false }))
   const [connected, setConnected] = useState(false)
 
   useEffect(() => {
