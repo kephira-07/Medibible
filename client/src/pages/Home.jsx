@@ -2,19 +2,8 @@ import { Link } from 'react-router-dom'
 import Button from '../components/common/Button.jsx'
 import BrandMark from '../components/common/BrandMark.jsx'
 import FloatingBlobs from '../components/common/FloatingBlobs.jsx'
-import { usePushNotifications } from '../hooks/usePushNotifications.js'
-
-const STATUS_LABELS = {
-  idle: '🔔 Me prévenir avant le prochain quiz',
-  subscribing: 'Activation…',
-  subscribed: '✅ Rappels activés',
-  unsupported: 'Notifications non supportées par ce navigateur',
-  error: 'Réessayer',
-}
 
 export default function Home() {
-  const { status, error, subscribe } = usePushNotifications()
-
   return (
     <main className="relative flex min-h-svh items-center justify-center overflow-hidden bg-medi-cream px-4 py-10 text-center">
       <FloatingBlobs />
@@ -48,17 +37,6 @@ export default function Home() {
           </Link>
         </div>
 
-        <div className="mt-7 flex flex-col items-center gap-2 border-t border-medi-green-deep/10 pt-4">
-          <button
-            type="button"
-            onClick={subscribe}
-            disabled={status === 'subscribing' || status === 'subscribed'}
-            className="text-sm font-medium text-medi-petrol/65 underline decoration-medi-gold/50 underline-offset-4 transition hover:text-medi-petrol disabled:no-underline"
-          >
-            {STATUS_LABELS[status]}
-          </button>
-          {status === 'error' && error && <p className="text-xs text-red-600">{error}</p>}
-        </div>
       </div>
     </main>
   )

@@ -11,9 +11,6 @@ export default function HostDashboard() {
   const [quizzes, setQuizzes] = useState([])
   const [error, setError] = useState(null)
   const [launchingId, setLaunchingId] = useState(null)
-  const [reminderTitle, setReminderTitle] = useState('Le quiz commence bientôt !')
-  const [reminderBody, setReminderBody] = useState('Rejoins-nous pour le quiz biblique en direct.')
-  const [reminderStatus, setReminderStatus] = useState(null) // null | 'sending' | { sent, failed }
 
   useEffect(() => {
     api
@@ -30,20 +27,6 @@ export default function HostDashboard() {
     } catch (err) {
       setError(err.response?.data?.message || 'Impossible de créer la session.')
       setLaunchingId(null)
-    }
-  }
-
-  const sendReminder = async (e) => {
-    e.preventDefault()
-    setReminderStatus('sending')
-    try {
-      const { data } = await api.post('/notifications/broadcast', {
-        title: reminderTitle,
-        body: reminderBody,
-      })
-      setReminderStatus(data)
-    } catch (err) {
-      setReminderStatus({ error: err.response?.data?.message || "Impossible d'envoyer le rappel." })
     }
   }
 
@@ -79,35 +62,6 @@ export default function HostDashboard() {
         </div>
 
         {error && <p className="text-sm text-red-600">{error}</p>}
-
-        <form
-          onSubmit={sendReminder}
-          className="flex w-full flex-col gap-3 rounded-[1.75rem] border border-medi-green-deep/10 bg-white/80 p-5 shadow-[0_18px_40px_rgba(15,50,61,0.05)]"
-        >
-          <p className="text-sm font-semibold text-medi-petrol">📣 Envoyer un rappel push</p>
-          <input
-            value={reminderTitle}
-            onChange={(e) => setReminderTitle(e.target.value)}
-            placeholder="Titre de la notification"
-            className="min-h-12 rounded-2xl border border-medi-green-deep/15 bg-medi-cream/60 px-4 text-medi-petrol outline-none transition focus:border-medi-green-deep/35 focus:ring-4 focus:ring-medi-sky/20"
-          />
-          <input
-            value={reminderBody}
-            onChange={(e) => setReminderBody(e.target.value)}
-            placeholder="Message"
-            className="min-h-12 rounded-2xl border border-medi-green-deep/15 bg-medi-cream/60 px-4 text-medi-petrol outline-none transition focus:border-medi-green-deep/35 focus:ring-4 focus:ring-medi-sky/20"
-          />
-          <Button variant="outline" type="submit" disabled={reminderStatus === 'sending'}>
-            {reminderStatus === 'sending' ? 'Envoi…' : 'Envoyer le rappel'}
-          </Button>
-          {reminderStatus && reminderStatus !== 'sending' && (
-            <p className="text-xs text-medi-petrol/60">
-              {reminderStatus.error
-                ? reminderStatus.error
-                : `Envoyé à ${reminderStatus.sent} abonné(s)${reminderStatus.failed ? `, ${reminderStatus.failed} échec(s)` : ''}.`}
-            </p>
-          )}
-        </form>
 
         <div className="flex w-full flex-col gap-3">
           {quizzes.map((quiz) => (

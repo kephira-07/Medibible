@@ -2,13 +2,20 @@ import express from 'express'
 import helmet from 'helmet'
 import cors from 'cors'
 import rateLimit from 'express-rate-limit'
+import fs from 'node:fs'
+import path from 'node:path'
+import { fileURLToPath } from 'node:url'
 import { env } from './config/env.js'
 import { notFoundHandler, errorHandler } from './middlewares/errorHandler.js'
 import quizRoutes from './routes/quiz.routes.js'
 import authRoutes from './routes/auth.routes.js'
 import sessionRoutes from './routes/session.routes.js'
-import notificationRoutes from './routes/notification.routes.js'
 import audioRoutes from './routes/audio.routes.js'
+
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = path.dirname(__filename)
+const clientDistPath = path.resolve(__dirname, '../../client/dist')
+const clientBuildExists = fs.existsSync(clientDistPath)
 
 const defaultOrigins = new Set([
   'http://localhost:5173',
@@ -51,8 +58,24 @@ export function createApp() {
   app.use('/api/auth', authRoutes)
   app.use('/api/quizzes', quizRoutes)
   app.use('/api/sessions', sessionRoutes)
-  app.use('/api/notifications', notificationRoutes)
   app.use('/api/audio', audioRoutes)
+
+  if (clientBuildExists) {
+    app.use(express.static(clientDistPath))
+    app.get(/^(?!\/api\/).*$/, (req, res, next) => {
+      if (req.method !== 'GET') return next()
+      if (req.accepts('html')) {
+        return res.sendFile(path.join(clientDistPath, 'index.html'))
+      }
+      return next()
+    })
+  } else {
+    app.get('/', (req, res) => {
+      res.status(200).json({
+        message: 'MediBible API is running. Build the client and deploy it to serve the web app at the root URL.',
+      })
+    })
+  }
 
   app.use(notFoundHandler)
   app.use(errorHandler)
