@@ -22,7 +22,11 @@ export function usePushNotifications() {
     setStatus('subscribing')
     setError(null)
     try {
-      const registration = await navigator.serviceWorker.register('/sw.js')
+      let registration = await navigator.serviceWorker.getRegistration()
+      if (!registration) {
+        registration = await navigator.serviceWorker.register('/sw.js')
+      }
+
       const { data } = await api.get('/notifications/vapid-public-key')
 
       const subscription = await registration.pushManager.subscribe({

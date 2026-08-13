@@ -21,10 +21,11 @@ export function initSocket(httpServer) {
     try {
       const payload = jwt.verify(token, env.jwtSecret)
       socket.data.user = { id: payload.sub, role: payload.role }
+      return next()
     } catch {
       socket.data.user = null
+      return next(new Error('Authentication failed'))
     }
-    next()
   })
 
   io.on('connection', (socket) => {

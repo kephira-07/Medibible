@@ -6,10 +6,10 @@ import BrandMark from './BrandMark.jsx'
 // page (déconnexion, liens de navigation…) dans le slot `right`.
 export default function AppHeader({ right }) {
   return (
-    <header className="flex w-full items-center justify-between py-4">
+    <header className="flex w-full items-center justify-between rounded-full border border-medi-green-deep/10 bg-white/70 px-4 py-3 shadow-[0_8px_24px_rgba(15,50,61,0.04)] backdrop-blur-sm">
       <Link to="/" className="flex items-center gap-2">
         <BrandMark className="h-8 w-8" />
-        <span className="text-lg font-bold text-medi-petrol">MediBible</span>
+        <span className="text-lg font-bold tracking-tight text-medi-petrol">MediBible</span>
       </Link>
       {right && <div className="flex items-center gap-4">{right}</div>}
     </header>

@@ -1,13 +1,9 @@
-// Palette façon jeu — chaque option a sa propre couleur vive, comme les
-// cartes de réponse d'un quiz en direct, plutôt qu'un simple contour sobre.
 const OPTION_STYLES = [
-  { bg: 'bg-medi-coral', text: 'text-white' },
-  { bg: 'bg-medi-sky', text: 'text-white' },
-  { bg: 'bg-medi-gold', text: 'text-medi-petrol' },
+  { bg: 'bg-[#1D5A68]', text: 'text-white' },
+  { bg: 'bg-[#79B4B7]', text: 'text-white' },
+  { bg: 'bg-[#C69214]', text: 'text-white' },
 ]
 
-// state: null | 'neutral' | 'correct' | 'incorrect' — 'neutral'/'correct'/'incorrect'
-// n'apparaissent qu'après clôture, pour révéler les réponses.
 export default function OptionButton({ text, selected, disabled, onClick, state, colorIndex = 0 }) {
   const palette = OPTION_STYLES[colorIndex % OPTION_STYLES.length]
 
@@ -15,17 +11,17 @@ export default function OptionButton({ text, selected, disabled, onClick, state,
   let animationClass = ''
 
   if (state === 'correct') {
-    extraClasses += ' ring-4 ring-white shadow-xl scale-[1.02]'
+    extraClasses += ' ring-4 ring-[#5B8C5A]/40 shadow-xl scale-[1.02]'
     animationClass = 'animate-bounce-in'
   } else if (state === 'incorrect') {
-    extraClasses += ' opacity-50 grayscale-[0.4]'
+    extraClasses += ' opacity-55 grayscale-[0.3]'
     if (selected) animationClass = 'animate-wiggle'
   } else if (state === 'neutral') {
     extraClasses += ' opacity-40'
   } else if (selected) {
-    extraClasses += ' ring-4 ring-white scale-[1.03] shadow-lg'
+    extraClasses += ' ring-4 ring-white/80 scale-[1.03] shadow-lg'
   } else {
-    extraClasses += ' opacity-90 hover:opacity-100 hover:-translate-y-0.5'
+    extraClasses += ' opacity-95 hover:opacity-100 hover:-translate-y-0.5'
   }
 
   return (
@@ -33,7 +29,7 @@ export default function OptionButton({ text, selected, disabled, onClick, state,
       type="button"
       disabled={disabled}
       onClick={onClick}
-      className={`relative min-h-14 w-full rounded-2xl px-4 py-3 text-left font-bold shadow-md transition-all duration-200 active:scale-95 disabled:cursor-not-allowed disabled:active:scale-100 ${extraClasses} ${animationClass}`}
+      className={`relative min-h-14 w-full rounded-2xl px-4 py-3 text-left font-semibold shadow-md transition-all duration-200 active:scale-95 disabled:cursor-not-allowed disabled:active:scale-100 ${extraClasses} ${animationClass}`}
     >
       {text}
       {state === 'correct' && (

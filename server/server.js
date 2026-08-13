@@ -2,9 +2,10 @@ import { createServer } from 'http'
 import { createApp } from './src/app.js'
 import { initSocket } from './src/sockets/index.js'
 import { connectDB } from './src/config/db.js'
-import { env } from './src/config/env.js'
+import { env, validateEnv } from './src/config/env.js'
 
 async function main() {
+  validateEnv()
   await connectDB()
 
   const app = createApp()

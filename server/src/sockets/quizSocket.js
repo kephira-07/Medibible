@@ -254,6 +254,10 @@ export function registerQuizHandlers(io, socket) {
 
       if (!participant) return callback?.({ error: "Vous n'avez pas rejoint cette session." })
 
+      const participantKey = user
+        ? `user:${user.id}`
+        : `guest:${participant.socketId || socket.id}`
+
       const { isCorrect, pointsEarned } = computeAnswerResult({
         question,
         selectedOptionIds,
@@ -266,6 +270,7 @@ export function registerQuizHandlers(io, socket) {
         session: session.id,
         questionIndex: session.currentQuestionIndex,
         user: user ? user.id : null,
+        participantKey,
         displayName: participant.displayName,
         selectedOptionIds: selectedOptionIds || [],
         isCorrect,

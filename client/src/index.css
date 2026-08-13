@@ -1,16 +1,15 @@
 @import "tailwindcss";
 
-/* Design tokens MediBible — palette avivée : plus saturée que la charte
-   d'origine pour un rendu "quiz vivant" plutôt qu'institutionnel. */
+/* Palette de marque MediBible — élégante, profonde et discrète */
 @theme {
-  --color-medi-green-deep: #157a5c;
-  --color-medi-green-sage: #22b783;
-  --color-medi-gold: #f4b400;
-  --color-medi-gold-light: #ffd23f;
-  --color-medi-cream: #fff8ea;
-  --color-medi-petrol: #163445;
-  --color-medi-coral: #ff6b5b;
-  --color-medi-sky: #2fa4e0;
+  --color-medi-green-deep: #1d5a68;
+  --color-medi-green-sage: #3c8b9b;
+  --color-medi-gold: #c69214;
+  --color-medi-gold-light: #f3d382;
+  --color-medi-cream: #fffde9;
+  --color-medi-petrol: #0f323d;
+  --color-medi-coral: #5b8c5a;
+  --color-medi-sky: #79b4b7;
 
   --font-sans: "Inter", system-ui, "Segoe UI", Roboto, sans-serif;
 
@@ -19,26 +18,31 @@
 
 @layer base {
   html {
-    color-scheme: light;
+   color-scheme: light;
   }
 
   body {
-    margin: 0;
-    background-color: var(--color-medi-cream);
-    color: var(--color-medi-petrol);
-    font-family: var(--font-sans);
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
+   margin: 0;
+   background:
+     radial-gradient(circle at top, rgba(121, 180, 183, 0.18), transparent 35%),
+     linear-gradient(180deg, #fffef3 0%, #fffde9 100%);
+   color: var(--color-medi-petrol);
+   font-family: var(--font-sans);
+   -webkit-font-smoothing: antialiased;
+   -moz-osx-font-smoothing: grayscale;
   }
 
   #root {
-    min-height: 100svh;
+   min-height: 100svh;
   }
 
-  /* Cibles tactiles larges par défaut sur mobile (charte MediBible : 48px min) */
   button,
   a[role="button"] {
     min-height: 48px;
+  }
+
+  ::selection {
+   background: rgba(198, 146, 20, 0.23);
   }
 }
 

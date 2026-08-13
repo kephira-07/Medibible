@@ -8,6 +8,7 @@ const ScoreSchema = new mongoose.Schema(
     session: { type: mongoose.Schema.Types.ObjectId, ref: 'Session', required: true },
     questionIndex: { type: Number, required: true },
     user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null },
+    participantKey: { type: String, required: true, index: true },
     displayName: { type: String, required: true, trim: true },
     selectedOptionIds: { type: [mongoose.Schema.Types.ObjectId], default: [] },
     isCorrect: { type: Boolean, required: true },
@@ -18,6 +19,6 @@ const ScoreSchema = new mongoose.Schema(
   { timestamps: true }
 )
 
-ScoreSchema.index({ session: 1, questionIndex: 1, displayName: 1 }, { unique: true })
+ScoreSchema.index({ session: 1, questionIndex: 1, participantKey: 1 }, { unique: true })
 
 export default mongoose.model('Score', ScoreSchema)
