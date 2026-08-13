@@ -46,6 +46,39 @@ function toPublicUser(user) {
   return { id: user.id, name: user.name, email: user.email, role: user.role }
 }
 
+async function getStaticEnvUser(email, password) {
+  const normalizedEmail = String(email || '').trim().toLowerCase()
+  const candidates = [
+    { role: 'admin', email: env.adminEmail?.trim().toLowerCase(), password: env.adminPassword },
+    { role: 'host', email: env.hostEmail?.trim().toLowerCase(), password: env.hostPassword },
+  ]
+
+  const matched = candidates.find(
+    (candidate) =>
+      candidate.email &&
+      candidate.password &&
+      candidate.email === normalizedEmail &&
+      candidate.password === password
+  )
+
+  if (!matched) return null
+
+  let user = await User.findOne({ email: normalizedEmail })
+  if (!user) {
+    user = await User.create({
+      name: matched.role === 'admin' ? 'Admin Env' : 'Host Env',
+      email: normalizedEmail,
+      passwordHash: await bcrypt.hash(matched.password, SALT_ROUNDS),
+      role: matched.role,
+    })
+  } else if (user.role !== matched.role) {
+    user.role = matched.role
+    await user.save()
+  }
+
+  return user
+}
+
 // POST /api/auth/register — toujours en rôle "player" : la promotion
 // admin/host ne doit pas pouvoir être auto-attribuée depuis le body de la requête.
 export async function register(req, res, next) {
@@ -89,6 +122,13 @@ export async function login(req, res, next) {
     }
 
     const normalizedEmail = String(email).trim().toLowerCase()
+
+    const envUser = await getStaticEnvUser(normalizedEmail, password)
+    if (envUser) {
+      const tokens = await issueTokens(envUser)
+      return res.json({ user: toPublicUser(envUser), token: tokens.token, refreshToken: tokens.refreshToken })
+    }
+
     const user = await User.findOne({ email: normalizedEmail })
     if (!user) return next(httpError(401, 'Identifiants invalides.'))
 
@@ -100,7 +140,7 @@ export async function login(req, res, next) {
   } catch (err) {
     next(err)
   }
-}
+  }
 
 export async function refresh(req, res, next) {
   try {
