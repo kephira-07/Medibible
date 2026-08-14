@@ -5,7 +5,6 @@ import Button from '../../components/common/Button.jsx'
 import AppHeader from '../../components/common/AppHeader.jsx'
 import { useAuth } from '../../context/AuthContext.jsx'
 
-
 export default function AdminDashboard() {
   const { logout } = useAuth()
   const [quizzes, setQuizzes] = useState([])
@@ -174,7 +173,7 @@ export default function AdminDashboard() {
                     </span>
                   </div>
                   <div className="mt-3 flex items-center justify-between text-xs text-medi-petrol/65">
-                    <span>{session.playerCount ?? (session.participants?.length || 0)} joueurs</span>
+                    <span>{session.playerCount ?? session.participants?.length ?? 0} joueurs</span>
                     <span>Leader : {session.winner?.displayName || '—'}</span>
                   </div>
                   <p className="mt-2 text-right text-sm font-bold text-medi-petrol">{session.winner?.totalScore ?? 0} pts</p>
@@ -289,6 +288,7 @@ export default function AdminDashboard() {
           </div>
         </section>
 
+<<<<<<< HEAD
       {detailOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
           <div className="w-full max-w-2xl rounded-lg bg-white p-6">
@@ -307,10 +307,30 @@ export default function AdminDashboard() {
                   </li>
                 ))}
               </ul>
+=======
+        {detailOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+            <div className="w-full max-w-2xl rounded-lg bg-white p-6">
+              <div className="flex items-start justify-between">
+                <h3 className="text-lg font-bold text-medi-petrol">Détail session {sessionDetail?.accessCode}</h3>
+                <button type="button" onClick={closeSessionDetail} className="text-sm font-medium text-medi-petrol/70">Fermer</button>
+              </div>
+              <p className="text-sm text-medi-petrol/70 mt-2">Quiz: {sessionDetail?.quiz?.title} — Status: {sessionDetail?.status}</p>
+              <div className="mt-4">
+                <h4 className="font-semibold">Participants ({sessionDetail?.playerCount ?? sessionDetail?.participants?.length ?? 0})</h4>
+                <ul className="mt-2 space-y-2 max-h-56 overflow-auto">
+                  {sessionDetail?.participants?.map((p, idx) => (
+                    <li key={p.socketId || `${p.displayName}-${idx}`} className="flex justify-between">
+                      <span className="text-medi-petrol">{p.displayName}</span>
+                      <span className="text-sm text-medi-petrol/70">{p.totalScore} pts</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+>>>>>>> a432979 (agen arielle)
             </div>
           </div>
-        </div>
-      )}
+        )}
 
       </div>
     </main>
