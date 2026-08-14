@@ -189,29 +189,31 @@ export default function AdminDashboard() {
           </div>
         </section>
 
-        <section className="grid gap-6 xl:grid-cols-[1.1fr_0.9fr]">
-          <div className="rounded-[2rem] border border-medi-green-deep/10 bg-white/80 p-5 shadow-[0_18px_40px_rgba(15,50,61,0.05)] sm:p-6">
-            <h2 className="mb-4 text-lg font-bold text-medi-petrol">Classement live</h2>
-            <div className="space-y-3">
-              {[
-                { rank: 1, name: 'Aline', score: 960 },
-                { rank: 2, name: 'Jean', score: 820 },
-                { rank: 3, name: 'Paul', score: 760 },
-                { rank: 4, name: 'Léa', score: 610 },
-              ].map((entry) => (
-                <div key={entry.rank} className="flex items-center justify-between rounded-[1.15rem] border border-medi-green-deep/10 bg-medi-cream/60 p-3">
-                  <div className="flex items-center gap-3">
-                    <span className="flex h-8 w-8 items-center justify-center rounded-full bg-medi-green-deep/10 font-bold text-medi-petrol">
-                      #{entry.rank}
-                    </span>
-                    <span className="font-semibold text-medi-petrol">{entry.name}</span>
-                  </div>
-                  <span className="text-sm font-bold text-medi-gold">{entry.score} pts</span>
-                </div>
-              ))}
-            </div>
+       <div className="rounded-[2rem] border border-medi-green-deep/10 bg-white/80 p-5 shadow-[0_18px_40px_rgba(15,50,61,0.05)] sm:p-6">
+  <h2 className="mb-4 text-lg font-bold text-medi-petrol">Classement live</h2>
+  <div className="space-y-3">
+    {online
+      .slice()
+      .sort((a, b) => (b.totalScore ?? 0) - (a.totalScore ?? 0))
+      .map((entry, index) => (
+        <div key={entry.socketId || `${entry.displayName}-${index}`} className="flex items-center justify-between rounded-[1.15rem] border border-medi-green-deep/10 bg-medi-cream/60 p-3">
+          <div className="flex items-center gap-3">
+            <span className="flex h-8 w-8 items-center justify-center rounded-full bg-medi-green-deep/10 font-bold text-medi-petrol">
+              #{index + 1}
+            </span>
+            <span className="font-semibold text-medi-petrol">{entry.displayName}</span>
           </div>
+          <span className="text-sm font-bold text-medi-gold">{entry.totalScore ?? 0} pts</span>
+        </div>
+      ))}
 
+    {online.length === 0 && (
+      <p className="py-6 text-center text-sm text-medi-petrol/50">
+        Aucun joueur connecté pour le moment.
+      </p>
+    )}
+  </div>
+</div>
           <div className="rounded-[2rem] border border-medi-green-deep/10 bg-white/80 p-5 shadow-[0_18px_40px_rgba(15,50,61,0.05)] sm:p-6">
             <div className="mb-4 flex items-center justify-between">
               <h2 className="text-lg font-bold text-medi-petrol">Derniers gagnants</h2>
