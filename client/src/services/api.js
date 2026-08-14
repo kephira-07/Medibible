@@ -1,9 +1,9 @@
-import axios from 'axios'
+﻿import axios from 'axios'
 
 // En local, VITE_API_URL est absent : on garde le chemin relatif '/api',
-// g?r? par le proxy Vite (vite.config.js). En production, le client et le
-// serveur sont sur des domaines diff?rents, donc VITE_API_URL doit pointer
-// vers l'URL r?elle du serveur d?ploy? (ex: https://medibible-api.onrender.com).
+// géré par le proxy Vite (vite.config.js). En production, le client et le
+// serveur sont sur des domaines différents, donc VITE_API_URL doit pointer
+// vers l'URL réelle du serveur déployé (ex: https://medibible-api.onrender.com).
 const baseURL = import.meta.env.VITE_API_URL ? `${import.meta.env.VITE_API_URL}/api` : '/api'
 
 const api = axios.create({ baseURL })
@@ -27,6 +27,7 @@ function readRefreshToken() {
 api.interceptors.request.use((config) => {
   const token = readSessionToken()
   if (token) {
+    config.headers = config.headers || {}
     config.headers.Authorization = `Bearer ${token}`
   }
   return config
@@ -60,6 +61,7 @@ api.interceptors.response.use(
           })
         )
 
+        originalRequest.headers = originalRequest.headers || {}
         originalRequest.headers.Authorization = `Bearer ${data.token}`
         return api(originalRequest)
       } catch {
