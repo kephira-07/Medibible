@@ -9,6 +9,7 @@ import AudioRoom from '../components/audio/AudioRoom.jsx'
 import Button from '../components/common/Button.jsx'
 import AppHeader from '../components/common/AppHeader.jsx'
 import FloatingBlobs from '../components/common/FloatingBlobs.jsx'
+import { HiOutlineBookOpen } from 'react-icons/hi'
 
 export default function LiveQuizRoom() {
   const { accessCode } = useParams()
@@ -191,7 +192,7 @@ export default function LiveQuizRoom() {
 
           {phase === 'closed' && bibleReference && (
             <p className="animate-pop-in rounded-2xl bg-medi-gold/15 px-4 py-2 text-sm font-medium text-medi-petrol">
-              📖 {bibleReference}
+              <HiOutlineBookOpen className="inline-block mr-2" />{bibleReference}
             </p>
           )}
 
