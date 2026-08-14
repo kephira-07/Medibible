@@ -189,7 +189,8 @@ export default function AdminDashboard() {
           </div>
         </section>
 
-       <div className="rounded-[2rem] border border-medi-green-deep/10 bg-white/80 p-5 shadow-[0_18px_40px_rgba(15,50,61,0.05)] sm:p-6">
+        <section className="grid gap-6 xl:grid-cols-[1.1fr_0.9fr]">
+      <div className="rounded-[2rem] border border-medi-green-deep/10 bg-white/80 p-5 shadow-[0_18px_40px_rgba(15,50,61,0.05)] sm:p-6">
   <h2 className="mb-4 text-lg font-bold text-medi-petrol">Classement live</h2>
   <div className="space-y-3">
     {online
@@ -214,6 +215,7 @@ export default function AdminDashboard() {
     )}
   </div>
 </div>
+
           <div className="rounded-[2rem] border border-medi-green-deep/10 bg-white/80 p-5 shadow-[0_18px_40px_rgba(15,50,61,0.05)] sm:p-6">
             <div className="mb-4 flex items-center justify-between">
               <h2 className="text-lg font-bold text-medi-petrol">Derniers gagnants</h2>
