@@ -7,8 +7,8 @@ import { env } from '../config/env.js'
 import { httpError } from '../utils/httpError.js'
 import { validateAuthInput } from '../utils/validators.js'
 
-const ACCESS_TOKEN_TTL = '15m'
-const REFRESH_TOKEN_TTL = '30d'
+const ACCESS_TOKEN_TTL = '30d'
+const REFRESH_TOKEN_TTL = '90d'
 const SALT_ROUNDS = 10
 
 function signAccessToken(user) {

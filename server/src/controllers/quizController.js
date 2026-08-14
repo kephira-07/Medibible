@@ -1,6 +1,21 @@
 import Quiz from '../models/Quiz.js'
 import { httpError } from '../utils/httpError.js'
 import { normalizeText, isValidObjectId } from '../utils/validators.js'
+import { DEFAULT_BASE_SCORE, DEFAULT_SPEED_BONUS } from '../utils/constants.js'
+
+function normalizeScoring(scoring) {
+  const baseValue = Number(scoring?.base ?? DEFAULT_BASE_SCORE)
+  const speedBonusValue = Number(scoring?.speedBonus ?? DEFAULT_SPEED_BONUS)
+
+  if (!Number.isFinite(baseValue) || !Number.isFinite(speedBonusValue)) {
+    throw httpError(400, 'La configuration de score est invalide.')
+  }
+
+  return {
+    base: baseValue,
+    speedBonus: speedBonusValue,
+  }
+}
 
 function validateQuizPayload(payload) {
   if (!payload || typeof payload !== 'object') {
@@ -21,19 +36,11 @@ function validateQuizPayload(payload) {
     throw httpError(400, 'Le quiz doit contenir au moins une question.')
   }
 
-  const scoring = payload.scoring || {}
-  if (typeof scoring.base !== 'number' || typeof scoring.speedBonus !== 'number') {
-    throw httpError(400, 'La configuration de score est invalide.')
-  }
-
   return {
     title,
     description: normalizeText(payload.description || '', 500),
     questions,
-    scoring: {
-      base: Number(scoring.base),
-      speedBonus: Number(scoring.speedBonus),
-    },
+    scoring: normalizeScoring(payload.scoring),
     status: ['draft', 'published', 'archived'].includes(payload.status) ? payload.status : 'draft',
   }
 }
@@ -96,12 +103,10 @@ export async function updateQuiz(req, res, next) {
       quiz.questions = questions
     }
     if (scoring !== undefined) {
-      if (typeof scoring.base !== 'number' || typeof scoring.speedBonus !== 'number') {
-        return next(httpError(400, 'La configuration de score est invalide.'))
-      }
-      quiz.scoring = {
-        base: Number(scoring.base),
-        speedBonus: Number(scoring.speedBonus),
+      try {
+        quiz.scoring = normalizeScoring(scoring)
+      } catch (err) {
+        return next(err)
       }
     }
     if (status !== undefined) {
