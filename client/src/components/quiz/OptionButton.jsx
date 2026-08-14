@@ -1,43 +1,36 @@
-const OPTION_STYLES = [
-  { bg: 'bg-[#1D5A68]', text: 'text-white' },
-  { bg: 'bg-[#79B4B7]', text: 'text-white' },
-  { bg: 'bg-[#C69214]', text: 'text-white' },
-]
+import { HiCheck, HiX } from 'react-icons/hi'
 
 export default function OptionButton({ text, selected, disabled, onClick, state, colorIndex = 0 }) {
-  const palette = OPTION_STYLES[colorIndex % OPTION_STYLES.length]
+  // Base styling for all option buttons
+  const base = 'relative w-full rounded-2xl px-4 py-3 text-left font-semibold shadow-sm transition-transform duration-150 focus:outline-none focus:ring-2'
+  const defaultBg = 'bg-white border border-gray-100 text-medi-petrol'
+  const hover = 'hover:-translate-y-0.5'
 
-  let extraClasses = `${palette.bg} ${palette.text}`
-  let animationClass = ''
+  let classes = `${base} ${defaultBg} ${hover}`
 
+  // Visual states
   if (state === 'correct') {
-    extraClasses += ' ring-4 ring-[#5B8C5A]/40 shadow-xl scale-[1.02]'
-    animationClass = 'animate-bounce-in'
+    classes = `${base} ${defaultBg} ring-2 ring-medi-green-deep/60 bg-medi-green-deep/6`
   } else if (state === 'incorrect') {
-    extraClasses += ' opacity-55 grayscale-[0.3]'
-    if (selected) animationClass = 'animate-wiggle'
-  } else if (state === 'neutral') {
-    extraClasses += ' opacity-40'
+    classes = `${base} ${defaultBg} opacity-60 grayscale`
   } else if (selected) {
-    extraClasses += ' ring-4 ring-white/80 scale-[1.03] shadow-lg'
-  } else {
-    extraClasses += ' opacity-95 hover:opacity-100 hover:-translate-y-0.5'
+    classes = `${base} ${defaultBg} ring-2 ring-medi-gold/60 bg-medi-gold/6 shadow-md`
   }
 
   return (
     <button
       type="button"
       disabled={disabled}
+      aria-pressed={selected}
+      aria-disabled={disabled}
       onClick={onClick}
-      className={`relative min-h-14 w-full rounded-2xl px-4 py-3 text-left font-semibold shadow-md transition-all duration-200 active:scale-95 disabled:cursor-not-allowed disabled:active:scale-100 ${extraClasses} ${animationClass}`}
+      className={classes}
     >
-      {text}
-      {state === 'correct' && (
-        <span className="absolute right-4 top-1/2 -translate-y-1/2 text-xl">✓</span>
-      )}
-      {state === 'incorrect' && selected && (
-        <span className="absolute right-4 top-1/2 -translate-y-1/2 text-xl">✕</span>
-      )}
+      <span>{text}</span>
+
+      <span className="absolute right-4 top-1/2 -translate-y-1/2 text-xl text-medi-petrol">
+        {state === 'correct' ? <HiCheck /> : state === 'incorrect' && selected ? <HiX /> : null}
+      </span>
     </button>
   )
 }
