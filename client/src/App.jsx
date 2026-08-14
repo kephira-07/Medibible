@@ -2,7 +2,6 @@ import { Routes, Route } from 'react-router-dom'
 import Home from './pages/Home.jsx'
 import Login from './pages/Login.jsx'
 import JoinSession from './pages/JoinSession.jsx'
-import HostDashboard from './pages/HostDashboard.jsx'
 import LiveQuizRoom from './pages/LiveQuizRoom.jsx'
 import AdminDashboard from './pages/admin/AdminDashboard.jsx'
 import QuizEditorPage from './pages/admin/QuizEditorPage.jsx'
@@ -14,14 +13,6 @@ function App() {
       <Route path="/" element={<Home />} />
       <Route path="/login" element={<Login />} />
       <Route path="/join" element={<JoinSession />} />
-      <Route
-        path="/host"
-        element={
-          <RequireAuth>
-            <HostDashboard />
-          </RequireAuth>
-        }
-      />
       <Route
         path="/admin"
         element={

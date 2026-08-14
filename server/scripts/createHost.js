@@ -7,16 +7,16 @@ import User from '../src/models/User.js'
 const SALT_ROUNDS = 10
 
 async function main() {
-  const [name, email, password, role = 'host'] = process.argv.slice(2)
+  const [name, email, password, role = 'player'] = process.argv.slice(2)
 
   if (!name || !email || !password) {
     console.error(
-      'Usage : node scripts/createHost.js "Nom complet" email@exemple.com motdepasse [host|admin]'
+      'Usage : node scripts/createHost.js "Nom complet" email@exemple.com motdepasse [player|admin]'
     )
     process.exit(1)
   }
-  if (!['host', 'admin'].includes(role)) {
-    console.error('Le rôle doit être "host" ou "admin".')
+  if (!['player', 'admin'].includes(role)) {
+    console.error('Le rôle doit être "player" ou "admin".')
     process.exit(1)
   }
 

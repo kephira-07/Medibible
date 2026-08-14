@@ -50,7 +50,6 @@ async function getStaticEnvUser(email, password) {
   const normalizedEmail = String(email || '').trim().toLowerCase()
   const candidates = [
     { role: 'admin', email: env.adminEmail?.trim().toLowerCase(), password: env.adminPassword },
-    { role: 'host', email: env.hostEmail?.trim().toLowerCase(), password: env.hostPassword },
   ]
 
   const matched = candidates.find(
@@ -66,7 +65,7 @@ async function getStaticEnvUser(email, password) {
   let user = await User.findOne({ email: normalizedEmail })
   if (!user) {
     user = await User.create({
-      name: matched.role === 'admin' ? 'Admin Env' : 'Host Env',
+      name: 'Admin Env',
       email: normalizedEmail,
       passwordHash: await bcrypt.hash(matched.password, SALT_ROUNDS),
       role: matched.role,
@@ -79,8 +78,8 @@ async function getStaticEnvUser(email, password) {
   return user
 }
 
-// POST /api/auth/register — toujours en rôle "player" : la promotion
-// admin/host ne doit pas pouvoir être auto-attribuée depuis le body de la requête.
+// POST /api/auth/register — toujours en rôle "player" : la promotion admin
+// ne doit pas pouvoir être auto-attribuée depuis le body de la requête.
 export async function register(req, res, next) {
   try {
     const { name, email, password } = req.body || {}

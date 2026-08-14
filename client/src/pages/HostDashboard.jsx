@@ -23,7 +23,7 @@ export default function HostDashboard() {
     setLaunchingId(quizId)
     try {
       const { data } = await api.post('/sessions', { quizId })
-      navigate(`/session/${data.accessCode}`, { state: { displayName: user?.name || 'Animateur' } })
+      navigate(`/session/${data.accessCode}`, { state: { displayName: user?.name || 'Admin' } })
     } catch (err) {
       setError(err.response?.data?.message || 'Impossible de créer la session.')
       setLaunchingId(null)
@@ -55,7 +55,7 @@ export default function HostDashboard() {
         <div className="flex items-end justify-between gap-3">
           <div>
             <p className="text-xs font-semibold uppercase tracking-[0.25em] text-medi-green-deep/70">
-              Animateur
+              Admin
             </p>
             <h1 className="mt-2 text-2xl font-bold tracking-tight text-medi-petrol">Mes quiz</h1>
           </div>

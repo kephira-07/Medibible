@@ -94,14 +94,9 @@ export default function AdminDashboard() {
       <div className="mx-auto flex w-full max-w-7xl flex-col gap-6">
         <AppHeader
           right={
-            <>
-              <Link to="/host" className="text-sm font-medium text-medi-petrol/70 transition hover:text-medi-petrol">
-                Espace animateur
-              </Link>
-              <button type="button" onClick={logout} className="text-sm font-medium text-medi-petrol/70 transition hover:text-medi-petrol">
-                Déconnexion
-              </button>
-            </>
+            <button type="button" onClick={logout} className="text-sm font-medium text-medi-petrol/70 transition hover:text-medi-petrol">
+              Déconnexion
+            </button>
           }
         />
 
@@ -114,9 +109,6 @@ export default function AdminDashboard() {
           <div className="flex flex-col gap-2 sm:flex-row">
             <Link to="/admin/quizzes/new" className="w-full sm:w-auto">
               <Button className="w-full sm:w-auto">+ Nouveau quiz</Button>
-            </Link>
-            <Link to="/host" className="w-full sm:w-auto">
-              <Button variant="outline" className="w-full sm:w-auto">Voir les sessions</Button>
             </Link>
           </div>
         </header>
@@ -175,7 +167,7 @@ export default function AdminDashboard() {
                   <div className="flex items-center justify-between gap-3">
                     <div>
                       <p className="font-semibold text-medi-petrol">{session.quiz?.title || 'Quiz inconnu'}</p>
-                      <p className="text-xs text-medi-petrol/60">{session.accessCode} • Hôte : {session.host?.name || session.host}</p>
+                      <p className="text-xs text-medi-petrol/60">{session.accessCode} • Créé par : {session.host?.name || session.host}</p>
                     </div>
                     <span className="rounded-full bg-emerald-100 px-2 py-1 text-[10px] font-bold uppercase tracking-[0.12em] text-emerald-700">
                       En cours
@@ -236,7 +228,7 @@ export default function AdminDashboard() {
                   <div className="flex items-center justify-between gap-3">
                     <div>
                       <p className="font-semibold text-medi-petrol">{w.winner?.displayName || '—'}</p>
-                      <p className="text-xs text-medi-petrol/60">{w.quizTitle} • Hôte: {w.hostName}</p>
+                      <p className="text-xs text-medi-petrol/60">{w.quizTitle} • Créé par : {w.hostName}</p>
                     </div>
                     <span className="text-sm font-bold text-medi-gold">{w.winner?.totalScore ?? 0} pts</span>
                   </div>
@@ -306,7 +298,7 @@ export default function AdminDashboard() {
             </div>
             <p className="text-sm text-medi-petrol/70 mt-2">Quiz: {sessionDetail?.quiz?.title} — Status: {sessionDetail?.status}</p>
             <div className="mt-4">
-              <h4 className="font-semibold">Participants ({sessionDetail?.playerCount ?? sessionDetail?.participants?.length || 0})</h4>
+              <h4 className="font-semibold">Participants ({sessionDetail?.playerCount ?? sessionDetail?.participants?.length ?? 0})</h4>
               <ul className="mt-2 space-y-2 max-h-56 overflow-auto">
                 {sessionDetail?.participants?.map((p, idx) => (
                   <li key={p.socketId || `${p.displayName}-${idx}`} className="flex justify-between">
