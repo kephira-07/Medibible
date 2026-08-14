@@ -10,9 +10,9 @@ import { authenticate, authorize } from '../middlewares/auth.js'
 
 const router = Router()
 
-// Back-office : réservé aux animateurs et administrateurs (les questions
+// Back-office : réservé aux administrateurs (les questions
 // exposent les bonnes réponses, elles ne doivent pas être visibles des joueurs)
-router.use(authenticate, authorize('admin', 'host'))
+router.use(authenticate, authorize('admin'))
 
 router.get('/', listQuizzes)
 router.get('/:id', getQuiz)

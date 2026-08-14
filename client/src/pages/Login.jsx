@@ -16,7 +16,7 @@ export default function Login() {
     setError(null)
     try {
       await login(email, password)
-      navigate('/host')
+      navigate('/admin')
     } catch (err) {
       setError(err.response?.data?.message || 'Connexion impossible.')
     }
@@ -32,7 +32,7 @@ export default function Login() {
         <div className="w-full max-w-md rounded-[2rem] border border-medi-green-deep/10 bg-white/80 p-6 shadow-[0_20px_45px_rgba(15,50,61,0.07)] backdrop-blur-sm sm:p-8">
           <div className="mb-6 text-center">
             <p className="text-xs font-semibold uppercase tracking-[0.25em] text-medi-green-deep/70">
-              Animateur
+              Admin
             </p>
             <h1 className="mt-3 text-2xl font-bold tracking-tight text-medi-petrol">Connexion</h1>
           </div>

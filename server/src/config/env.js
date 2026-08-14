@@ -8,8 +8,6 @@ export const env = {
   clientUrl: process.env.CLIENT_URL || 'http://localhost:5173',
   adminEmail: process.env.ADMIN_EMAIL || '',
   adminPassword: process.env.ADMIN_PASSWORD || '',
-  hostEmail: process.env.HOST_EMAIL || '',
-  hostPassword: process.env.HOST_PASSWORD || '',
   livekitUrl: process.env.LIVEKIT_URL || '',
   livekitApiKey: process.env.LIVEKIT_API_KEY || '',
   livekitApiSecret: process.env.LIVEKIT_API_SECRET || '',

@@ -32,7 +32,7 @@ export default function Home() {
           </Link>
           <Link to="/login" className="w-full">
             <Button variant="outline" className="w-full">
-              Espace animateur
+              Espace admin
             </Button>
           </Link>
         </div>

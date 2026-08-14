@@ -24,18 +24,18 @@ function publicQuestion(question, session) {
   }
 }
 
-// Vérifie que le socket appelant est bien l'hôte de la session, et renvoie
+// Vérifie que le socket appelant est bien l'administrateur de la session, et renvoie
 // session + quiz déjà chargés pour éviter de les requêter deux fois.
 async function requireHostSession(socket, sessionId) {
   const user = socket.data.user
-  if (!user || !['admin', 'host'].includes(user.role)) {
-    throw new Error('Action réservée à l’hôte.')
+  if (!user || user.role !== 'admin') {
+    throw new Error('Action réservée à l’administrateur.')
   }
 
   const session = await Session.findById(sessionId)
   if (!session) throw new Error('Session introuvable.')
   if (session.host.toString() !== user.id) {
-    throw new Error("Vous n'êtes pas l'hôte de cette session.")
+    throw new Error("Vous n'êtes pas l'administrateur de cette session.")
   }
 
   const quiz = await Quiz.findById(session.quiz)
@@ -120,10 +120,7 @@ export function registerQuizHandlers(io, socket) {
       if (!quiz) return callback?.({ error: 'Quiz associé introuvable.' })
 
       const user = socket.data.user
-      const isHost =
-        Boolean(user) &&
-        session.host.toString() === user.id &&
-        ['admin', 'host'].includes(user.role)
+      const isHost = Boolean(user) && session.host.toString() === user.id && user.role === 'admin'
 
       socket.join(roomName(session.id))
       socket.data.sessionId = session.id.toString()
