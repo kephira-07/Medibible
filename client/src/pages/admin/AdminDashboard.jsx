@@ -306,7 +306,7 @@ export default function AdminDashboard() {
             </div>
             <p className="text-sm text-medi-petrol/70 mt-2">Quiz: {sessionDetail?.quiz?.title} — Status: {sessionDetail?.status}</p>
             <div className="mt-4">
-              <h4 className="font-semibold">Participants ({sessionDetail?.playerCount ?? sessionDetail?.participants?.length || 0})</h4>
+              <h4 className="font-semibold">Participants {(sessionDetail?.playerCount ?? sessionDetail?.participants?.length ?? 0)}</h4>
               <ul className="mt-2 space-y-2 max-h-56 overflow-auto">
                 {sessionDetail?.participants?.map((p, idx) => (
                   <li key={p.socketId || `${p.displayName}-${idx}`} className="flex justify-between">
