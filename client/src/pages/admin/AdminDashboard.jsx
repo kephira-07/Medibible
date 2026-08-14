@@ -104,6 +104,12 @@ export default function AdminDashboard() {
             <p className="text-xs font-semibold uppercase tracking-[0.26em] text-medi-green-deep/70">Administration</p>
             <h1 className="mt-2 text-2xl font-bold tracking-tight text-medi-petrol sm:text-3xl">Tableau de bord</h1>
           </div>
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+           <Link to="/admin/hostdashboard" className="w-full sm:w-auto">
+              <Button className="w-full sm:w-auto">Commencer la session</Button>
+            </Link>
+          </div>
+       
 
           <div className="flex flex-col gap-2 sm:flex-row">
             <Link to="/admin/quizzes/new" className="w-full sm:w-auto">
