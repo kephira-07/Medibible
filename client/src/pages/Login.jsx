@@ -21,11 +21,7 @@ export default function Login() {
     
     try {
       await login(email, password)
-<<<<<<< HEAD
-      navigate('/admin')
-=======
       navigate('/admin')  // Redirige vers le tableau de bord après une connexion réussie
->>>>>>> a432979 (agen arielle)
     } catch (err) {
       setError(err.response?.data?.message || 'Connexion impossible. Vérifiez vos identifiants.')
     } finally {
@@ -40,13 +36,6 @@ export default function Login() {
         <AppHeader />
       </header>
 
-<<<<<<< HEAD
-      <div className="flex w-full flex-1 items-center justify-center">
-        <div className="w-full max-w-md rounded-[2rem] border border-medi-green-deep/10 bg-white/80 p-6 shadow-[0_20px_45px_rgba(15,50,61,0.07)] backdrop-blur-sm sm:p-8">
-          <div className="mb-6 text-center">
-            <p className="text-xs font-semibold uppercase tracking-[0.25em] text-medi-green-deep/70">
-              Admin
-=======
       {/* Zone centrale & Formulaire Mobile-First */}
       <div className="flex-1 flex flex-col justify-end sm:justify-center items-center px-0 sm:px-6 pt-6 pb-0 sm:pb-6">
         
@@ -65,7 +54,6 @@ export default function Login() {
             </h1>
             <p className="mt-1.5 text-sm text-medi-petrol/60">
               Connectez-vous pour piloter vos quiz en direct.
->>>>>>> a432979 (agen arielle)
             </p>
           </div>
 

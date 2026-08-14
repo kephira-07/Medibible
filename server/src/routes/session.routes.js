@@ -16,15 +16,14 @@ router.get('/', authenticate, authorize('admin'), listSessions)
 // Créer une session
 router.post('/', authenticate, authorize('admin'), createSession)
 
-// Admin: détails d'une session (utiliser sessionId)
-router.get('/admin/:sessionId', authenticate, authorize('admin'), getSessionDetail)
-// Admin: derniers winners
+// 1. Routes statiques spécifiques /admin/* (À MENTENIR EN PREMIER)
 router.get('/admin/winners', authenticate, authorize('admin'), getRecentWinners)
-// Admin: utilisateurs en ligne
 router.get('/admin/online', authenticate, authorize('admin'), getOnlineUsers)
 
-// Public : un joueur doit pouvoir vérifier un code avant même de se connecter
-// Placer cette route en dernier pour éviter les collisions avec /admin/*
+// 2. Route dynamique avec paramètre /admin/:sessionId (À METTRE APRÈS)
+router.get('/admin/:sessionId', authenticate, authorize('admin'), getSessionDetail)
+
+// 3. Public : accès par code
 router.get('/:accessCode', getSessionByCode)
 
 export default router
