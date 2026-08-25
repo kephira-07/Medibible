@@ -40,7 +40,7 @@ export default function Login() {
       <div className="flex-1 flex flex-col justify-end sm:justify-center items-center px-0 sm:px-6 pt-6 pb-0 sm:pb-6">
         
         {/* Card : Style Sheet sur mobile, Carte suspendue sur Desktop */}
-        <div className="w-full max-w-md rounded-t-[2.5rem] border border-[#dfe9e6] bg-[linear-gradient(180deg,rgba(255,255,255,0.96),rgba(244,248,247,0.92))] p-6 sm:rounded-[2.5rem] sm:p-10 shadow-[0_-12px_35px_rgba(15,50,61,0.06)] sm:shadow-[0_25px_50px_rgba(24,54,66,0.08)] transition-all duration-300">
+        <div className="w-full max-w-md rounded-t-[2.5rem] border border-[#d8cdb3] bg-[#f8f3ea]/95 p-6 sm:rounded-[2.5rem] sm:p-10 shadow-[0_-12px_35px_rgba(29,43,50,0.05)] sm:shadow-[0_20px_42px_rgba(29,43,50,0.07)] transition-all duration-300">
           
           {/* Header du formulaire */}
           <div className="flex flex-col items-center text-center mb-8">
