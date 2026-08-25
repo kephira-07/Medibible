@@ -2,9 +2,9 @@ import { HiCheck, HiX } from 'react-icons/hi'
 
 export default function OptionButton({ text, selected, disabled, onClick, state, colorIndex = 0 }) {
   // Base styling for all option buttons
-  const base = 'relative w-full rounded-2xl px-4 py-3 text-left font-semibold shadow-sm transition-transform duration-150 focus:outline-none focus:ring-2'
-  const defaultBg = 'bg-white border border-gray-100 text-medi-petrol'
-  const hover = 'hover:-translate-y-0.5'
+  const base = 'relative w-full rounded-2xl px-4 py-3 text-left font-semibold shadow-sm transition-all duration-150 focus:outline-none focus:ring-2'
+  const defaultBg = 'bg-[#fffdf9] border border-[#e8dec8] text-medi-petrol'
+  const hover = 'hover:-translate-y-0.5 hover:border-[#d3b77b] hover:shadow-md'
 
   let classes = `${base} ${defaultBg} ${hover}`
 

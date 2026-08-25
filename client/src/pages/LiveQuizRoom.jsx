@@ -153,13 +153,13 @@ export default function LiveQuizRoom() {
       <div className="relative z-10 flex w-full max-w-2xl flex-col items-center gap-6">
         <AppHeader />
 
-        <div className="text-center">
+        <div className="w-full rounded-[2rem] border border-[#d8cdb3] bg-[#faf4eb]/90 p-5 text-center shadow-[0_18px_38px_rgba(26,43,50,0.06)]">
           <h1 className="text-xl font-bold text-medi-petrol">{joined.session.quizTitle}</h1>
           <div className="mt-2 inline-flex flex-col items-center gap-1">
-            <span className="text-xs text-medi-petrol/50">
+            <span className="text-xs uppercase tracking-[0.18em] text-medi-petrol/55">
               {joined.isHost ? 'Code pour les participants' : 'Salle de jeu'}
             </span>
-            <span className="rounded-2xl bg-medi-gold/20 px-4 py-1 text-lg font-bold tracking-[0.2em] text-medi-petrol">
+            <span className="rounded-2xl bg-[#f1e7d3] px-4 py-1 text-lg font-bold tracking-[0.2em] text-medi-petrol">
               {normalizedCode}
             </span>
           </div>
@@ -167,11 +167,10 @@ export default function LiveQuizRoom() {
 
         <AudioRoom roomName={normalizedCode} displayName={displayName} isHost={joined.isHost} />
 
-          {phase === 'closed' && bibleReference && (
-            <p className="animate-pop-in rounded-2xl bg-medi-gold/15 px-4 py-2 text-sm font-medium text-medi-petrol">
-              <HiOutlineBookOpen className="inline-block mr-2" />{bibleReference}
-            </p>
-          </div>
+        {phase === 'closed' && bibleReference && (
+          <p className="animate-pop-in rounded-2xl bg-medi-gold/15 px-4 py-2 text-sm font-medium text-medi-petrol">
+            <HiOutlineBookOpen className="inline-block mr-2" />{bibleReference}
+          </p>
         )}
 
         {/* QUESTION / RÉSULTAT DE LA QUESTION */}

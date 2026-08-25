@@ -23,9 +23,9 @@ export default function JoinSession() {
       </div>
 
       <div className="flex w-full flex-1 items-center justify-center">
-        <div className="w-full max-w-md rounded-[2rem] border border-medi-green-deep/10 bg-white/80 p-6 shadow-[0_20px_45px_rgba(15,50,61,0.07)] backdrop-blur-sm sm:p-8">
+        <div className="w-full max-w-md rounded-[2rem] border border-[#d7cdb3] bg-[#faf4eb]/95 p-6 shadow-[0_22px_50px_rgba(26,43,50,0.08)] backdrop-blur-sm sm:p-8">
           <div className="mb-6 text-center">
-            <p className="text-xs font-semibold uppercase tracking-[0.25em] text-medi-green-deep/70">
+            <p className="text-[10px] font-semibold uppercase tracking-[0.28em] text-medi-green-deep/80">
               Session en cours
             </p>
             <h1 className="mt-3 text-2xl font-bold tracking-tight text-medi-petrol">Rejoindre un quiz</h1>

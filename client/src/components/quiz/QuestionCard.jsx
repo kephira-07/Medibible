@@ -26,11 +26,11 @@ export default function QuestionCard({ question, phase, correctOptionIds, hasAns
   }
 
   return (
-    <div className="w-full max-w-md overflow-hidden rounded-[2rem] border border-medi-green-deep/10 bg-white/85 shadow-[0_18px_40px_rgba(15,50,61,0.08)] backdrop-blur-sm">
-      <div className="h-2 bg-gradient-to-r from-medi-green-deep via-medi-gold to-medi-sky" />
+    <div className="w-full max-w-md overflow-hidden rounded-[2rem] border border-[#d8cdb3] bg-[#faf5ee]/95 shadow-[0_18px_42px_rgba(26,43,50,0.08)] backdrop-blur-sm">
+      <div className="h-2 bg-gradient-to-r from-[#1f2f39] via-[#c9a569] to-[#dfe8e2]" />
       <div className="p-6">
         <div className="mb-4 flex items-center justify-between gap-3">
-          <span className="rounded-full bg-medi-green-deep/5 px-3 py-1 text-sm font-semibold text-medi-petrol/70">
+          <span className="rounded-full bg-[#f2e8d7] px-3 py-1 text-sm font-semibold text-medi-petrol/75">
             Question {question.questionIndex + 1} / {question.totalQuestions}
           </span>
           {phase === 'open' && <CountdownRing remainingMs={remainingMs} totalMs={totalMs} />}
