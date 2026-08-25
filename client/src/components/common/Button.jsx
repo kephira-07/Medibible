@@ -1,10 +1,10 @@
 const VARIANTS = {
   primary:
-    'bg-medi-green-deep text-white shadow-[0_10px_30px_rgba(29,90,104,0.22)] hover:bg-[#173f4b]',
-  gold: 'bg-medi-gold text-medi-petrol shadow-[0_10px_24px_rgba(198,146,20,0.22)] hover:brightness-105',
+    'bg-gradient-to-r from-medi-green-deep via-[#2b6473] to-medi-green-sage text-white shadow-[0_12px_28px_rgba(31,79,93,0.22)] hover:brightness-110',
+  gold: 'bg-gradient-to-r from-[#e8bf6d] to-medi-gold text-medi-petrol shadow-[0_12px_28px_rgba(217,168,78,0.25)] hover:brightness-105',
   outline:
-    'border border-medi-green-deep/20 bg-white/80 text-medi-petrol shadow-[0_8px_20px_rgba(15,50,61,0.05)] hover:bg-medi-green-deep/5',
-  coral: 'bg-medi-coral text-white shadow-[0_10px_24px_rgba(91,140,90,0.18)] hover:brightness-105',
+    'border border-[#dfe8e6] bg-white/90 text-medi-petrol shadow-[0_10px_24px_rgba(24,54,66,0.06)] hover:border-medi-green-sage/60 hover:bg-[#f2f9f7]',
+  coral: 'bg-gradient-to-r from-[#d68f7a] to-medi-coral text-white shadow-[0_12px_28px_rgba(199,123,93,0.22)] hover:brightness-105',
 }
 
 export default function Button({ variant = 'primary', className = '', children, ...props }) {

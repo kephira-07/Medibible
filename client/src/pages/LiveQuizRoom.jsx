@@ -167,11 +167,10 @@ export default function LiveQuizRoom() {
 
         <AudioRoom roomName={normalizedCode} displayName={displayName} isHost={joined.isHost} />
 
-          {phase === 'closed' && bibleReference && (
-            <p className="animate-pop-in rounded-2xl bg-medi-gold/15 px-4 py-2 text-sm font-medium text-medi-petrol">
-              <HiOutlineBookOpen className="inline-block mr-2" />{bibleReference}
-            </p>
-          </div>
+        {phase === 'closed' && bibleReference && (
+          <p className="animate-pop-in rounded-2xl bg-medi-gold/15 px-4 py-2 text-sm font-medium text-medi-petrol">
+            <HiOutlineBookOpen className="inline-block mr-2" />{bibleReference}
+          </p>
         )}
 
         {/* QUESTION / RÉSULTAT DE LA QUESTION */}

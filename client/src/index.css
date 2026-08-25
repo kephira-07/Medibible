@@ -1,15 +1,15 @@
 @import "tailwindcss";
 
-/* Palette de marque MediBible — élégante, profonde et discrète */
+/* Palette de marque MediBible — colorée, élégante et sobre */
 @theme {
-  --color-medi-green-deep: #1d5a68;
-  --color-medi-green-sage: #3c8b9b;
-  --color-medi-gold: #c69214;
-  --color-medi-gold-light: #f3d382;
-  --color-medi-cream: #fffde9;
-  --color-medi-petrol: #0f323d;
-  --color-medi-coral: #5b8c5a;
-  --color-medi-sky: #79b4b7;
+  --color-medi-green-deep: #1f4f5d;
+  --color-medi-green-sage: #5b8e8f;
+  --color-medi-gold: #d9a84e;
+  --color-medi-gold-light: #f5e0a6;
+  --color-medi-cream: #f9f4ec;
+  --color-medi-petrol: #183642;
+  --color-medi-coral: #c77b5d;
+  --color-medi-sky: #cfe7ec;
 
   --font-sans: "Inter", system-ui, "Segoe UI", Roboto, sans-serif;
 
@@ -24,8 +24,9 @@
   body {
    margin: 0;
    background:
-     radial-gradient(circle at top, rgba(121, 180, 183, 0.18), transparent 35%),
-     linear-gradient(180deg, #fffef3 0%, #fffde9 100%);
+     radial-gradient(circle at top left, rgba(207, 231, 236, 0.95), transparent 28%),
+     radial-gradient(circle at bottom right, rgba(217, 168, 78, 0.18), transparent 32%),
+     linear-gradient(180deg, #fdfaf6 0%, #f6f0e9 100%);
    color: var(--color-medi-petrol);
    font-family: var(--font-sans);
    -webkit-font-smoothing: antialiased;
