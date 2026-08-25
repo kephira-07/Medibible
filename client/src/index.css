@@ -1,15 +1,15 @@
 @import "tailwindcss";
 
-/* Palette de marque MediBible — plus sérieuse, biblique et sobre */
+/* Palette de marque MediBible — moderne, sobre et inspirée du monde biblique */
 @theme {
-  --color-medi-green-deep: #1a2d36;
-  --color-medi-green-sage: #6d7f6d;
-  --color-medi-gold: #c8a96c;
-  --color-medi-gold-light: #ead7a0;
-  --color-medi-cream: #f5efe4;
-  --color-medi-petrol: #1d2b32;
-  --color-medi-coral: #8b6b55;
-  --color-medi-sky: #dfe9e3;
+  --color-medi-green-deep: #1f2f39;
+  --color-medi-green-sage: #6e7d67;
+  --color-medi-gold: #c9a569;
+  --color-medi-gold-light: #ead5a0;
+  --color-medi-cream: #f5efe5;
+  --color-medi-petrol: #1a2b32;
+  --color-medi-coral: #8c6b58;
+  --color-medi-sky: #dfe8e2;
 
   --font-sans: "Inter", system-ui, "Segoe UI", Roboto, sans-serif;
   --font-serif: "Georgia", "Times New Roman", serif;
@@ -25,7 +25,8 @@
   body {
    margin: 0;
    background:
-     linear-gradient(180deg, #f4efe7 0%, #efe8dc 100%);
+     radial-gradient(circle at top left, rgba(223, 232, 226, 0.8), transparent 20%),
+     linear-gradient(180deg, #f6f1e7 0%, #efe7dc 100%);
    color: var(--color-medi-petrol);
    font-family: var(--font-sans);
    -webkit-font-smoothing: antialiased;

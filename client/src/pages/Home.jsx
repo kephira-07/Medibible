@@ -8,9 +8,9 @@ export default function Home() {
     <main className="relative flex min-h-svh items-center justify-center overflow-hidden bg-medi-cream px-4 py-10 text-center">
       <FloatingBlobs />
 
-      <div className="relative z-10 w-full max-w-md rounded-[2rem] border border-[#d8cdb3] bg-[#f8f3ea]/95 p-6 shadow-[0_18px_42px_rgba(29,43,50,0.08)] backdrop-blur-sm sm:p-8">
+      <div className="relative z-10 w-full max-w-md rounded-[2rem] border border-[#d9ceb3] bg-[#faf5ee]/95 p-6 shadow-[0_22px_52px_rgba(26,43,50,0.08)] backdrop-blur-sm sm:p-8">
         <div className="flex flex-col items-center gap-4">
-          <div className="flex h-20 w-20 items-center justify-center rounded-full border border-[#d5cab2] bg-[#f3ebdd] shadow-[0_10px_24px_rgba(29,43,50,0.06)]">
+          <div className="flex h-20 w-20 items-center justify-center rounded-full border border-[#d9ceb3] bg-[#f2e8d7] shadow-[0_12px_26px_rgba(26,43,50,0.06)]">
             <BrandMark className="animate-sway h-16 w-16" />
           </div>
           <div>
@@ -36,7 +36,6 @@ export default function Home() {
             </Button>
           </Link>
         </div>
-
       </div>
     </main>
   )

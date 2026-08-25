@@ -23,7 +23,7 @@ export default function JoinSession() {
       </div>
 
       <div className="flex w-full flex-1 items-center justify-center">
-        <div className="w-full max-w-md rounded-[2rem] border border-[#d7cdb3] bg-[#f8f3ea]/95 p-6 shadow-[0_18px_42px_rgba(29,43,50,0.08)] backdrop-blur-sm sm:p-8">
+        <div className="w-full max-w-md rounded-[2rem] border border-[#d7cdb3] bg-[#faf4eb]/95 p-6 shadow-[0_22px_50px_rgba(26,43,50,0.08)] backdrop-blur-sm sm:p-8">
           <div className="mb-6 text-center">
             <p className="text-[10px] font-semibold uppercase tracking-[0.28em] text-medi-green-deep/80">
               Session en cours
