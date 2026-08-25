@@ -10,6 +10,7 @@ import Button from '../components/common/Button.jsx'
 import AppHeader from '../components/common/AppHeader.jsx'
 import FloatingBlobs from '../components/common/FloatingBlobs.jsx'
 import { HiOutlineBookOpen } from 'react-icons/hi'
+import { FaBullseye, FaTimes, FaUsers, FaTrophy, FaClock } from 'react-icons/fa'
 
 export default function LiveQuizRoom() {
   const { accessCode } = useParams()
@@ -190,7 +191,7 @@ export default function LiveQuizRoom() {
               >
                 {lastResult.isCorrect ? (
                   <div className="flex flex-col items-center gap-1">
-                    <span className="text-2xl">🎯</span>
+                    <FaBullseye className="inline-block text-2xl" />
                     <p className="text-lg font-bold text-emerald-700">Excellente réponse !</p>
                     <span className="inline-block rounded-full bg-emerald-200/80 px-3 py-0.5 text-sm font-extrabold text-emerald-900">
                       +{lastResult.pointsEarned} pts
@@ -198,7 +199,7 @@ export default function LiveQuizRoom() {
                   </div>
                 ) : (
                   <div className="flex flex-col items-center gap-1">
-                    <span className="text-2xl">❌</span>
+                    <FaTimes className="inline-block text-2xl" />
                     <p className="text-lg font-bold text-rose-700">Aïe, mauvaise réponse !</p>
                     <p className="text-xs text-rose-600">Pas de points pour cette question.</p>
                   </div>
@@ -209,7 +210,7 @@ export default function LiveQuizRoom() {
             {/* SI CLÔTURÉ ET SANS RÉPONSE */}
             {!hasAnswered && phase === 'closed' && (
               <div className="w-full rounded-2xl border-2 border-amber-300 bg-amber-50 p-4 text-center text-amber-900">
-                <span className="text-xl">⏰</span>
+                <FaClock className="inline-block text-xl" />
                 <p className="font-semibold">Temps écoulé !</p>
                 <p className="text-xs opacity-80">Vous n'avez pas soumis de réponse à temps.</p>
               </div>
@@ -225,13 +226,13 @@ export default function LiveQuizRoom() {
 
             {phase === 'open' && (
               <p className="text-sm font-medium text-medi-petrol/60">
-                👥 {answeredCount} réponse(s) enregistrée(s)
+                <FaUsers className="inline-block mr-2" /> {answeredCount} réponse(s) enregistrée(s)
               </p>
             )}
 
             {phase === 'closed' && bibleReference && (
               <p className="animate-pop-in rounded-2xl border border-medi-gold/30 bg-medi-gold/15 px-5 py-3 text-center text-sm font-semibold text-medi-petrol">
-                📖 Référence : <span className="underline">{bibleReference}</span>
+                <HiOutlineBookOpen className="inline-block mr-2" />Référence : <span className="underline">{bibleReference}</span>
               </p>
             )}
 
@@ -243,7 +244,7 @@ export default function LiveQuizRoom() {
         {phase === 'ended' && (
           <div className="animate-fade-in-up flex w-full flex-col items-center gap-6 text-center">
             <div className="rounded-3xl border border-medi-gold/40 bg-white/80 p-6 shadow-xl backdrop-blur-md">
-              <span className="text-4xl">🏆</span>
+              <FaTrophy className="inline-block text-4xl" />
               <h2 className="mt-2 text-2xl font-black text-medi-petrol">Quiz terminé !</h2>
             </div>
             <ScoreBoard leaderboard={leaderboard} title="Classement final" />

@@ -1,3 +1,5 @@
+import { FaTimes } from 'react-icons/fa'
+
 const MIN_OPTIONS = 2
 const MAX_OPTIONS = 3
 
@@ -63,7 +65,7 @@ export default function QuestionEditor({ question, index, onChange, onRemove }) 
               className="px-2 text-medi-petrol/40 hover:text-red-600 disabled:opacity-30"
               title="Retirer l'option"
             >
-              ✕
+              <FaTimes className="text-medi-petrol/60" />
             </button>
           </div>
         ))}

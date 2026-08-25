@@ -1,3 +1,5 @@
+import { FaMicrophoneSlash } from 'react-icons/fa'
+
 const AVATAR_COLORS = ['#2D5A4C', '#3D8B7A', '#D4AF37', '#E5A93C', '#1D3B48']
 
 // Couleur déterministe : le même prénom donne toujours le même avatar
@@ -31,7 +33,7 @@ export default function AvatarBubble({ name, isSpeaking, isMuted, size = 56 }) {
         <span style={{ fontSize: size * 0.4 }}>{initialFrom(name)}</span>
         {isMuted && (
           <span className="absolute -bottom-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-medi-petrol text-[10px]">
-            🔇
+            <FaMicrophoneSlash className="w-3 h-3" />
           </span>
         )}
       </div>

@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useAudioRoom } from '../../hooks/useAudioRoom.js'
 import AvatarBubble from './AvatarBubble.jsx'
 import Button from '../common/Button.jsx'
+import { FaMicrophone, FaMicrophoneSlash } from 'react-icons/fa'
 
 // Aucune fenêtre d'appel, aucune interface tierce : juste des avatars qui
 // réagissent quand quelqu'un parle, comme un chat vocal de jeu en ligne.
@@ -27,7 +28,7 @@ export default function AudioRoom({ roomName, displayName }) {
         onClick={handleToggle}
         disabled={connecting}
       >
-        {connected ? '🎙️ Quitter le vocal' : connecting ? 'Connexion…' : '🎙️ Rejoindre le vocal'}
+        {connected ? <><FaMicrophone className="inline-block mr-2" />Quitter le vocal</> : connecting ? 'Connexion…' : <><FaMicrophone className="inline-block mr-2" />Rejoindre le vocal</>}
       </Button>
 
       {error && <p className="text-xs text-red-600">{error}</p>}
@@ -43,7 +44,7 @@ export default function AudioRoom({ roomName, displayName }) {
             className="flex h-14 w-14 items-center justify-center rounded-full border-2 border-medi-petrol/15 text-xl transition-transform active:scale-90"
             title={muted ? 'Activer le micro' : 'Couper le micro'}
           >
-            {muted ? '🔇' : '🎤'}
+            {muted ? <FaMicrophoneSlash className="inline-block" /> : <FaMicrophone className="inline-block" />}
           </button>
         </div>
       )}
