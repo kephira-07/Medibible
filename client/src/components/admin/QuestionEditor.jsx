@@ -77,7 +77,7 @@ export default function QuestionEditor({ question, index, total, onChange, onRem
 
       <div className="mb-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
         <label className="block">
-          <span className="mb-1.5 block text-xs font-bold uppercase tracking-wide text-medi-petrol/50">Référence biblique</span>
+          <span className="mb-1.5 block text-xs font-bold uppercase tracking-wide text-medi-petrol/50">Référence biblique (optionnel)</span>
           <div className="flex items-center gap-2 rounded-xl border-2 border-medi-border bg-white px-3">
             <HiOutlineBookOpen className="shrink-0 text-medi-petrol/40" />
             <input

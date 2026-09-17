@@ -35,7 +35,7 @@ function initialFrom(name) {
   return name?.trim().charAt(0).toUpperCase() || '?'
 }
 
-const AVATAR_COLORS = ['#FF6B5B', '#2FA4E0', '#F4B400', '#22B783', '#0B5E45']
+const AVATAR_COLORS = ['#FF6B5B', '#2FA4E0', '#F4B400', '#22B783', '#006414']
 function colorForName(name) {
   let hash = 0
   const str = name || ''
@@ -491,16 +491,9 @@ export default function AdminDashboard() {
             {filteredQuizzes.map((quiz) => (
               <div key={quiz._id} className="flex flex-col gap-3 rounded-xl border-2 border-medi-border bg-medi-cream/40 p-4">
                 <div className="flex items-center justify-between gap-2">
-                  <div className="flex flex-wrap items-center gap-1.5">
-                    <span className="rounded-full bg-medi-sky/15 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-medi-sky">
-                      {quiz.status === 'published' ? 'Publié' : quiz.status === 'archived' ? 'Archivé' : 'Brouillon'}
-                    </span>
-                    {quiz.category && (
-                      <span className="rounded-full bg-medi-green-deep/10 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-medi-green-deep">
-                        {quiz.category}
-                      </span>
-                    )}
-                  </div>
+                  <span className="rounded-full bg-medi-sky/15 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-medi-sky">
+                    {quiz.status === 'published' ? 'Publié' : quiz.status === 'archived' ? 'Archivé' : 'Brouillon'}
+                  </span>
                   <span className="text-[10px] font-semibold uppercase tracking-wide text-medi-petrol/40">
                     {quiz.createdAt ? new Date(quiz.createdAt).toLocaleDateString('fr-FR') : ''}
                   </span>

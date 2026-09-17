@@ -3,7 +3,7 @@
 export default function BrandMark({ className = 'h-10 w-10' }) {
   return (
     <svg viewBox="0 0 48 48" className={className} fill="none" xmlns="http://www.w3.org/2000/svg">
-      <circle cx="24" cy="24" r="21" stroke="#0B5E45" strokeWidth="2.5" />
+      <circle cx="24" cy="24" r="21" stroke="#006414" strokeWidth="2.5" />
       <path
         d="M13 31c4.5-2.2 6.9-2.2 11 0s6.5 2.2 11 0"
         stroke="#F4B400"

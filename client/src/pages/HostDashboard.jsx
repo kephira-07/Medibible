@@ -75,11 +75,6 @@ export default function HostDashboard() {
               className="flex flex-col gap-3 rounded-xl border-2 border-medi-border bg-white/90 p-4 shadow-[0_12px_25px_rgba(22,50,62,0.06)] sm:flex-row sm:items-center sm:justify-between"
             >
               <div className="min-w-0">
-                {quiz.category && (
-                  <span className="mb-1 inline-block rounded-full bg-medi-green-deep/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-medi-green-deep">
-                    {quiz.category}
-                  </span>
-                )}
                 <p className="truncate font-bold text-medi-petrol">{quiz.title}</p>
                 <p className="text-xs text-medi-petrol/50">{quiz.questions.length} question(s) • ~{estimatedMinutes} min</p>
               </div>

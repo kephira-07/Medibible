@@ -130,7 +130,7 @@ export default function Login() {
             {/* Bouton Valider */}
             <Button
               type="submit"
-              variant="sky"
+              variant="primary"
               disabled={loading}
               className="mt-3 w-full min-h-[52px] text-base font-bold active:scale-[0.98] transition-transform"
             >

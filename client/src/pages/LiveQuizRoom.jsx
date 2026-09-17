@@ -13,7 +13,7 @@ import { HiOutlineBookOpen } from 'react-icons/hi'
 import { FaBullseye, FaTimes, FaUsers, FaTrophy, FaClock, FaShareAlt, FaChartBar } from 'react-icons/fa'
 
 const MEDALS = ['🥇', '🥈', '🥉']
-const AVATAR_COLORS = ['#FF6B5B', '#2FA4E0', '#F4B400', '#22B783', '#0B5E45']
+const AVATAR_COLORS = ['#FF6B5B', '#2FA4E0', '#F4B400', '#22B783', '#006414']
 function colorForName(name) {
   let hash = 0
   const str = name || ''

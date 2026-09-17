@@ -39,7 +39,6 @@ function validateQuizPayload(payload) {
   return {
     title,
     description: normalizeText(payload.description || '', 500),
-    category: normalizeText(payload.category || '', 40),
     questions,
     scoring: normalizeScoring(payload.scoring),
     status: ['draft', 'published', 'archived'].includes(payload.status) ? payload.status : 'draft',
@@ -94,10 +93,9 @@ export async function updateQuiz(req, res, next) {
     const quiz = await Quiz.findById(quizId)
     if (!quiz) return next(httpError(404, `Quiz introuvable : ${quizId}`))
 
-    const { title, description, category, questions, scoring, status } = req.body || {}
+    const { title, description, questions, scoring, status } = req.body || {}
     if (title !== undefined) quiz.title = normalizeText(title, 120)
     if (description !== undefined) quiz.description = normalizeText(description || '', 500)
-    if (category !== undefined) quiz.category = normalizeText(category || '', 40)
     if (questions !== undefined) {
       if (!Array.isArray(questions) || questions.length === 0) {
         return next(httpError(400, 'Le quiz doit contenir au moins une question.'))

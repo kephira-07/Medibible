@@ -4,8 +4,6 @@ import Button from '../common/Button.jsx'
 import { HiOutlineAdjustments, HiOutlineLightBulb, HiOutlinePlus, HiOutlinePencil } from 'react-icons/hi'
 import { HiOutlineBookOpen, HiOutlineClock } from 'react-icons/hi'
 
-const CATEGORIES = ['Histoire', 'Paraboles', 'Personnages', 'Louange', 'Épîtres', 'Prophètes']
-
 function emptyQuestion() {
   return {
     text: '',
@@ -47,7 +45,6 @@ function CollapsedQuestionRow({ question, index, onExpand }) {
 export default function QuizForm({ initialQuiz, onSubmit, submitting, error }) {
   const [title, setTitle] = useState(initialQuiz?.title || '')
   const [description, setDescription] = useState(initialQuiz?.description || '')
-  const [category, setCategory] = useState(initialQuiz?.category || '')
   const [questions, setQuestions] = useState(
     initialQuiz?.questions?.map((q) => ({ ...q, options: q.options.map((o) => ({ ...o })) })) || [
       emptyQuestion(),
@@ -105,7 +102,7 @@ export default function QuizForm({ initialQuiz, onSubmit, submitting, error }) {
     }
 
     setLocalError(null)
-    onSubmit({ title, description, category, questions })
+    onSubmit({ title, description, questions })
   }
 
   return (
@@ -125,26 +122,6 @@ export default function QuizForm({ initialQuiz, onSubmit, submitting, error }) {
             className="min-h-12 w-full rounded-xl border-2 border-medi-border bg-white px-4 text-lg font-bold text-medi-petrol outline-none focus:border-medi-sky focus:ring-4 focus:ring-medi-sky/15"
           />
         </label>
-
-        <div className="mb-4">
-          <span className="mb-1.5 block text-xs font-bold uppercase tracking-wide text-medi-petrol/50">Catégorie biblique</span>
-          <div className="flex flex-wrap gap-2">
-            {CATEGORIES.map((c) => (
-              <button
-                key={c}
-                type="button"
-                onClick={() => setCategory((prev) => (prev === c ? '' : c))}
-                className={`rounded-full px-3.5 py-1.5 text-sm font-bold transition ${
-                  category === c
-                    ? 'bg-medi-green-deep text-white'
-                    : 'bg-medi-cream text-medi-petrol/60 hover:bg-medi-border'
-                }`}
-              >
-                {c}
-              </button>
-            ))}
-          </div>
-        </div>
 
         <label className="block">
           <span className="mb-1.5 block text-xs font-bold uppercase tracking-wide text-medi-petrol/50">Notes pour l'animateur (optionnel)</span>
@@ -211,7 +188,7 @@ export default function QuizForm({ initialQuiz, onSubmit, submitting, error }) {
         </p>
       )}
 
-      <Button variant="sky" type="submit" disabled={submitting} className="text-base">
+      <Button variant="primary" type="submit" disabled={submitting} className="text-base">
         {submitting ? 'Enregistrement…' : 'Enregistrer le quiz'}
       </Button>
     </form>
