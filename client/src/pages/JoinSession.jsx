@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom'
 import Button from '../components/common/Button.jsx'
 import AppHeader from '../components/common/AppHeader.jsx'
 
+const BERGERS = ['Charles HE', 'Charles DAKPE', 'Edwige', 'Délali', 'Pascaline', 'Prunelle']
+
 export default function JoinSession() {
   const navigate = useNavigate()
   const [accessCode, setAccessCode] = useState('')
@@ -11,9 +13,9 @@ export default function JoinSession() {
 
   const handleSubmit = (e) => {
     e.preventDefault()
-    if (!accessCode.trim() || !displayName.trim() || !bergerName.trim()) return
+    if (!accessCode.trim() || !displayName.trim() || !bergerName) return
     navigate(`/session/${accessCode.trim().toUpperCase()}`, {
-      state: { displayName: displayName.trim(), bergerName: bergerName.trim() },
+      state: { displayName: displayName.trim(), bergerName },
     })
   }
 
@@ -58,19 +60,32 @@ export default function JoinSession() {
               />
             </label>
 
-            <label className="flex flex-col gap-2 text-sm font-bold text-medi-petrol/75">
-              Votre groupe de maison / berger
-              <input
-                value={bergerName}
-                onChange={(e) => setBergerName(e.target.value)}
-                placeholder="Ex: Groupe Bethsaïda"
-                required
-                className="min-h-12 rounded-2xl border-2 border-medi-border bg-white px-4 text-medi-petrol outline-none transition focus:border-medi-sky focus:ring-4 focus:ring-medi-sky/20"
-                maxLength={40}
-              />
-            </label>
+            <div className="flex flex-col gap-2 text-sm font-bold text-medi-petrol/75">
+              Votre berger
+              <div className="flex flex-wrap gap-2">
+                {BERGERS.map((b) => (
+                  <button
+                    key={b}
+                    type="button"
+                    onClick={() => setBergerName(b)}
+                    className={`rounded-full px-3.5 py-1.5 text-sm font-bold transition ${
+                      bergerName === b
+                        ? 'bg-medi-green-deep text-white'
+                        : 'bg-white border-2 border-medi-border text-medi-petrol/60 hover:border-medi-sky'
+                    }`}
+                  >
+                    {b}
+                  </button>
+                ))}
+              </div>
+            </div>
 
-            <Button variant="coral" type="submit" className="mt-2 w-full text-base">
+            <Button
+              variant="coral"
+              type="submit"
+              disabled={!accessCode.trim() || !displayName.trim() || !bergerName}
+              className="mt-2 w-full text-base"
+            >
               🎮 Rejoindre
             </Button>
           </form>
