@@ -13,7 +13,7 @@ import { HiOutlineBookOpen } from 'react-icons/hi'
 import { FaBullseye, FaTimes, FaUsers, FaTrophy, FaClock, FaShareAlt, FaChartBar } from 'react-icons/fa'
 
 const MEDALS = ['🥇', '🥈', '🥉']
-const AVATAR_COLORS = ['#FF6B5B', '#2FA4E0', '#F4B400', '#22B783', '#006414']
+const AVATAR_COLORS = ['#C1613C', '#8B6F4E', '#D9924A', '#4C8B3E', '#006414']
 function colorForName(name) {
   let hash = 0
   const str = name || ''
@@ -368,7 +368,7 @@ export default function LiveQuizRoom() {
 
               <div className="flex w-full flex-col gap-3">
                 <Button variant="coral" className="w-full text-base" onClick={() => navigate('/join')}>
-                  🎮 Rejoindre une nouvelle partie
+                  Rejoindre une nouvelle partie
                 </Button>
                 <Button variant="outline" className="w-full" onClick={shareScore}>
                   <FaShareAlt className="mr-2 inline-block" />

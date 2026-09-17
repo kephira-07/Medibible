@@ -10,7 +10,7 @@ export default function Home() {
 
       <div className="relative z-10 w-full max-w-md rounded-2xl border-2 border-medi-border bg-medi-surface/95 p-6 shadow-[0_22px_52px_rgba(22,50,62,0.1)] backdrop-blur-sm sm:p-8">
         <div className="flex flex-col items-center gap-4">
-          <div className="flex h-24 w-24 items-center justify-center rounded-full border-2 border-medi-gold/40 bg-gradient-to-br from-medi-gold-light/40 to-medi-sky/10 shadow-[0_14px_30px_rgba(244,180,0,0.18)]">
+          <div className="flex h-24 w-24 items-center justify-center rounded-full border-2 border-medi-gold/40 bg-gradient-to-br from-medi-gold-light/40 to-medi-sky/10 shadow-[0_14px_30px_rgba(217,146,74,0.20)]">
             <BrandMark className="animate-sway h-16 w-16" />
           </div>
           <div>
@@ -29,7 +29,7 @@ export default function Home() {
         <div className="mt-8 flex w-full flex-col gap-3">
           <Link to="/join" className="w-full">
             <Button variant="coral" className="w-full text-base">
-              🎮 Rejoindre un quiz
+              Rejoindre un quiz
             </Button>
           </Link>
         </div>

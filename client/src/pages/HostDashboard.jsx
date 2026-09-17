@@ -84,7 +84,7 @@ export default function HostDashboard() {
                 onClick={() => launchSession(quiz._id)}
                 disabled={launchingId === quiz._id}
               >
-                {launchingId === quiz._id ? 'Lancement…' : '🎮 Lancer'}
+                {launchingId === quiz._id ? 'Lancement…' : 'Lancer'}
               </Button>
             </div>
             )

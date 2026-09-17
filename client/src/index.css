@@ -1,24 +1,25 @@
-@import url("https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Domine:wght@500;600;700&display=swap");
 @import "tailwindcss";
 
-/* Palette de marque MediBible v3 — vivante, colorée, esprit "jeu communautaire" */
+/* Palette de marque MediBible v4 — "Chaleureux communautaire" : terracotta
+   et vert profond, chaleur d'un foyer de maison plutôt qu'un jeu. */
 @theme {
   --color-medi-green-deep: #006414;
-  --color-medi-green-sage: #22b783;
-  --color-medi-gold: #f4b400;
-  --color-medi-gold-light: #ffd873;
-  --color-medi-cream: #fff8ec;
-  --color-medi-petrol: #16323e;
-  --color-medi-coral: #ff6b5b;
-  --color-medi-sky: #2fa4e0;
+  --color-medi-green-sage: #4c8b3e;
+  --color-medi-gold: #d9924a;
+  --color-medi-gold-light: #f0c989;
+  --color-medi-cream: #fbf2e3;
+  --color-medi-petrol: #3a2e22;
+  --color-medi-coral: #c1613c;
+  --color-medi-sky: #8b6f4e;
 
   /* Surfaces neutres réutilisées à la place des hex bruts dispersés dans les pages */
-  --color-medi-surface: #fffbf2;
-  --color-medi-border: #f0dfb8;
-  --color-medi-chip: #fdecc0;
+  --color-medi-surface: #fffdf8;
+  --color-medi-border: #efdcc3;
+  --color-medi-chip: #f6e4c9;
 
-  --font-sans: "Baloo 2", "Inter", system-ui, "Segoe UI", Roboto, sans-serif;
-  --font-display: "Baloo 2", "Inter", system-ui, sans-serif;
+  --font-sans: system-ui, "Segoe UI", "Nunito Sans", Roboto, sans-serif;
+  --font-display: "Domine", Georgia, "Times New Roman", serif;
 
   --radius-2xl: 1rem;
 }
@@ -31,9 +32,9 @@
   body {
    margin: 0;
    background:
-     radial-gradient(circle at top left, rgba(47, 164, 224, 0.14), transparent 24%),
-     radial-gradient(circle at bottom right, rgba(244, 180, 0, 0.16), transparent 26%),
-     linear-gradient(180deg, #fffaf0 0%, #fff3dd 100%);
+     radial-gradient(circle at top left, rgba(139, 111, 78, 0.12), transparent 24%),
+     radial-gradient(circle at bottom right, rgba(217, 146, 74, 0.16), transparent 26%),
+     linear-gradient(180deg, #fdf6ec 0%, #fbeed9 100%);
    color: var(--color-medi-petrol);
    font-family: var(--font-sans);
    -webkit-font-smoothing: antialiased;
@@ -60,7 +61,7 @@
   }
 
   ::selection {
-   background: rgba(244, 180, 0, 0.28);
+   background: rgba(217, 146, 74, 0.28);
   }
 }
 

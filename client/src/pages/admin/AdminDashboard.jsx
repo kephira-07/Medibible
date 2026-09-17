@@ -35,7 +35,7 @@ function initialFrom(name) {
   return name?.trim().charAt(0).toUpperCase() || '?'
 }
 
-const AVATAR_COLORS = ['#FF6B5B', '#2FA4E0', '#F4B400', '#22B783', '#006414']
+const AVATAR_COLORS = ['#C1613C', '#8B6F4E', '#D9924A', '#4C8B3E', '#006414']
 function colorForName(name) {
   let hash = 0
   const str = name || ''

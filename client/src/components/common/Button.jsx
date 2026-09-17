@@ -1,11 +1,11 @@
 const VARIANTS = {
   primary:
-    'bg-medi-green-deep text-white shadow-[0_12px_26px_rgba(11,94,69,0.32)] hover:bg-[#0a4f3a]',
-  gold: 'bg-medi-gold text-medi-petrol shadow-[0_12px_26px_rgba(244,180,0,0.32)] hover:brightness-105',
+    'bg-medi-green-deep text-white shadow-[0_12px_26px_rgba(0,100,20,0.30)] hover:bg-[#004d0f]',
+  gold: 'bg-medi-gold text-medi-petrol shadow-[0_12px_26px_rgba(217,146,74,0.35)] hover:brightness-105',
   outline:
-    'border-2 border-medi-border bg-white text-medi-petrol shadow-[0_8px_18px_rgba(22,50,62,0.06)] hover:border-medi-green-sage hover:bg-medi-green-sage/5',
-  coral: 'bg-medi-coral text-white shadow-[0_12px_26px_rgba(255,107,91,0.32)] hover:brightness-105',
-  sky: 'bg-medi-sky text-white shadow-[0_12px_26px_rgba(47,164,224,0.32)] hover:brightness-105',
+    'border-2 border-medi-border bg-white text-medi-petrol shadow-[0_8px_18px_rgba(58,46,34,0.06)] hover:border-medi-green-sage hover:bg-medi-green-sage/5',
+  coral: 'bg-medi-coral text-white shadow-[0_12px_26px_rgba(193,97,60,0.32)] hover:brightness-105',
+  sky: 'bg-medi-sky text-white shadow-[0_12px_26px_rgba(139,111,78,0.32)] hover:brightness-105',
 }
 
 export default function Button({ variant = 'primary', className = '', children, ...props }) {

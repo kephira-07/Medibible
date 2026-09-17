@@ -151,7 +151,7 @@ export default function JoinSession() {
               disabled={!accessCode.trim() || !displayName.trim() || !bergerName || !effectiveEmail.trim()}
               className="mt-2 w-full text-base"
             >
-              🎮 Rejoindre
+              Rejoindre
             </Button>
           </form>
         </div>
