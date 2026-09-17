@@ -148,9 +148,7 @@ export default function AdminDashboard() {
         {/* HERO */}
         <section className="flex flex-col gap-4 rounded-2xl border-2 border-medi-border bg-white p-6 shadow-[0_18px_40px_rgba(22,50,62,0.06)] sm:p-8 lg:flex-row lg:items-center lg:justify-between">
           <div>
-            <span className="inline-flex items-center gap-2 rounded-full bg-medi-gold/15 px-3 py-1 text-xs font-bold uppercase tracking-wide text-medi-petrol">
-              Session de Grâce &amp; Partage
-            </span>
+          
             <p className="mt-2 text-xs font-semibold uppercase tracking-widest text-medi-petrol/45">{today}</p>
             <h1 className="mt-3 text-2xl font-extrabold tracking-tight text-medi-petrol sm:text-3xl">Tableau de bord Animateur</h1>
             <p className="mt-2 max-w-xl text-sm text-medi-petrol/65">
@@ -304,33 +302,7 @@ export default function AdminDashboard() {
           </div>
 
           <div className="flex flex-col gap-4">
-            <Link
-              to="/admin/sessions"
-              className="flex items-center justify-between gap-3 rounded-2xl border-2 border-medi-border bg-white p-5 transition hover:border-medi-green-sage sm:p-6"
-            >
-              <div>
-                <h2 className="flex items-center gap-2 text-lg font-bold text-medi-petrol">
-                  Mes sessions
-                  <span className="flex items-center gap-1.5 rounded-full bg-medi-coral/10 px-2 py-0.5 text-[10px] font-bold uppercase text-medi-coral">
-                    
-                  </span>
-                </h2>
-                <p className="mt-1 text-sm text-medi-petrol/55">{sessionsActiveCount} session(s) en attente ou en cours.</p>
-              </div>
-              <FaSatelliteDish className="shrink-0 text-2xl text-medi-gold" />
-            </Link>
-
-            <Link
-              to="/admin/quizzes"
-              className="flex items-center justify-between gap-3 rounded-2xl border-2 border-medi-border bg-white p-5 transition hover:border-medi-green-sage sm:p-6"
-            >
-              <div>
-                <h2 className="text-lg font-bold text-medi-petrol">Mes quiz</h2>
-                <p className="mt-1 text-sm text-medi-petrol/55">{quizzes.length} quiz créé{quizzes.length > 1 ? 's' : ''} — modifier, lancer, rechercher.</p>
-              </div>
-              <FaBookOpen className="shrink-0 text-2xl text-medi-sky" />
-            </Link>
-            <div className="rounded-2xl border-2 border-medi-border bg-white p-5 shadow-[0_18px_40px_rgba(22,50,62,0.05)] sm:p-6">
+             <div className="rounded-2xl border-2 border-medi-border bg-white p-5 shadow-[0_18px_40px_rgba(22,50,62,0.05)] sm:p-6">
               <h2 className="text-lg font-bold text-medi-petrol">Classement des bergers</h2>
               <p className="mt-1 text-sm text-medi-petrol/55">
                 Les groupes de maison dont les joueurs ont cumulé le plus de points sur la dernière session lancée.
@@ -392,6 +364,33 @@ export default function AdminDashboard() {
                 </button>
               )}
             </div>
+            <Link
+              to="/admin/sessions"
+              className="flex items-center justify-between gap-3 rounded-2xl border-2 border-medi-border bg-white p-5 transition hover:border-medi-green-sage sm:p-6"
+            >
+              <div>
+                <h2 className="flex items-center gap-2 text-lg font-bold text-medi-petrol">
+                  Mes sessions
+                  <span className="flex items-center gap-1.5 rounded-full bg-medi-coral/10 px-2 py-0.5 text-[10px] font-bold uppercase text-medi-coral">
+                    
+                  </span>
+                </h2>
+                <p className="mt-1 text-sm text-medi-petrol/55">{sessionsActiveCount} session(s) en attente ou en cours.</p>
+              </div>
+              <FaSatelliteDish className="shrink-0 text-2xl text-medi-gold" />
+            </Link>
+
+            <Link
+              to="/admin/quizzes"
+              className="flex items-center justify-between gap-3 rounded-2xl border-2 border-medi-border bg-white p-5 transition hover:border-medi-green-sage sm:p-6"
+            >
+              <div>
+                <h2 className="text-lg font-bold text-medi-petrol">Mes quiz</h2>
+                <p className="mt-1 text-sm text-medi-petrol/55">{quizzes.length} quiz créé{quizzes.length > 1 ? 's' : ''} — modifier, lancer, rechercher.</p>
+              </div>
+              <FaBookOpen className="shrink-0 text-2xl text-medi-sky" />
+            </Link>
+           
 
             
           </div>
