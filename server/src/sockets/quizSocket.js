@@ -107,7 +107,7 @@ async function endSession(io, session) {
 
 export function registerQuizHandlers(io, socket) {
   // Un joueur ou l'hôte rejoint le salon d'une session via son code d'accès
-  socket.on('session:join', async ({ accessCode, displayName, bergerName }, callback) => {
+  socket.on('session:join', async ({ accessCode, displayName, bergerName, email }, callback) => {
     try {
       if (!accessCode || !displayName) {
         return callback?.({ error: 'accessCode et displayName sont requis.' })
@@ -146,6 +146,7 @@ export function registerQuizHandlers(io, socket) {
               'participants.$.socketId': socket.id,
               'participants.$.displayName': displayName,
               'participants.$.bergerName': bergerName,
+              ...(email ? { 'participants.$.email': email } : {}),
             },
           }
         )
@@ -163,6 +164,7 @@ export function registerQuizHandlers(io, socket) {
                   user: user ? user.id : null,
                   displayName,
                   bergerName,
+                  email: email || '',
                   socketId: socket.id,
                   totalScore: 0,
                 },

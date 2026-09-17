@@ -12,6 +12,15 @@ const ParticipantSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
+  // Demandé une seule fois côté client (mémorisé en localStorage) — pas
+  // d'unicité imposée ici, un même email peut réapparaître sur plusieurs
+  // sessions/participants au fil du temps.
+  email: {
+    type: String,
+    trim: true,
+    lowercase: true,
+    default: '',
+  },
   // Nom du "berger"/groupe de maison du participant — affiché en sous-titre
   // dans le tableau de bord admin. Obligatoire à la jonction (voir la
   // validation dans quizSocket.js, côté hôte non concerné).

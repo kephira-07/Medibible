@@ -258,7 +258,7 @@ export default function AdminDashboard() {
         </section>
 
         {/* UTILISATEURS CONNECTÉS + SESSIONS EN DIRECT */}
-        <section id="live-sessions" className="grid gap-6 xl:grid-cols-[1.1fr_0.9fr]">
+        <section id="live-sessions" className="grid items-start gap-6 xl:grid-cols-[1.1fr_0.9fr]">
           <div className="rounded-2xl border-2 border-medi-border bg-white p-5 shadow-[0_18px_40px_rgba(22,50,62,0.05)] sm:p-6">
             <div className="mb-4 flex items-center justify-between gap-3">
               <h2 className="text-lg font-bold text-medi-petrol">Utilisateurs connectés</h2>

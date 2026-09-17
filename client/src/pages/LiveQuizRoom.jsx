@@ -34,6 +34,7 @@ export default function LiveQuizRoom() {
   const normalizedCode = accessCode?.toUpperCase()
   const displayName = location.state?.displayName || user?.name
   const bergerName = location.state?.bergerName || ''
+  const email = location.state?.email || ''
 
   const [error, setError] = useState(null)
   const [joined, setJoined] = useState(null)
@@ -56,7 +57,7 @@ export default function LiveQuizRoom() {
   useEffect(() => {
     if (!connected || !displayName || !normalizedCode) return
 
-    socket.emit('session:join', { accessCode: normalizedCode, displayName, bergerName }, (res) => {
+    socket.emit('session:join', { accessCode: normalizedCode, displayName, bergerName, email }, (res) => {
       if (res?.error) {
         setError(res.error)
         return
@@ -70,7 +71,7 @@ export default function LiveQuizRoom() {
         setPhase('ended')
       }
     })
-  }, [connected, displayName, bergerName, normalizedCode, socket])
+  }, [connected, displayName, bergerName, email, normalizedCode, socket])
 
   // Écoute des diffusions temps réel
   useEffect(() => {
