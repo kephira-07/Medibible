@@ -9,6 +9,7 @@ import AudioRoom from '../components/audio/AudioRoom.jsx'
 import Button from '../components/common/Button.jsx'
 import AppHeader from '../components/common/AppHeader.jsx'
 import FloatingBlobs from '../components/common/FloatingBlobs.jsx'
+import ConfirmDialog from '../components/common/ConfirmDialog.jsx'
 import { HiOutlineBookOpen } from 'react-icons/hi'
 import { FaBullseye, FaTimes, FaUsers, FaTrophy, FaClock, FaShareAlt, FaChartBar } from 'react-icons/fa'
 
@@ -49,6 +50,7 @@ export default function LiveQuizRoom() {
   const [answeredCount, setAnsweredCount] = useState(0)
   const [lastResult, setLastResult] = useState(null)
   const [shareCopied, setShareCopied] = useState(false)
+  const [showLeaveConfirm, setShowLeaveConfirm] = useState(false)
 
   // Redirection si pas de pseudo
   useEffect(() => {
@@ -66,6 +68,14 @@ export default function LiveQuizRoom() {
       }
       setJoined(res)
       setLeaderboard(res.leaderboard || [])
+      // Réinitialise toute notification laissée par une question précédente :
+      // une reconnexion (écran verrouillé, onglet mis en veille, réseau
+      // instable côté mobile) redéclenche ce join sans jamais démonter le
+      // composant, donc l'ancien lastResult/hasAnswered resterait sinon
+      // affiché par-dessus la question retrouvée.
+      setHasAnswered(false)
+      setLastResult(null)
+      setCorrectOptionIds([])
       if (res.activeQuestion) {
         setQuestion(res.activeQuestion)
         setPhase('open')
@@ -192,7 +202,23 @@ export default function LiveQuizRoom() {
     <main className="relative flex min-h-svh flex-col items-center overflow-hidden bg-medi-cream px-4 py-10">
       <FloatingBlobs />
       <div className="relative z-10 flex w-full max-w-2xl flex-col items-center gap-6">
-        <AppHeader />
+        {/* Pendant que la partie est en cours, un clic sur le logo demande
+            confirmation au lieu de faire quitter la session directement. */}
+        <AppHeader onBrandClick={phase !== 'ended' ? () => setShowLeaveConfirm(true) : undefined} />
+
+        <ConfirmDialog
+          open={showLeaveConfirm}
+          title="Quitter la session ?"
+          message={
+            joined.isHost
+              ? 'Tu es en train d\'animer cette partie. Si tu quittes, les joueurs resteront en attente.'
+              : 'Tu es en train de jouer. Si tu quittes maintenant, tu sortiras de la partie en cours.'
+          }
+          confirmLabel="Oui, quitter"
+          cancelLabel="Rester ici"
+          onConfirm={() => navigate('/')}
+          onCancel={() => setShowLeaveConfirm(false)}
+        />
 
         {!connected && (
           <div className="animate-pop-in w-full rounded-2xl border-2 border-medi-coral/40 bg-medi-coral/10 px-4 py-2.5 text-center text-sm font-semibold text-medi-coral">
@@ -274,44 +300,44 @@ export default function LiveQuizRoom() {
             key={question.questionIndex || question._id}
             className="animate-fade-in-up flex w-full flex-col items-center gap-6"
           >
-            {/* BANNIÈRE COLORÉE DE CONFIRMATION / RÉSULTAT */}
+            {/* BANNIÈRE COMPACTE DE CONFIRMATION / RÉSULTAT */}
             {hasAnswered && lastResult && (
               <div
-                className={`w-full rounded-2xl border-2 p-4 text-center transition-all duration-300 ${
+                className={`animate-pop-in flex w-full items-center gap-2.5 rounded-xl border px-3.5 py-2 text-sm transition-all duration-300 ${
                   lastResult.isCorrect
-                    ? 'border-emerald-500 bg-emerald-50 text-emerald-900 shadow-lg shadow-emerald-500/10'
-                    : 'border-rose-400 bg-rose-50 text-rose-900 shadow-lg shadow-rose-500/10'
+                    ? 'border-emerald-300 bg-emerald-50 text-emerald-800'
+                    : 'border-rose-300 bg-rose-50 text-rose-800'
                 }`}
               >
                 {lastResult.isCorrect ? (
-                  <div className="flex flex-col items-center gap-1">
-                    <FaBullseye className="inline-block text-2xl" />
-                    <p className="text-lg font-bold text-emerald-700">Excellente réponse !</p>
-                    {typeof lastResult.elapsedMs === 'number' && (
-                      <p className="text-xs font-semibold text-emerald-700/70">
-                        Temps de réponse : {(lastResult.elapsedMs / 1000).toFixed(1)}s
-                      </p>
-                    )}
-                    <span className="inline-block rounded-full bg-emerald-200/80 px-3 py-0.5 text-sm font-extrabold text-emerald-900">
-                      +{lastResult.pointsEarned} pts
+                  <>
+                    <FaBullseye className="shrink-0 text-base" />
+                    <p className="min-w-0 flex-1 truncate font-semibold">
+                      Bonne réponse !{' '}
+                      {typeof lastResult.elapsedMs === 'number' && (
+                        <span className="font-normal text-emerald-700/70">
+                          ({(lastResult.elapsedMs / 1000).toFixed(1)}s)
+                        </span>
+                      )}
+                    </p>
+                    <span className="shrink-0 rounded-full bg-emerald-200/80 px-2 py-0.5 text-xs font-extrabold text-emerald-900">
+                      +{lastResult.pointsEarned}
                     </span>
-                  </div>
+                  </>
                 ) : (
-                  <div className="flex flex-col items-center gap-1">
-                    <FaTimes className="inline-block text-2xl" />
-                    <p className="text-lg font-bold text-rose-700">Aïe, mauvaise réponse !</p>
-                    <p className="text-xs text-rose-600">Pas de points pour cette question.</p>
-                  </div>
+                  <>
+                    <FaTimes className="shrink-0 text-base" />
+                    <p className="font-semibold">Mauvaise réponse — pas de points.</p>
+                  </>
                 )}
               </div>
             )}
 
             {/* SI CLÔTURÉ ET SANS RÉPONSE */}
             {!hasAnswered && phase === 'closed' && (
-              <div className="w-full rounded-2xl border-2 border-amber-300 bg-amber-50 p-4 text-center text-amber-900">
-                <FaClock className="inline-block text-xl" />
-                <p className="font-semibold">Temps écoulé !</p>
-                <p className="text-xs opacity-80">Vous n'avez pas soumis de réponse à temps.</p>
+              <div className="animate-pop-in flex w-full items-center gap-2.5 rounded-xl border border-amber-300 bg-amber-50 px-3.5 py-2 text-sm text-amber-900">
+                <FaClock className="shrink-0 text-base" />
+                <p className="font-semibold">Temps écoulé — aucune réponse soumise.</p>
               </div>
             )}
 

@@ -13,20 +13,9 @@ import {
 
 // Quelques versets bien connus — un seul est affiché, choisi de façon stable
 // pour la journée (pas de fabrication de contenu biblique inventé).
-const VERSES = [
-  { text: 'Ta parole est une lampe à mes pieds, une lumière sur mon sentier.', ref: 'Psaume 119:105' },
-  { text: 'Je puis tout par celui qui me fortifie.', ref: 'Philippiens 4:13' },
-  { text: "L'Éternel est mon berger : je ne manquerai de rien.", ref: 'Psaume 23:1' },
-  { text: 'Que tout ce que vous faites se fasse avec amour.', ref: '1 Corinthiens 16:14' },
-  { text: 'Approchez-vous de Dieu, et il s’approchera de vous.', ref: 'Jacques 4:8' },
-  { text: 'Réjouissez-vous toujours dans le Seigneur.', ref: 'Philippiens 4:4' },
-  { text: 'Confie-toi en l’Éternel de tout ton cœur.', ref: 'Proverbes 3:5' },
-]
 
-function verseOfTheDay() {
-  const dayIndex = Math.floor(Date.now() / 86400000)
-  return VERSES[dayIndex % VERSES.length]
-}
+
+
 
 function initialFrom(name) {
   return name?.trim().charAt(0).toUpperCase() || '?'
@@ -47,11 +36,10 @@ export default function AdminDashboard() {
   const [showAllRanking, setShowAllRanking] = useState(false)
   const [showAllBergers, setShowAllBergers] = useState(false)
 
-  const [online, setOnline] = useState([])
   const [allSessions, setAllSessions] = useState([])
   const [winners, setWinners] = useState([])
 
-  const verse = useMemo(verseOfTheDay, [])
+
   const today = useMemo(
     () => new Date().toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }),
     []
@@ -59,13 +47,11 @@ export default function AdminDashboard() {
 
   async function loadAdmin() {
     try {
-      const [onlineRes, sessionsRes, winnersRes] = await Promise.all([
-        api.get('/sessions/admin/online'),
+      const [sessionsRes, winnersRes] = await Promise.all([
         api.get('/sessions'),
         api.get('/sessions/admin/winners'),
       ])
 
-      setOnline(onlineRes.data || [])
       setAllSessions(Array.isArray(sessionsRes.data) ? sessionsRes.data : [])
       setWinners(winnersRes.data || [])
     } catch (err) {
@@ -91,6 +77,21 @@ export default function AdminDashboard() {
     [allSessions]
   )
 
+  // Le dashboard n'est nourri que par la dernière session lancée (celle dont
+  // la création est la plus récente) — on ne mélange plus les joueurs et
+  // scores de plusieurs sessions/quiz différents dans les mêmes listes.
+  const lastSession = useMemo(() => {
+    if (allSessions.length === 0) return null
+    return [...allSessions].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))[0]
+  }, [allSessions])
+
+  const lastSessionParticipants = lastSession?.participants || []
+
+  const online = useMemo(
+    () => lastSessionParticipants.filter((p) => p.socketId),
+    [lastSessionParticipants]
+  )
+
   const stats = useMemo(
     () => [
       { label: 'Frères & sœurs connectés', value: online.length, accent: 'bg-medi-green-deep', icon: FaUserFriends },
@@ -103,45 +104,43 @@ export default function AdminDashboard() {
 
   const podium = useMemo(
     () =>
-      online
+      lastSessionParticipants
         .slice()
         .sort((a, b) => (b.totalScore ?? 0) - (a.totalScore ?? 0))
         .slice(0, 3),
-    [online]
+    [lastSessionParticipants]
   )
 
   const ranking = useMemo(
     () =>
-      online
+      lastSessionParticipants
         .slice()
         .sort((a, b) => (b.totalScore ?? 0) - (a.totalScore ?? 0))
         .slice(3),
-    [online]
+    [lastSessionParticipants]
   )
 
-  // Classement des bergers : cumul des points de tous leurs joueurs, toutes
-  // sessions confondues (pas seulement ceux en ligne maintenant) — reflète
-  // qui, parmi les groupes de maison, s'est le plus investi dans la durée.
+  // Classement des bergers : cumul des points des joueurs de la dernière
+  // session lancée uniquement (plus de mélange entre sessions différentes).
   const bergerRanking = useMemo(() => {
     const byBerger = new Map()
-    for (const session of allSessions) {
-      for (const p of session.participants || []) {
-        const berger = p.bergerName?.trim()
-        if (!berger) continue
-        const entry = byBerger.get(berger) || { bergerName: berger, totalScore: 0, players: new Set() }
-        entry.totalScore += p.totalScore || 0
-        entry.players.add(p.displayName)
-        byBerger.set(berger, entry)
-      }
+    for (const p of lastSessionParticipants) {
+      const berger = p.bergerName?.trim()
+      if (!berger) continue
+      const entry = byBerger.get(berger) || { bergerName: berger, totalScore: 0, players: new Set() }
+      entry.totalScore += p.totalScore || 0
+      entry.players.add(p.displayName)
+      byBerger.set(berger, entry)
     }
     return Array.from(byBerger.values())
       .map((e) => ({ bergerName: e.bergerName, totalScore: e.totalScore, playerCount: e.players.size }))
       .sort((a, b) => b.totalScore - a.totalScore)
-  }, [allSessions])
+  }, [lastSessionParticipants])
 
   const visibleOnline = showAllOnline ? online : online.slice(0, 6)
   const visibleRanking = showAllRanking ? ranking : ranking.slice(0, 5)
   const visibleBergers = showAllBergers ? bergerRanking : bergerRanking.slice(0, 5)
+  const maxBergerScore = bergerRanking[0]?.totalScore || 0
 
   return (
     <AdminLayout>
@@ -187,6 +186,12 @@ export default function AdminDashboard() {
         </section>
 
         {/* UTILISATEURS CONNECTÉS / CLASSEMENTS / RACCOURCIS */}
+        {lastSession && (
+          <p className="text-xs font-semibold text-medi-petrol/50">
+            Données de la dernière session lancée : <span className="text-medi-petrol">{lastSession.quizTitle}</span>{' '}
+            <span className="rounded-full bg-medi-gold/15 px-2 py-0.5 font-bold text-medi-petrol">#{lastSession.accessCode}</span>
+          </p>
+        )}
         <section className="grid items-start gap-6 xl:grid-cols-[1.1fr_0.9fr]">
           <div className="flex flex-col gap-6">
             <div className="rounded-2xl border-2 border-medi-border bg-white p-5 shadow-[0_18px_40px_rgba(22,50,62,0.05)] sm:p-6">
@@ -200,7 +205,7 @@ export default function AdminDashboard() {
               <div className="space-y-3">
                 {visibleOnline.map((u) => (
                   <div
-                    key={`${u.displayName}-${u.sessionId || u.socketId}`}
+                    key={u._id || `${u.displayName}-${u.socketId}`}
                     className="flex items-center gap-3 rounded-lg border-2 border-medi-border bg-medi-cream/50 p-3"
                   >
                     <div
@@ -211,7 +216,7 @@ export default function AdminDashboard() {
                     </div>
                     <div className="min-w-0 flex-1">
                       <p className="truncate font-bold text-medi-petrol">{u.displayName}</p>
-                      <p className="truncate text-xs text-medi-petrol/55">{u.bergerName || u.accessCode || '—'}</p>
+                      <p className="truncate text-xs text-medi-petrol/55">{u.bergerName || '—'}</p>
                     </div>
                     <div className="text-right">
                       <p className="text-xs font-bold text-medi-petrol">{u.totalScore ?? 0} pts</p>
@@ -220,7 +225,11 @@ export default function AdminDashboard() {
                   </div>
                 ))}
                 {online.length === 0 && (
-                  <p className="py-6 text-center text-sm text-medi-petrol/50">Aucun frère ou sœur connecté pour le moment.</p>
+                  <p className="py-6 text-center text-sm text-medi-petrol/50">
+                    {lastSession
+                      ? 'Aucun frère ou sœur connecté pour le moment.'
+                      : 'Aucune session lancée pour le moment — lance un quiz pour voir les joueurs ici.'}
+                  </p>
                 )}
               </div>
 
@@ -291,45 +300,10 @@ export default function AdminDashboard() {
               )}
             </div>
 
-            <div className="rounded-2xl border-2 border-medi-border bg-white p-5 shadow-[0_18px_40px_rgba(22,50,62,0.05)] sm:p-6">
-              <h2 className="text-lg font-bold text-medi-petrol">Classement des bergers</h2>
-              <p className="mt-1 text-sm text-medi-petrol/55">
-                Les groupes de maison dont les joueurs ont cumulé le plus de points, toutes sessions confondues.
-              </p>
-
-              <div className="mt-4 space-y-2.5">
-                {visibleBergers.map((b, index) => (
-                  <div key={b.bergerName} className="flex items-center justify-between rounded-lg border-2 border-medi-border bg-medi-cream/50 p-3">
-                    <div className="flex items-center gap-3">
-                      <span className="flex h-8 w-8 items-center justify-center rounded-full bg-medi-green-deep/8 text-sm font-bold text-medi-petrol">
-                        {index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : `#${index + 1}`}
-                      </span>
-                      <div>
-                        <p className="font-semibold text-medi-petrol">{b.bergerName}</p>
-                        <p className="text-xs text-medi-petrol/50">{b.playerCount} joueur{b.playerCount > 1 ? 's' : ''}</p>
-                      </div>
-                    </div>
-                    <span className="text-sm font-bold text-medi-gold">{b.totalScore} pts</span>
-                  </div>
-                ))}
-                {bergerRanking.length === 0 && (
-                  <p className="py-4 text-center text-sm text-medi-petrol/50">Aucune donnée pour le moment.</p>
-                )}
-              </div>
-
-              {bergerRanking.length > 5 && (
-                <button
-                  type="button"
-                  onClick={() => setShowAllBergers((v) => !v)}
-                  className="mt-4 w-full rounded-2xl border-2 border-medi-border py-2.5 text-sm font-bold text-medi-petrol/70 transition hover:bg-medi-cream"
-                >
-                  {showAllBergers ? 'Réduire la liste' : 'Lire la suite'}
-                </button>
-              )}
-            </div>
+            
           </div>
 
-          <div className="flex flex-col gap-6">
+          <div className="flex flex-col gap-4">
             <Link
               to="/admin/sessions"
               className="flex items-center justify-between gap-3 rounded-2xl border-2 border-medi-border bg-white p-5 transition hover:border-medi-green-sage sm:p-6"
@@ -338,7 +312,7 @@ export default function AdminDashboard() {
                 <h2 className="flex items-center gap-2 text-lg font-bold text-medi-petrol">
                   Mes sessions
                   <span className="flex items-center gap-1.5 rounded-full bg-medi-coral/10 px-2 py-0.5 text-[10px] font-bold uppercase text-medi-coral">
-                    <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-medi-coral" /> Live
+                    
                   </span>
                 </h2>
                 <p className="mt-1 text-sm text-medi-petrol/55">{sessionsActiveCount} session(s) en attente ou en cours.</p>
@@ -356,14 +330,70 @@ export default function AdminDashboard() {
               </div>
               <FaBookOpen className="shrink-0 text-2xl text-medi-sky" />
             </Link>
-
-            <div className="rounded-2xl border-2 border-medi-gold/30 bg-medi-gold/8 p-5 sm:p-6">
-              <p className="flex items-center gap-2 text-xs font-bold uppercase tracking-wide text-medi-gold">
-                <FaMedal /> Verset du jour
+            <div className="rounded-2xl border-2 border-medi-border bg-white p-5 shadow-[0_18px_40px_rgba(22,50,62,0.05)] sm:p-6">
+              <h2 className="text-lg font-bold text-medi-petrol">Classement des bergers</h2>
+              <p className="mt-1 text-sm text-medi-petrol/55">
+                Les groupes de maison dont les joueurs ont cumulé le plus de points sur la dernière session lancée.
               </p>
-              <p className="mt-2 text-sm italic text-medi-petrol/80">« {verse.text} »</p>
-              <p className="mt-1 text-xs font-semibold text-medi-petrol/50">{verse.ref}</p>
+
+              <div className="mt-4 space-y-2.5">
+                {visibleBergers.map((b, index) => {
+                  const isLeader = index === 0
+                  const avgPerPlayer = b.playerCount > 0 ? Math.round(b.totalScore / b.playerCount) : 0
+                  const relativePct = maxBergerScore > 0 ? Math.max(6, Math.round((b.totalScore / maxBergerScore) * 100)) : 0
+                  return (
+                    <div
+                      key={b.bergerName}
+                      className={`rounded-xl border-2 p-3 transition ${
+                        isLeader ? 'border-medi-gold/50 bg-medi-gold/8' : 'border-medi-border bg-medi-cream/50'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between gap-3">
+                        <div className="flex min-w-0 items-center gap-3">
+                          <span
+                            className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-sm font-bold ${
+                              isLeader ? 'bg-medi-gold/25 text-medi-petrol' : 'bg-medi-green-deep/8 text-medi-petrol'
+                            }`}
+                          >
+                            {index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : `#${index + 1}`}
+                          </span>
+                          <div className="min-w-0">
+                            <p className="truncate font-bold text-medi-petrol">{b.bergerName}</p>
+                            <p className="text-xs text-medi-petrol/50">
+                              {b.playerCount} joueur{b.playerCount > 1 ? 's' : ''} · {avgPerPlayer} pts/joueur en moyenne
+                            </p>
+                          </div>
+                        </div>
+                        <span className={`shrink-0 text-sm font-extrabold ${isLeader ? 'text-medi-gold' : 'text-medi-petrol'}`}>
+                          {b.totalScore} pts
+                        </span>
+                      </div>
+                      <div className="mt-2.5 h-1.5 w-full overflow-hidden rounded-full bg-white/70">
+                        <div
+                          className={`h-full rounded-full ${isLeader ? 'bg-medi-gold' : 'bg-medi-green-sage'}`}
+                          style={{ width: `${relativePct}%` }}
+                        />
+                      </div>
+                    </div>
+                  )
+                })}
+                {bergerRanking.length === 0 && (
+                  <p className="py-4 text-center text-sm text-medi-petrol/50">Aucune donnée pour le moment.</p>
+                )}
+              </div>
+
+              {bergerRanking.length > 5 && (
+                <button
+                  type="button"
+                  onClick={() => setShowAllBergers((v) => !v)}
+                  className="mt-4 w-full rounded-2xl border-2 border-medi-border py-2.5 text-sm font-bold text-medi-petrol/70 transition hover:bg-medi-cream"
+                >
+                  {showAllBergers ? 'Réduire la liste' : 'Lire la suite'}
+                </button>
+              )}
             </div>
+
+            
           </div>
         </section>
 
