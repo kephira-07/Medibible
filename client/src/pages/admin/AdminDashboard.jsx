@@ -1,16 +1,14 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { useEffect, useMemo, useState } from 'react'
+import { Link } from 'react-router-dom'
 import api from '../../services/api.js'
 import Button from '../../components/common/Button.jsx'
 import AdminLayout from '../../components/admin/AdminLayout.jsx'
-import { useAuth } from '../../context/AuthContext.jsx'
 import {
   FaUserFriends,
   FaSatelliteDish,
   FaBookOpen,
   FaCrown,
   FaTrophy,
-  FaSearch,
   FaMedal,
 } from 'react-icons/fa'
 
@@ -44,20 +42,15 @@ function colorForName(name) {
 }
 
 export default function AdminDashboard() {
-  const { user } = useAuth()
-  const navigate = useNavigate()
   const [quizzes, setQuizzes] = useState([])
   const [error, setError] = useState(null)
-  const [deletingId, setDeletingId] = useState(null)
-  const [launchingId, setLaunchingId] = useState(null)
-  const [quizSearch, setQuizSearch] = useState('')
   const [showAllOnline, setShowAllOnline] = useState(false)
+  const [showAllRanking, setShowAllRanking] = useState(false)
+  const [showAllBergers, setShowAllBergers] = useState(false)
 
   const [online, setOnline] = useState([])
-  const [sessionsActive, setSessionsActive] = useState([])
+  const [allSessions, setAllSessions] = useState([])
   const [winners, setWinners] = useState([])
-  const [sessionDetail, setSessionDetail] = useState(null)
-  const [detailOpen, setDetailOpen] = useState(false)
 
   const verse = useMemo(verseOfTheDay, [])
   const today = useMemo(
@@ -74,7 +67,7 @@ export default function AdminDashboard() {
       ])
 
       setOnline(onlineRes.data || [])
-      setSessionsActive(Array.isArray(sessionsRes.data) ? sessionsRes.data.filter((s) => ['live', 'lobby'].includes(s.status)) : [])
+      setAllSessions(Array.isArray(sessionsRes.data) ? sessionsRes.data : [])
       setWinners(winnersRes.data || [])
     } catch (err) {
       setError((prev) => prev || (err.response?.data?.message || 'Impossible de charger les données admin.'))
@@ -94,38 +87,19 @@ export default function AdminDashboard() {
       .catch((err) => setError(err.response?.data?.message || 'Impossible de charger les quiz.'))
   }, [])
 
-  const openSessionDetail = async (sessionId) => {
-    try {
-      const { data } = await api.get(`/sessions/admin/${sessionId}`)
-      setSessionDetail(data)
-      setDetailOpen(true)
-    } catch (err) {
-      setError(err.response?.data?.message || 'Impossible de charger le détail de la session.')
-    }
-  }
-
-  const closeSessionDetail = useCallback(() => {
-    setDetailOpen(false)
-    setSessionDetail(null)
-  }, [])
-
-  useEffect(() => {
-    if (!detailOpen) return
-    const onKeyDown = (e) => {
-      if (e.key === 'Escape') closeSessionDetail()
-    }
-    window.addEventListener('keydown', onKeyDown)
-    return () => window.removeEventListener('keydown', onKeyDown)
-  }, [detailOpen, closeSessionDetail])
+  const sessionsActiveCount = useMemo(
+    () => allSessions.filter((s) => ['live', 'lobby'].includes(s.status)).length,
+    [allSessions]
+  )
 
   const stats = useMemo(
     () => [
       { label: 'Frères & sœurs connectés', value: online.length, accent: 'bg-medi-green-deep', icon: FaUserFriends },
-      { label: 'Sessions actives', value: sessionsActive.length, accent: 'bg-medi-gold', icon: FaSatelliteDish },
+      { label: 'Sessions actives', value: sessionsActiveCount, accent: 'bg-medi-gold', icon: FaSatelliteDish },
       { label: 'Quiz publiés', value: quizzes.length, accent: 'bg-medi-sky', icon: FaBookOpen },
       { label: 'Gagnants récents', value: winners.length, accent: 'bg-medi-coral', icon: FaCrown },
     ],
-    [quizzes.length, online.length, sessionsActive.length, winners.length]
+    [quizzes.length, online.length, sessionsActiveCount, winners.length]
   )
 
   const podium = useMemo(
@@ -146,41 +120,33 @@ export default function AdminDashboard() {
     [online]
   )
 
-  const filteredQuizzes = useMemo(() => {
-    const q = quizSearch.trim().toLowerCase()
-    if (!q) return quizzes
-    return quizzes.filter((quiz) => quiz.title?.toLowerCase().includes(q))
-  }, [quizzes, quizSearch])
-
-  const handleDelete = async (id) => {
-    if (!window.confirm('Supprimer ce quiz définitivement ?')) return
-    setDeletingId(id)
-    try {
-      await api.delete(`/quizzes/${id}`)
-      setQuizzes((prev) => prev.filter((q) => q._id !== id))
-    } catch (err) {
-      setError(err.response?.data?.message || 'Suppression impossible.')
-    } finally {
-      setDeletingId(null)
+  // Classement des bergers : cumul des points de tous leurs joueurs, toutes
+  // sessions confondues (pas seulement ceux en ligne maintenant) — reflète
+  // qui, parmi les groupes de maison, s'est le plus investi dans la durée.
+  const bergerRanking = useMemo(() => {
+    const byBerger = new Map()
+    for (const session of allSessions) {
+      for (const p of session.participants || []) {
+        const berger = p.bergerName?.trim()
+        if (!berger) continue
+        const entry = byBerger.get(berger) || { bergerName: berger, totalScore: 0, players: new Set() }
+        entry.totalScore += p.totalScore || 0
+        entry.players.add(p.displayName)
+        byBerger.set(berger, entry)
+      }
     }
-  }
-
-  const handleLaunch = async (quizId) => {
-    setLaunchingId(quizId)
-    try {
-      const { data } = await api.post('/sessions', { quizId })
-      navigate(`/session/${data.accessCode}`, { state: { displayName: user?.name || 'Animateur' } })
-    } catch (err) {
-      setError(err.response?.data?.message || 'Impossible de créer la session.')
-      setLaunchingId(null)
-    }
-  }
+    return Array.from(byBerger.values())
+      .map((e) => ({ bergerName: e.bergerName, totalScore: e.totalScore, playerCount: e.players.size }))
+      .sort((a, b) => b.totalScore - a.totalScore)
+  }, [allSessions])
 
   const visibleOnline = showAllOnline ? online : online.slice(0, 6)
+  const visibleRanking = showAllRanking ? ranking : ranking.slice(0, 5)
+  const visibleBergers = showAllBergers ? bergerRanking : bergerRanking.slice(0, 5)
 
   return (
     <AdminLayout>
-      <div id="dashboard-top" className="mx-auto flex w-full max-w-7xl flex-col gap-6 px-4 py-5 sm:px-6 lg:px-8">
+      <div className="mx-auto flex w-full max-w-7xl flex-col gap-6 px-4 py-5 sm:px-6 lg:px-8">
         {/* HERO */}
         <section className="flex flex-col gap-4 rounded-2xl border-2 border-medi-border bg-white p-6 shadow-[0_18px_40px_rgba(22,50,62,0.06)] sm:p-8 lg:flex-row lg:items-center lg:justify-between">
           <div>
@@ -197,6 +163,12 @@ export default function AdminDashboard() {
             <Button variant="primary" className="w-full text-base sm:w-auto">+ Nouveau quiz</Button>
           </Link>
         </section>
+
+        {error && (
+          <p className="rounded-xl border-2 border-medi-coral/30 bg-medi-coral/10 px-4 py-2 text-sm font-semibold text-medi-coral">
+            {error}
+          </p>
+        )}
 
         {/* STATS */}
         <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
@@ -215,8 +187,8 @@ export default function AdminDashboard() {
           })}
         </section>
 
-        {/* UTILISATEURS CONNECTÉS / SESSIONS EN DIRECT / CLASSEMENT / RÉCOMPENSES */}
-        <section id="live-sessions" className="grid items-start gap-6 xl:grid-cols-[1.1fr_0.9fr]">
+        {/* UTILISATEURS CONNECTÉS / CLASSEMENTS / RACCOURCIS */}
+        <section className="grid items-start gap-6 xl:grid-cols-[1.1fr_0.9fr]">
           <div className="flex flex-col gap-6">
             <div className="rounded-2xl border-2 border-medi-border bg-white p-5 shadow-[0_18px_40px_rgba(22,50,62,0.05)] sm:p-6">
               <div className="mb-4 flex items-center justify-between gap-3">
@@ -296,7 +268,7 @@ export default function AdminDashboard() {
               )}
 
               <div className="space-y-2.5">
-                {ranking.map((entry, index) => (
+                {visibleRanking.map((entry, index) => (
                   <div key={entry.socketId || `${entry.displayName}-${index}`} className="flex items-center justify-between rounded-lg border-2 border-medi-border bg-medi-cream/50 p-3">
                     <div className="flex items-center gap-3">
                       <span className="flex h-8 w-8 items-center justify-center rounded-full bg-medi-green-deep/8 font-bold text-medi-petrol">
@@ -308,72 +280,83 @@ export default function AdminDashboard() {
                   </div>
                 ))}
               </div>
+
+              {ranking.length > 5 && (
+                <button
+                  type="button"
+                  onClick={() => setShowAllRanking((v) => !v)}
+                  className="mt-4 w-full rounded-2xl border-2 border-medi-border py-2.5 text-sm font-bold text-medi-petrol/70 transition hover:bg-medi-cream"
+                >
+                  {showAllRanking ? 'Réduire la liste' : 'Lire la suite'}
+                </button>
+              )}
+            </div>
+
+            <div className="rounded-2xl border-2 border-medi-border bg-white p-5 shadow-[0_18px_40px_rgba(22,50,62,0.05)] sm:p-6">
+              <h2 className="text-lg font-bold text-medi-petrol">Classement des bergers</h2>
+              <p className="mt-1 text-sm text-medi-petrol/55">
+                Les groupes de maison dont les joueurs ont cumulé le plus de points, toutes sessions confondues.
+              </p>
+
+              <div className="mt-4 space-y-2.5">
+                {visibleBergers.map((b, index) => (
+                  <div key={b.bergerName} className="flex items-center justify-between rounded-lg border-2 border-medi-border bg-medi-cream/50 p-3">
+                    <div className="flex items-center gap-3">
+                      <span className="flex h-8 w-8 items-center justify-center rounded-full bg-medi-green-deep/8 text-sm font-bold text-medi-petrol">
+                        {index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : `#${index + 1}`}
+                      </span>
+                      <div>
+                        <p className="font-semibold text-medi-petrol">{b.bergerName}</p>
+                        <p className="text-xs text-medi-petrol/50">{b.playerCount} joueur{b.playerCount > 1 ? 's' : ''}</p>
+                      </div>
+                    </div>
+                    <span className="text-sm font-bold text-medi-gold">{b.totalScore} pts</span>
+                  </div>
+                ))}
+                {bergerRanking.length === 0 && (
+                  <p className="py-4 text-center text-sm text-medi-petrol/50">Aucune donnée pour le moment.</p>
+                )}
+              </div>
+
+              {bergerRanking.length > 5 && (
+                <button
+                  type="button"
+                  onClick={() => setShowAllBergers((v) => !v)}
+                  className="mt-4 w-full rounded-2xl border-2 border-medi-border py-2.5 text-sm font-bold text-medi-petrol/70 transition hover:bg-medi-cream"
+                >
+                  {showAllBergers ? 'Réduire la liste' : 'Lire la suite'}
+                </button>
+              )}
             </div>
           </div>
 
           <div className="flex flex-col gap-6">
-            <div className="rounded-2xl border-2 border-medi-border bg-white p-5 shadow-[0_18px_40px_rgba(22,50,62,0.05)] sm:p-6">
-              <div className="mb-4 flex items-center justify-between gap-3">
-                <h2 className="text-lg font-bold text-medi-petrol">Sessions en direct</h2>
-                <span className="flex items-center gap-1.5 rounded-full bg-medi-coral/10 px-2.5 py-1 text-xs font-bold text-medi-coral">
-                  <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-medi-coral" /> Live
-                </span>
+            <Link
+              to="/admin/sessions"
+              className="flex items-center justify-between gap-3 rounded-2xl border-2 border-medi-border bg-white p-5 transition hover:border-medi-green-sage sm:p-6"
+            >
+              <div>
+                <h2 className="flex items-center gap-2 text-lg font-bold text-medi-petrol">
+                  Mes sessions
+                  <span className="flex items-center gap-1.5 rounded-full bg-medi-coral/10 px-2 py-0.5 text-[10px] font-bold uppercase text-medi-coral">
+                    <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-medi-coral" /> Live
+                  </span>
+                </h2>
+                <p className="mt-1 text-sm text-medi-petrol/55">{sessionsActiveCount} session(s) en attente ou en cours.</p>
               </div>
+              <FaSatelliteDish className="shrink-0 text-2xl text-medi-gold" />
+            </Link>
 
-              <div className="space-y-3">
-                {sessionsActive.map((session) => {
-                  const hasProgress = session.status === 'live' && session.currentQuestionIndex >= 0 && session.questionsCount
-                  const progressPct = hasProgress
-                    ? Math.round(((session.currentQuestionIndex + 1) / session.questionsCount) * 100)
-                    : 0
-                  return (
-                    <div key={session._id} className="rounded-lg border-2 border-medi-border bg-medi-cream/50 p-3.5">
-                      <div className="flex items-center justify-between gap-3">
-                        <div className="flex items-center gap-2.5 min-w-0">
-                          <span className="shrink-0 rounded-lg bg-medi-gold/20 px-2 py-1 text-[10px] font-extrabold uppercase tracking-wide text-medi-petrol">
-                            #{session.accessCode}
-                          </span>
-                          <p className="truncate font-bold text-medi-petrol">{session.quiz?.title || 'Quiz inconnu'}</p>
-                        </div>
-                        <span className="shrink-0 rounded-full bg-emerald-100 px-2 py-1 text-[10px] font-bold uppercase tracking-[0.1em] text-emerald-700">
-                          {session.status === 'live' ? 'En cours' : 'En attente'}
-                        </span>
-                      </div>
-
-                      <p className="mt-1.5 text-xs text-medi-petrol/55">Créé par : {session.host?.name || 'Inconnu'}</p>
-
-                      {hasProgress ? (
-                        <div className="mt-3">
-                          <div className="mb-1 flex items-center justify-between text-[11px] font-semibold text-medi-petrol/60">
-                            <span>Question {session.currentQuestionIndex + 1} / {session.questionsCount}</span>
-                            <span>{progressPct}%</span>
-                          </div>
-                          <div className="h-1.5 w-full overflow-hidden rounded-full bg-medi-border">
-                            <div className="h-full rounded-full bg-medi-sky transition-all" style={{ width: `${progressPct}%` }} />
-                          </div>
-                        </div>
-                      ) : (
-                        <p className="mt-3 text-xs font-semibold text-medi-petrol/50">En attente du lancement…</p>
-                      )}
-
-                      <div className="mt-3 flex items-center justify-between text-xs text-medi-petrol/65">
-                        <span>{session.playerCount ?? session.participants?.length ?? 0} joueurs</span>
-                        <span>Leader : {session.winner?.displayName || '—'}</span>
-                      </div>
-
-                      <div className="mt-3 flex justify-end">
-                        <Button variant="outline" className="text-sm" onClick={() => openSessionDetail(session._id)}>
-                          Détails
-                        </Button>
-                      </div>
-                    </div>
-                  )
-                })}
-                {sessionsActive.length === 0 && (
-                  <p className="py-6 text-center text-sm text-medi-petrol/50">Aucune session en direct pour le moment.</p>
-                )}
+            <Link
+              to="/admin/quizzes"
+              className="flex items-center justify-between gap-3 rounded-2xl border-2 border-medi-border bg-white p-5 transition hover:border-medi-green-sage sm:p-6"
+            >
+              <div>
+                <h2 className="text-lg font-bold text-medi-petrol">Mes quiz</h2>
+                <p className="mt-1 text-sm text-medi-petrol/55">{quizzes.length} quiz créé{quizzes.length > 1 ? 's' : ''} — modifier, lancer, rechercher.</p>
               </div>
-            </div>
+              <FaBookOpen className="shrink-0 text-2xl text-medi-sky" />
+            </Link>
 
             <Link
               to="/admin/history"
@@ -396,129 +379,11 @@ export default function AdminDashboard() {
           </div>
         </section>
 
-        {/* GESTION DES QUIZ */}
-        <section id="quiz-management" className="rounded-2xl border-2 border-medi-border bg-white p-5 shadow-[0_18px_40px_rgba(22,50,62,0.05)] sm:p-6">
-          <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <div>
-              <p className="text-xs font-bold uppercase tracking-[0.22em] text-medi-green-deep/70">Back-office</p>
-              <h2 className="mt-1 text-xl font-extrabold text-medi-petrol">Gestion des quiz</h2>
-              <p className="text-sm text-medi-petrol/55">Création, modification et lancement de questionnaires interactifs.</p>
-            </div>
-            <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-              <div className="relative">
-                <FaSearch className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-medi-petrol/35" />
-                <input
-                  value={quizSearch}
-                  onChange={(e) => setQuizSearch(e.target.value)}
-                  placeholder="Rechercher un quiz…"
-                  className="min-h-11 w-full rounded-full border-2 border-medi-border bg-medi-cream/40 pl-10 pr-4 text-sm text-medi-petrol outline-none focus:border-medi-sky focus:ring-4 focus:ring-medi-sky/15 sm:w-56"
-                />
-              </div>
-              <Link to="/admin/quizzes/new" className="w-full sm:w-auto">
-                <Button variant="primary" className="w-full sm:w-auto">+ Nouveau quiz</Button>
-              </Link>
-            </div>
-          </div>
-
-          {error && (
-            <p className="mb-4 rounded-xl border-2 border-medi-coral/30 bg-medi-coral/10 px-4 py-2 text-sm font-semibold text-medi-coral">
-              {error}
-            </p>
-          )}
-
-          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-            {filteredQuizzes.map((quiz) => (
-              <div key={quiz._id} className="flex flex-col gap-3 rounded-xl border-2 border-medi-border bg-medi-cream/40 p-4">
-                <div className="flex items-center justify-between gap-2">
-                  <span className="rounded-full bg-medi-sky/15 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-medi-sky">
-                    {quiz.status === 'published' ? 'Publié' : quiz.status === 'archived' ? 'Archivé' : 'Brouillon'}
-                  </span>
-                  <span className="text-[10px] font-semibold uppercase tracking-wide text-medi-petrol/40">
-                    {quiz.createdAt ? new Date(quiz.createdAt).toLocaleDateString('fr-FR') : ''}
-                  </span>
-                </div>
-                <div className="min-w-0">
-                  <p className="truncate font-bold text-medi-petrol">{quiz.title}</p>
-                  {quiz.description && <p className="mt-1 line-clamp-2 text-xs text-medi-petrol/55">{quiz.description}</p>}
-                  <p className="mt-1 text-xs text-medi-petrol/50">{quiz.questions?.length || 0} question(s)</p>
-                </div>
-                <div className="mt-auto flex flex-col gap-2 sm:flex-row">
-                  <Link to={`/admin/quizzes/${quiz._id}/edit`} className="flex-1">
-                    <Button variant="outline" className="w-full text-sm">Modifier</Button>
-                  </Link>
-                  <Button
-                    variant="gold"
-                    className="flex-1 text-sm"
-                    onClick={() => handleLaunch(quiz._id)}
-                    disabled={launchingId === quiz._id}
-                  >
-                    {launchingId === quiz._id ? 'Lancement…' : 'Lancer'}
-                  </Button>
-                  <Button
-                    variant="coral"
-                    className="text-sm"
-                    onClick={() => handleDelete(quiz._id)}
-                    disabled={deletingId === quiz._id}
-                  >
-                    {deletingId === quiz._id ? '…' : 'Supprimer'}
-                  </Button>
-                </div>
-              </div>
-            ))}
-            {filteredQuizzes.length === 0 && !error && (
-              <p className="col-span-full rounded-xl border-2 border-dashed border-medi-border bg-white/60 p-6 text-center text-sm text-medi-petrol/60">
-                {quizSearch ? 'Aucun quiz ne correspond à ta recherche.' : 'Aucun quiz pour le moment.'}
-              </p>
-            )}
-          </div>
-        </section>
-
         {/* FOOTER */}
         <footer className="flex flex-col items-center gap-1 py-4 text-center text-xs text-medi-petrol/40">
           <p>MediBible &copy; {new Date().getFullYear()} — Communauté chrétienne</p>
           <p>Besoin d'aide ? Contacte le support de ta communauté.</p>
         </footer>
-
-        {detailOpen && (
-          <div
-            className="fixed inset-0 z-50 flex items-center justify-center bg-medi-petrol/50 p-4 backdrop-blur-sm"
-            onClick={closeSessionDetail}
-          >
-            <div
-              className="animate-pop-in w-full max-w-2xl rounded-2xl border-2 border-medi-border bg-medi-surface p-6 shadow-[0_24px_60px_rgba(22,50,62,0.25)]"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <div className="flex items-start justify-between gap-3">
-                <h3 className="text-lg font-extrabold text-medi-petrol">Détail session {sessionDetail?.accessCode}</h3>
-                <button
-                  type="button"
-                  onClick={closeSessionDetail}
-                  className="rounded-full bg-medi-border/60 px-3 py-1 text-sm font-semibold text-medi-petrol/70 transition hover:bg-medi-border"
-                >
-                  Fermer
-                </button>
-              </div>
-              <p className="mt-2 text-sm text-medi-petrol/70">Quiz : {sessionDetail?.quiz?.title} — Statut : {sessionDetail?.status}</p>
-              <div className="mt-4">
-                <h4 className="font-bold text-medi-petrol">Participants ({sessionDetail?.playerCount ?? sessionDetail?.participants?.length ?? 0})</h4>
-                <ul className="mt-2 max-h-56 space-y-2 overflow-auto">
-                  {sessionDetail?.participants?.map((p, idx) => (
-                    <li
-                      key={p.socketId || `${p.displayName}-${idx}`}
-                      className="flex items-center justify-between rounded-xl bg-white px-3 py-2"
-                    >
-                      <span>
-                        <span className="block font-medium text-medi-petrol">{p.displayName}</span>
-                        {p.bergerName && <span className="block text-xs text-medi-petrol/50">{p.bergerName}</span>}
-                      </span>
-                      <span className="text-sm font-bold text-medi-green-deep">{p.totalScore} pts</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            </div>
-          </div>
-        )}
       </div>
     </AdminLayout>
   )

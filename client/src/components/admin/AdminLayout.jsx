@@ -21,18 +21,14 @@ function colorForName(name) {
   return AVATAR_COLORS[Math.abs(hash) % AVATAR_COLORS.length]
 }
 
-// Chaque item pointe soit vers une ancre du tableau de bord (#section),
-// soit vers une page dédiée (ex: /admin/history) — les deux cohabitent tant
-// que le back-office n'a pas assez de pages pour justifier de tout séparer.
 const NAV_ITEMS = [
   { key: 'dashboard', to: '/admin', icon: HiOutlineViewGrid, label: 'Tableau de bord' },
-  { key: 'quiz', to: '/admin#quiz-management', icon: HiOutlineBookOpen, label: 'Gestion des quiz' },
-  { key: 'live', to: '/admin#live-sessions', icon: HiOutlineStatusOnline, label: 'Sessions en direct' },
+  { key: 'quizzes', to: '/admin/quizzes', icon: HiOutlineBookOpen, label: 'Mes quiz' },
+  { key: 'sessions', to: '/admin/sessions', icon: HiOutlineStatusOnline, label: 'Mes sessions' },
   { key: 'history', to: '/admin/history', icon: HiOutlineClock, label: 'Historique' },
 ]
 
 function isActive(item, pathname) {
-  if (item.to.includes('#')) return pathname === '/admin' && item.key === 'dashboard'
   return pathname === item.to
 }
 
@@ -63,9 +59,9 @@ export default function AdminLayout({ children }) {
             const Icon = item.icon
             const active = isActive(item, pathname)
             return (
-              <a
+              <Link
                 key={item.key}
-                href={item.to}
+                to={item.to}
                 className={`flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold transition ${
                   active
                     ? 'bg-medi-green-deep text-white'
@@ -74,7 +70,7 @@ export default function AdminLayout({ children }) {
               >
                 <Icon className="text-lg" />
                 {item.label}
-              </a>
+              </Link>
             )
           })}
         </nav>
@@ -127,16 +123,16 @@ export default function AdminLayout({ children }) {
             const Icon = item.icon
             const active = isActive(item, pathname)
             return (
-              <a
+              <Link
                 key={item.key}
-                href={item.to}
+                to={item.to}
                 className={`flex flex-col items-center gap-1 py-2.5 text-[11px] font-bold transition ${
                   active ? 'text-medi-green-deep' : 'text-medi-petrol/50'
                 }`}
               >
                 <Icon className="text-xl" />
                 <span className="truncate px-1">{item.label}</span>
-              </a>
+              </Link>
             )
           })}
         </nav>

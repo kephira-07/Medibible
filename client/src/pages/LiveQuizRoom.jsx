@@ -13,6 +13,9 @@ import { HiOutlineBookOpen } from 'react-icons/hi'
 import { FaBullseye, FaTimes, FaUsers, FaTrophy, FaClock, FaShareAlt, FaChartBar } from 'react-icons/fa'
 
 const MEDALS = ['🥇', '🥈', '🥉']
+// Doit rester synchronisé avec MAX_PLAYERS_PER_SESSION côté serveur
+// (server/src/utils/constants.js) — l'animateur coordonne, il ne compte pas.
+const MAX_PLAYERS = 25
 const AVATAR_COLORS = ['#C1613C', '#8B6F4E', '#D9924A', '#4C8B3E', '#006414']
 function colorForName(name) {
   let hash = 0
@@ -211,6 +214,53 @@ export default function LiveQuizRoom() {
         </div>
 
         <AudioRoom roomName={normalizedCode} displayName={displayName} isHost={joined.isHost} />
+
+        {/* SALLE D'ATTENTE — avant que l'animateur ne lance une question */}
+        {phase === 'lobby' && (
+          <div className="animate-fade-in-up flex w-full flex-col items-center gap-6">
+            <div className="w-full rounded-2xl border-2 border-medi-border bg-white p-6 text-center shadow-[0_18px_38px_rgba(22,50,62,0.08)]">
+              <span className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-medi-gold/15 text-2xl text-medi-gold">
+                <FaClock />
+              </span>
+              <h2 className="mt-3 text-lg font-bold text-medi-petrol">
+                {joined.isHost ? 'En attente de lancement' : "En attente que l'animateur lance le quiz"}
+              </h2>
+              <p className="mt-1 text-sm text-medi-petrol/60">
+                {joined.isHost
+                  ? 'Aucune question ne démarre automatiquement — utilise le bouton ci-dessous quand tu es prêt.'
+                  : 'Les questions vont apparaître ici dès que l’animateur lancera la première.'}
+              </p>
+            </div>
+
+            <div className="w-full rounded-2xl border-2 border-medi-border bg-medi-surface/95 p-5">
+              <p className="mb-3 flex items-center justify-between text-sm font-extrabold text-medi-petrol">
+                <span className="flex items-center gap-2"><FaUsers /> Joueurs connectés</span>
+                <span className="text-xs font-semibold text-medi-petrol/45">{leaderboard.length} / {MAX_PLAYERS}</span>
+              </p>
+              {leaderboard.length > 0 ? (
+                <div className="flex flex-wrap gap-2">
+                  {leaderboard.map((p) => (
+                    <span
+                      key={p.displayName}
+                      className="flex items-center gap-2 rounded-full border-2 border-medi-border bg-white px-3 py-1.5 text-sm font-semibold text-medi-petrol"
+                    >
+                      <span
+                        className="flex h-6 w-6 items-center justify-center rounded-full text-xs font-bold text-white"
+                        style={{ backgroundColor: colorForName(p.displayName) }}
+                      >
+                        {initialFrom(p.displayName)}
+                      </span>
+                      {p.displayName}
+                      {!joined.isHost && p.displayName === displayName && <span className="text-medi-coral"> (Vous)</span>}
+                    </span>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-sm text-medi-petrol/50">Aucun joueur connecté pour le moment.</p>
+              )}
+            </div>
+          </div>
+        )}
 
         {phase === 'closed' && bibleReference && (
           <p className="animate-pop-in rounded-2xl bg-medi-gold/15 px-4 py-2 text-sm font-medium text-medi-petrol">
