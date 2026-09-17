@@ -257,167 +257,166 @@ export default function AdminDashboard() {
           })}
         </section>
 
-        {/* UTILISATEURS CONNECTÉS + SESSIONS EN DIRECT */}
+        {/* UTILISATEURS CONNECTÉS / SESSIONS EN DIRECT / CLASSEMENT / RÉCOMPENSES */}
         <section id="live-sessions" className="grid items-start gap-6 xl:grid-cols-[1.1fr_0.9fr]">
-          <div className="rounded-2xl border-2 border-medi-border bg-white p-5 shadow-[0_18px_40px_rgba(22,50,62,0.05)] sm:p-6">
-            <div className="mb-4 flex items-center justify-between gap-3">
-              <h2 className="text-lg font-bold text-medi-petrol">Utilisateurs connectés</h2>
-              <span className="rounded-full bg-medi-green-deep/8 px-2.5 py-1 text-xs font-semibold text-medi-green-deep">
-                {online.length} en ligne
-              </span>
-            </div>
-
-            <div className="space-y-3">
-              {visibleOnline.map((u) => (
-                <div
-                  key={`${u.displayName}-${u.sessionId || u.socketId}`}
-                  className="flex items-center gap-3 rounded-lg border-2 border-medi-border bg-medi-cream/50 p-3"
-                >
-                  <div
-                    className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-sm font-bold text-white"
-                    style={{ backgroundColor: colorForName(u.displayName) }}
-                  >
-                    {initialFrom(u.displayName)}
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate font-bold text-medi-petrol">{u.displayName}</p>
-                    <p className="truncate text-xs text-medi-petrol/55">{u.bergerName || u.accessCode || '—'}</p>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-xs font-bold text-medi-petrol">{u.totalScore ?? 0} pts</p>
-                    <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-emerald-600">En ligne</p>
-                  </div>
-                </div>
-              ))}
-              {online.length === 0 && (
-                <p className="py-6 text-center text-sm text-medi-petrol/50">Aucun frère ou sœur connecté pour le moment.</p>
-              )}
-            </div>
-
-            {online.length > 6 && (
-              <button
-                type="button"
-                onClick={() => setShowAllOnline((v) => !v)}
-                className="mt-4 w-full rounded-2xl border-2 border-medi-border py-2.5 text-sm font-bold text-medi-petrol/70 transition hover:bg-medi-cream"
-              >
-                {showAllOnline ? 'Réduire la liste' : 'Voir les autres frères et sœurs'}
-              </button>
-            )}
-          </div>
-
-          <div className="rounded-2xl border-2 border-medi-border bg-white p-5 shadow-[0_18px_40px_rgba(22,50,62,0.05)] sm:p-6">
-            <div className="mb-4 flex items-center justify-between gap-3">
-              <h2 className="text-lg font-bold text-medi-petrol">Sessions en direct</h2>
-              <span className="flex items-center gap-1.5 rounded-full bg-medi-coral/10 px-2.5 py-1 text-xs font-bold text-medi-coral">
-                <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-medi-coral" /> Live
-              </span>
-            </div>
-
-            <div className="space-y-3">
-              {sessionsActive.map((session) => {
-                const hasProgress = session.status === 'live' && session.currentQuestionIndex >= 0 && session.questionsCount
-                const progressPct = hasProgress
-                  ? Math.round(((session.currentQuestionIndex + 1) / session.questionsCount) * 100)
-                  : 0
-                return (
-                  <div key={session._id} className="rounded-lg border-2 border-medi-border bg-medi-cream/50 p-3.5">
-                    <div className="flex items-center justify-between gap-3">
-                      <div className="flex items-center gap-2.5 min-w-0">
-                        <span className="shrink-0 rounded-lg bg-medi-gold/20 px-2 py-1 text-[10px] font-extrabold uppercase tracking-wide text-medi-petrol">
-                          #{session.accessCode}
-                        </span>
-                        <p className="truncate font-bold text-medi-petrol">{session.quiz?.title || 'Quiz inconnu'}</p>
-                      </div>
-                      <span className="shrink-0 rounded-full bg-emerald-100 px-2 py-1 text-[10px] font-bold uppercase tracking-[0.1em] text-emerald-700">
-                        {session.status === 'live' ? 'En cours' : 'En attente'}
-                      </span>
-                    </div>
-
-                    <p className="mt-1.5 text-xs text-medi-petrol/55">Créé par : {session.host?.name || 'Inconnu'}</p>
-
-                    {hasProgress ? (
-                      <div className="mt-3">
-                        <div className="mb-1 flex items-center justify-between text-[11px] font-semibold text-medi-petrol/60">
-                          <span>Question {session.currentQuestionIndex + 1} / {session.questionsCount}</span>
-                          <span>{progressPct}%</span>
-                        </div>
-                        <div className="h-1.5 w-full overflow-hidden rounded-full bg-medi-border">
-                          <div className="h-full rounded-full bg-medi-sky transition-all" style={{ width: `${progressPct}%` }} />
-                        </div>
-                      </div>
-                    ) : (
-                      <p className="mt-3 text-xs font-semibold text-medi-petrol/50">En attente du lancement…</p>
-                    )}
-
-                    <div className="mt-3 flex items-center justify-between text-xs text-medi-petrol/65">
-                      <span>{session.playerCount ?? session.participants?.length ?? 0} joueurs</span>
-                      <span>Leader : {session.winner?.displayName || '—'}</span>
-                    </div>
-
-                    <div className="mt-3 flex justify-end">
-                      <Button variant="outline" className="text-sm" onClick={() => openSessionDetail(session._id)}>
-                        Détails
-                      </Button>
-                    </div>
-                  </div>
-                )
-              })}
-              {sessionsActive.length === 0 && (
-                <p className="py-6 text-center text-sm text-medi-petrol/50">Aucune session en direct pour le moment.</p>
-              )}
-            </div>
-          </div>
-        </section>
-
-        {/* CLASSEMENT & RÉCOMPENSES */}
-        <section className="grid gap-6 xl:grid-cols-[1.1fr_0.9fr]">
-          <div className="rounded-2xl border-2 border-medi-border bg-white p-5 shadow-[0_18px_40px_rgba(22,50,62,0.05)] sm:p-6">
-            <h2 className="mb-6 text-lg font-bold text-medi-petrol">Classement général</h2>
-
-            {podium.length > 0 ? (
-              <div className="mb-6 flex items-end justify-center gap-3">
-                {[podium[1], podium[0], podium[2]].map((p, slot) => {
-                  if (!p) return <div key={slot} className="w-24" />
-                  const isFirst = slot === 1
-                  const height = isFirst ? 'h-28' : slot === 0 ? 'h-20' : 'h-14'
-                  const ring = isFirst ? 'ring-medi-gold' : slot === 0 ? 'ring-slate-300' : 'ring-medi-coral/60'
-                  const medal = isFirst ? '🥇' : slot === 0 ? '🥈' : '🥉'
-                  return (
-                    <div key={p.socketId || p.displayName} className="flex w-24 flex-col items-center gap-2">
-                      <span className="text-2xl">{medal}</span>
-                      <div
-                        className={`flex h-12 w-12 items-center justify-center rounded-full text-base font-bold text-white ring-4 ${ring}`}
-                        style={{ backgroundColor: colorForName(p.displayName) }}
-                      >
-                        {initialFrom(p.displayName)}
-                      </div>
-                      <p className="max-w-full truncate text-sm font-bold text-medi-petrol">{p.displayName}</p>
-                      <p className="text-xs font-semibold text-medi-gold">{p.totalScore ?? 0} pts</p>
-                      <div className={`w-full rounded-t-xl bg-gradient-to-b from-medi-gold-light/60 to-medi-gold/20 ${height}`} />
-                    </div>
-                  )
-                })}
+          <div className="flex flex-col gap-6">
+            <div className="rounded-2xl border-2 border-medi-border bg-white p-5 shadow-[0_18px_40px_rgba(22,50,62,0.05)] sm:p-6">
+              <div className="mb-4 flex items-center justify-between gap-3">
+                <h2 className="text-lg font-bold text-medi-petrol">Utilisateurs connectés</h2>
+                <span className="rounded-full bg-medi-green-deep/8 px-2.5 py-1 text-xs font-semibold text-medi-green-deep">
+                  {online.length} en ligne
+                </span>
               </div>
-            ) : (
-              <p className="mb-6 text-center text-sm text-medi-petrol/50">Aucun joueur connecté pour le moment.</p>
-            )}
 
-            <div className="space-y-2.5">
-              {ranking.map((entry, index) => (
-                <div key={entry.socketId || `${entry.displayName}-${index}`} className="flex items-center justify-between rounded-lg border-2 border-medi-border bg-medi-cream/50 p-3">
-                  <div className="flex items-center gap-3">
-                    <span className="flex h-8 w-8 items-center justify-center rounded-full bg-medi-green-deep/8 font-bold text-medi-petrol">
-                      #{index + 4}
-                    </span>
-                    <span className="font-semibold text-medi-petrol">{entry.displayName}</span>
+              <div className="space-y-3">
+                {visibleOnline.map((u) => (
+                  <div
+                    key={`${u.displayName}-${u.sessionId || u.socketId}`}
+                    className="flex items-center gap-3 rounded-lg border-2 border-medi-border bg-medi-cream/50 p-3"
+                  >
+                    <div
+                      className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-sm font-bold text-white"
+                      style={{ backgroundColor: colorForName(u.displayName) }}
+                    >
+                      {initialFrom(u.displayName)}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate font-bold text-medi-petrol">{u.displayName}</p>
+                      <p className="truncate text-xs text-medi-petrol/55">{u.bergerName || u.accessCode || '—'}</p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-xs font-bold text-medi-petrol">{u.totalScore ?? 0} pts</p>
+                      <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-emerald-600">En ligne</p>
+                    </div>
                   </div>
-                  <span className="text-sm font-bold text-medi-gold">{entry.totalScore ?? 0} pts</span>
+                ))}
+                {online.length === 0 && (
+                  <p className="py-6 text-center text-sm text-medi-petrol/50">Aucun frère ou sœur connecté pour le moment.</p>
+                )}
+              </div>
+
+              {online.length > 6 && (
+                <button
+                  type="button"
+                  onClick={() => setShowAllOnline((v) => !v)}
+                  className="mt-4 w-full rounded-2xl border-2 border-medi-border py-2.5 text-sm font-bold text-medi-petrol/70 transition hover:bg-medi-cream"
+                >
+                  {showAllOnline ? 'Réduire la liste' : 'Voir les autres frères et sœurs'}
+                </button>
+              )}
+            </div>
+
+            <div className="rounded-2xl border-2 border-medi-border bg-white p-5 shadow-[0_18px_40px_rgba(22,50,62,0.05)] sm:p-6">
+              <h2 className="mb-6 text-lg font-bold text-medi-petrol">Classement général</h2>
+
+              {podium.length > 0 ? (
+                <div className="mb-6 flex items-end justify-center gap-3">
+                  {[podium[1], podium[0], podium[2]].map((p, slot) => {
+                    if (!p) return <div key={slot} className="w-24" />
+                    const isFirst = slot === 1
+                    const height = isFirst ? 'h-28' : slot === 0 ? 'h-20' : 'h-14'
+                    const ring = isFirst ? 'ring-medi-gold' : slot === 0 ? 'ring-slate-300' : 'ring-medi-coral/60'
+                    const medal = isFirst ? '🥇' : slot === 0 ? '🥈' : '🥉'
+                    return (
+                      <div key={p.socketId || p.displayName} className="flex w-24 flex-col items-center gap-2">
+                        <span className="text-2xl">{medal}</span>
+                        <div
+                          className={`flex h-12 w-12 items-center justify-center rounded-full text-base font-bold text-white ring-4 ${ring}`}
+                          style={{ backgroundColor: colorForName(p.displayName) }}
+                        >
+                          {initialFrom(p.displayName)}
+                        </div>
+                        <p className="max-w-full truncate text-sm font-bold text-medi-petrol">{p.displayName}</p>
+                        <p className="text-xs font-semibold text-medi-gold">{p.totalScore ?? 0} pts</p>
+                        <div className={`w-full rounded-t-xl bg-gradient-to-b from-medi-gold-light/60 to-medi-gold/20 ${height}`} />
+                      </div>
+                    )
+                  })}
                 </div>
-              ))}
+              ) : (
+                <p className="mb-6 text-center text-sm text-medi-petrol/50">Aucun joueur connecté pour le moment.</p>
+              )}
+
+              <div className="space-y-2.5">
+                {ranking.map((entry, index) => (
+                  <div key={entry.socketId || `${entry.displayName}-${index}`} className="flex items-center justify-between rounded-lg border-2 border-medi-border bg-medi-cream/50 p-3">
+                    <div className="flex items-center gap-3">
+                      <span className="flex h-8 w-8 items-center justify-center rounded-full bg-medi-green-deep/8 font-bold text-medi-petrol">
+                        #{index + 4}
+                      </span>
+                      <span className="font-semibold text-medi-petrol">{entry.displayName}</span>
+                    </div>
+                    <span className="text-sm font-bold text-medi-gold">{entry.totalScore ?? 0} pts</span>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
 
           <div className="flex flex-col gap-6">
+            <div className="rounded-2xl border-2 border-medi-border bg-white p-5 shadow-[0_18px_40px_rgba(22,50,62,0.05)] sm:p-6">
+              <div className="mb-4 flex items-center justify-between gap-3">
+                <h2 className="text-lg font-bold text-medi-petrol">Sessions en direct</h2>
+                <span className="flex items-center gap-1.5 rounded-full bg-medi-coral/10 px-2.5 py-1 text-xs font-bold text-medi-coral">
+                  <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-medi-coral" /> Live
+                </span>
+              </div>
+
+              <div className="space-y-3">
+                {sessionsActive.map((session) => {
+                  const hasProgress = session.status === 'live' && session.currentQuestionIndex >= 0 && session.questionsCount
+                  const progressPct = hasProgress
+                    ? Math.round(((session.currentQuestionIndex + 1) / session.questionsCount) * 100)
+                    : 0
+                  return (
+                    <div key={session._id} className="rounded-lg border-2 border-medi-border bg-medi-cream/50 p-3.5">
+                      <div className="flex items-center justify-between gap-3">
+                        <div className="flex items-center gap-2.5 min-w-0">
+                          <span className="shrink-0 rounded-lg bg-medi-gold/20 px-2 py-1 text-[10px] font-extrabold uppercase tracking-wide text-medi-petrol">
+                            #{session.accessCode}
+                          </span>
+                          <p className="truncate font-bold text-medi-petrol">{session.quiz?.title || 'Quiz inconnu'}</p>
+                        </div>
+                        <span className="shrink-0 rounded-full bg-emerald-100 px-2 py-1 text-[10px] font-bold uppercase tracking-[0.1em] text-emerald-700">
+                          {session.status === 'live' ? 'En cours' : 'En attente'}
+                        </span>
+                      </div>
+
+                      <p className="mt-1.5 text-xs text-medi-petrol/55">Créé par : {session.host?.name || 'Inconnu'}</p>
+
+                      {hasProgress ? (
+                        <div className="mt-3">
+                          <div className="mb-1 flex items-center justify-between text-[11px] font-semibold text-medi-petrol/60">
+                            <span>Question {session.currentQuestionIndex + 1} / {session.questionsCount}</span>
+                            <span>{progressPct}%</span>
+                          </div>
+                          <div className="h-1.5 w-full overflow-hidden rounded-full bg-medi-border">
+                            <div className="h-full rounded-full bg-medi-sky transition-all" style={{ width: `${progressPct}%` }} />
+                          </div>
+                        </div>
+                      ) : (
+                        <p className="mt-3 text-xs font-semibold text-medi-petrol/50">En attente du lancement…</p>
+                      )}
+
+                      <div className="mt-3 flex items-center justify-between text-xs text-medi-petrol/65">
+                        <span>{session.playerCount ?? session.participants?.length ?? 0} joueurs</span>
+                        <span>Leader : {session.winner?.displayName || '—'}</span>
+                      </div>
+
+                      <div className="mt-3 flex justify-end">
+                        <Button variant="outline" className="text-sm" onClick={() => openSessionDetail(session._id)}>
+                          Détails
+                        </Button>
+                      </div>
+                    </div>
+                  )
+                })}
+                {sessionsActive.length === 0 && (
+                  <p className="py-6 text-center text-sm text-medi-petrol/50">Aucune session en direct pour le moment.</p>
+                )}
+              </div>
+            </div>
+
             <div className="rounded-2xl border-2 border-medi-border bg-white p-5 shadow-[0_18px_40px_rgba(22,50,62,0.05)] sm:p-6">
               <div className="mb-4 flex items-center justify-between">
                 <h2 className="text-lg font-bold text-medi-petrol">Derniers gagnants</h2>
