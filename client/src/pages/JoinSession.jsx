@@ -49,6 +49,8 @@ export default function JoinSession() {
             <label className="flex flex-col gap-2 text-sm font-bold text-medi-petrol/75">
               Code de session
               <input
+                id="accessCode"
+                name="accessCode"
                 value={accessCode}
                 onChange={(e) => setAccessCode(e.target.value)}
                 placeholder="AB12CD"
@@ -60,6 +62,8 @@ export default function JoinSession() {
             <label className="flex flex-col gap-2 text-sm font-bold text-medi-petrol/75">
               Votre prénom
               <input
+                id="displayName"
+                name="displayName"
                 value={displayName}
                 onChange={(e) => setDisplayName(e.target.value)}
                 placeholder="Ex: Julie"

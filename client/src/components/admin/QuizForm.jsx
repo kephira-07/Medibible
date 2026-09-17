@@ -126,6 +126,8 @@ export default function QuizForm({ initialQuiz, onSubmit, submitting, error }) {
         <label className="mb-4 block">
           <span className="mb-1.5 block text-xs font-bold uppercase tracking-wide text-medi-petrol/50">Titre du quiz</span>
           <input
+            id="quizTitle"
+            name="quizTitle"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             placeholder="Ex : Les Actes des Apôtres • Foi et Mission"
@@ -137,6 +139,8 @@ export default function QuizForm({ initialQuiz, onSubmit, submitting, error }) {
         <label className="block">
           <span className="mb-1.5 block text-xs font-bold uppercase tracking-wide text-medi-petrol/50">Notes pour l'animateur (optionnel)</span>
           <textarea
+            id="quizDescription"
+            name="quizDescription"
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             placeholder="Ex : Quiz interactif pour la séance d'étude de jeunesse de vendredi soir."

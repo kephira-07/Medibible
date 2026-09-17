@@ -76,6 +76,7 @@ export default function QuestionEditor({ question, index, total, onChange, onRem
       <label className="mb-4 block">
         <span className="mb-1.5 block text-xs font-bold uppercase tracking-wide text-medi-petrol/50">Intitulé de la question</span>
         <textarea
+          name={`question-text-${index}`}
           value={question.text}
           onChange={(e) => update({ text: e.target.value })}
           placeholder="Énoncé de la question"
@@ -90,6 +91,7 @@ export default function QuestionEditor({ question, index, total, onChange, onRem
           <div className="flex items-center gap-2 rounded-xl border-2 border-medi-border bg-white px-3">
             <HiOutlineBookOpen className="shrink-0 text-medi-petrol/40" />
             <input
+              name={`bible-reference-${index}`}
               value={question.bibleReference}
               onChange={(e) => update({ bibleReference: e.target.value })}
               placeholder="ex : Matthieu 14:29"
@@ -164,6 +166,7 @@ export default function QuestionEditor({ question, index, total, onChange, onRem
               {LETTERS[i]}
             </span>
             <input
+              name={`option-${index}-${i}`}
               value={option.text}
               onChange={(e) => updateOption(i, { text: e.target.value })}
               placeholder={`Option ${LETTERS[i]}`}

@@ -78,6 +78,8 @@ export default function MyQuizzesPage() {
         <div className="relative w-full sm:max-w-sm">
           <FaSearch className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-medi-petrol/35" />
           <input
+            id="quizSearch"
+            name="quizSearch"
             value={search}
             onChange={(e) => {
               setSearch(e.target.value)

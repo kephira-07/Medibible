@@ -57,6 +57,8 @@ export default function QuestionBankPicker({ onAdd, onClose }) {
           <div className="relative">
             <FaSearch className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-medi-petrol/35" />
             <input
+              id="questionBankSearch"
+              name="questionBankSearch"
               autoFocus
               value={search}
               onChange={(e) => setSearch(e.target.value)}
