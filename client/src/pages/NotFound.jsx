@@ -13,7 +13,7 @@ export default function NotFound() {
           Ce lien ne mène à rien ici — vérifie le code de session ou reviens à l'accueil.
         </p>
         <Link to="/" className="mt-6 inline-block w-full">
-          <Button variant="coral" className="w-full">Retour à l'accueil</Button>
+          <Button variant="primary" className="w-full">Retour à l'accueil</Button>
         </Link>
       </div>
     </main>

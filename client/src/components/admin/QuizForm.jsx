@@ -1,8 +1,10 @@
 import { useState } from 'react'
 import QuestionEditor from './QuestionEditor.jsx'
+import QuestionBankPicker from './QuestionBankPicker.jsx'
 import Button from '../common/Button.jsx'
 import { HiOutlineAdjustments, HiOutlineLightBulb, HiOutlinePlus, HiOutlinePencil } from 'react-icons/hi'
 import { HiOutlineBookOpen, HiOutlineClock } from 'react-icons/hi'
+import { FaBookOpen } from 'react-icons/fa'
 
 function emptyQuestion() {
   return {
@@ -12,6 +14,7 @@ function emptyQuestion() {
       { text: '', isCorrect: false },
     ],
     timeLimit: 30,
+    points: 100,
     bibleReference: '',
   }
 }
@@ -52,6 +55,14 @@ export default function QuizForm({ initialQuiz, onSubmit, submitting, error }) {
   )
   const [expandedIndex, setExpandedIndex] = useState(0)
   const [localError, setLocalError] = useState(null)
+  const [bankOpen, setBankOpen] = useState(false)
+
+  const addQuestionFromBank = (question) => {
+    const { _id, ...rest } = question
+    const copy = { ...rest, options: rest.options.map(({ _id: optId, ...opt }) => ({ ...opt })) }
+    setQuestions((prev) => [...prev, copy])
+    setExpandedIndex(questions.length)
+  }
 
   const updateQuestion = (index, updated) =>
     setQuestions((prev) => prev.map((q, i) => (i === index ? updated : q)))
@@ -162,17 +173,35 @@ export default function QuizForm({ initialQuiz, onSubmit, submitting, error }) {
         </div>
       </div>
 
-      <button
-        type="button"
-        onClick={addQuestion}
-        className="flex flex-col items-center gap-1 rounded-2xl border-2 border-dashed border-medi-green-sage bg-medi-green-sage/5 p-5 text-center transition hover:bg-medi-green-sage/10"
-      >
-        <span className="flex h-9 w-9 items-center justify-center rounded-full bg-medi-green-deep text-white">
-          <HiOutlinePlus />
-        </span>
-        <span className="font-bold text-medi-green-deep">Ajouter une question</span>
-        <span className="text-xs text-medi-petrol/50">Choix multiples pour tester les connaissances bibliques.</span>
-      </button>
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+        <button
+          type="button"
+          onClick={addQuestion}
+          className="flex flex-col items-center gap-1 rounded-2xl border-2 border-dashed border-medi-green-sage bg-medi-green-sage/5 p-5 text-center transition hover:bg-medi-green-sage/10"
+        >
+          <span className="flex h-9 w-9 items-center justify-center rounded-full bg-medi-green-deep text-white">
+            <HiOutlinePlus />
+          </span>
+          <span className="font-bold text-medi-green-deep">Ajouter une question</span>
+          <span className="text-xs text-medi-petrol/50">Choix multiples pour tester les connaissances bibliques.</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setBankOpen(true)}
+          className="flex flex-col items-center gap-1 rounded-2xl border-2 border-dashed border-medi-border bg-medi-cream/40 p-5 text-center transition hover:bg-medi-cream"
+        >
+          <span className="flex h-9 w-9 items-center justify-center rounded-full bg-medi-petrol/10 text-medi-petrol">
+            <FaBookOpen />
+          </span>
+          <span className="font-bold text-medi-petrol">Réutiliser une question</span>
+          <span className="text-xs text-medi-petrol/50">Piocher une question déjà écrite dans un autre quiz.</span>
+        </button>
+      </div>
+
+      {bankOpen && (
+        <QuestionBankPicker onAdd={addQuestionFromBank} onClose={() => setBankOpen(false)} />
+      )}
 
       <div className="flex items-start gap-3 rounded-2xl border-2 border-medi-gold/30 bg-medi-gold/8 p-4">
         <HiOutlineLightBulb className="mt-0.5 shrink-0 text-medi-gold" />

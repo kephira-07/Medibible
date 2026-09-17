@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import api from '../../services/api.js'
 import QuizForm from '../../components/admin/QuizForm.jsx'
-import AppHeader from '../../components/common/AppHeader.jsx'
+import AdminLayout from '../../components/admin/AdminLayout.jsx'
 
 function extractErrorMessage(err) {
   const data = err.response?.data
@@ -48,37 +48,37 @@ export default function QuizEditorPage() {
 
   if (loading) {
     return (
-      <main className="flex min-h-svh items-center justify-center bg-medi-cream">
-        <p className="flex items-center gap-2 text-medi-petrol/60">
-          <span className="h-4 w-4 animate-spin rounded-full border-2 border-medi-sky border-t-transparent" />
-          Chargement…
-        </p>
-      </main>
+      <AdminLayout>
+        <div className="flex min-h-[60vh] items-center justify-center">
+          <p className="flex items-center gap-2 text-medi-petrol/60">
+            <span className="h-4 w-4 animate-spin rounded-full border-2 border-medi-sky border-t-transparent" />
+            Chargement…
+          </p>
+        </div>
+      </AdminLayout>
     )
   }
 
   return (
-    <main className="flex min-h-svh flex-col items-center gap-6 bg-medi-cream px-4 py-4">
-      <div className="w-full max-w-2xl">
-        <AppHeader />
-      </div>
-
-      <div className="w-full max-w-2xl">
-        <div className="mb-1 flex items-center justify-between gap-3">
-          <p className="text-xs font-bold uppercase tracking-[0.22em] text-medi-green-deep/70">Éditeur de quiz</p>
-          <span className="rounded-full bg-medi-chip px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-medi-petrol/70">
-            {initialQuiz?.status === 'published' ? 'Publié' : 'Brouillon'}
-          </span>
+    <AdminLayout>
+      <div className="flex flex-col items-center gap-6 px-4 py-6">
+        <div className="w-full max-w-2xl">
+          <div className="mb-1 flex items-center justify-between gap-3">
+            <p className="text-xs font-bold uppercase tracking-[0.22em] text-medi-green-deep/70">Éditeur de quiz</p>
+            <span className="rounded-full bg-medi-chip px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-medi-petrol/70">
+              {initialQuiz?.status === 'published' ? 'Publié' : 'Brouillon'}
+            </span>
+          </div>
+          <h1 className="text-2xl font-extrabold text-medi-petrol">
+            {isEditing ? 'Modifier le quiz' : 'Créer un quiz'}
+          </h1>
+          <p className="mt-1 text-sm text-medi-petrol/60">
+            Rédige tes questions et prépare les réponses pour dynamiser ton assemblée ou ton groupe de maison.
+          </p>
         </div>
-        <h1 className="text-2xl font-extrabold text-medi-petrol">
-          {isEditing ? 'Modifier le quiz' : 'Créer un quiz'}
-        </h1>
-        <p className="mt-1 text-sm text-medi-petrol/60">
-          Rédige tes questions et prépare les réponses pour dynamiser ton assemblée ou ton groupe de maison.
-        </p>
-      </div>
 
-      <QuizForm initialQuiz={initialQuiz} onSubmit={handleSubmit} submitting={submitting} error={error} />
-    </main>
+        <QuizForm initialQuiz={initialQuiz} onSubmit={handleSubmit} submitting={submitting} error={error} />
+      </div>
+    </AdminLayout>
   )
 }

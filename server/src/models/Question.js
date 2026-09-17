@@ -3,6 +3,7 @@ import {
   QUESTION_MIN_OPTIONS,
   QUESTION_MAX_OPTIONS,
   DEFAULT_TIME_LIMIT_SECONDS,
+  DEFAULT_BASE_SCORE,
 } from '../utils/constants.js'
 
 // Une option de réponse — pas de champ "catégorie" par choix, conformément au cahier des charges
@@ -37,6 +38,9 @@ const QuestionSchema = new mongoose.Schema(
       required: true,
     },
     timeLimit: { type: Number, default: DEFAULT_TIME_LIMIT_SECONDS, min: 5 },
+    // Points attribués pour une bonne réponse à cette question — ajustable par
+    // l'animateur, 100 par défaut (un bonus de vitesse s'y ajoute ensuite).
+    points: { type: Number, default: DEFAULT_BASE_SCORE, min: 0 },
     // Référence biblique explicative affichée après la question, ex: "Matthieu 14:29"
     bibleReference: { type: String, trim: true, default: '' },
   },

@@ -34,7 +34,6 @@ export default function LiveQuizRoom() {
   const normalizedCode = accessCode?.toUpperCase()
   const displayName = location.state?.displayName || user?.name
   const bergerName = location.state?.bergerName || ''
-  const email = location.state?.email || ''
 
   const [error, setError] = useState(null)
   const [joined, setJoined] = useState(null)
@@ -57,7 +56,7 @@ export default function LiveQuizRoom() {
   useEffect(() => {
     if (!connected || !displayName || !normalizedCode) return
 
-    socket.emit('session:join', { accessCode: normalizedCode, displayName, bergerName, email }, (res) => {
+    socket.emit('session:join', { accessCode: normalizedCode, displayName, bergerName }, (res) => {
       if (res?.error) {
         setError(res.error)
         return
@@ -71,7 +70,7 @@ export default function LiveQuizRoom() {
         setPhase('ended')
       }
     })
-  }, [connected, displayName, bergerName, email, normalizedCode, socket])
+  }, [connected, displayName, bergerName, normalizedCode, socket])
 
   // Écoute des diffusions temps réel
   useEffect(() => {
@@ -367,7 +366,7 @@ export default function LiveQuizRoom() {
               </div>
 
               <div className="flex w-full flex-col gap-3">
-                <Button variant="coral" className="w-full text-base" onClick={() => navigate('/join')}>
+                <Button variant="primary" className="w-full text-base" onClick={() => navigate('/join')}>
                   Rejoindre une nouvelle partie
                 </Button>
                 <Button variant="outline" className="w-full" onClick={shareScore}>

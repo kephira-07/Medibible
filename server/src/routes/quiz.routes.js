@@ -5,6 +5,7 @@ import {
   createQuiz,
   updateQuiz,
   deleteQuiz,
+  listQuestionBank,
 } from '../controllers/quizController.js'
 import { authenticate, authorize } from '../middlewares/auth.js'
 
@@ -15,6 +16,7 @@ const router = Router()
 router.use(authenticate, authorize('admin'))
 
 router.get('/', listQuizzes)
+router.get('/bank/questions', listQuestionBank)
 router.get('/:id', getQuiz)
 router.post('/', createQuiz)
 router.put('/:id', updateQuiz)

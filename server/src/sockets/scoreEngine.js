@@ -14,7 +14,8 @@ export function computeAnswerResult({ question, selectedOptionIds, endsAt, answe
   const totalMs = question.timeLimit * 1000
   const remainingMs = Math.max(0, endsAt - answeredAt)
   const ratio = totalMs > 0 ? remainingMs / totalMs : 0
-  const pointsEarned = Math.round(scoring.base + ratio * scoring.speedBonus)
+  const basePoints = question.points ?? scoring.base
+  const pointsEarned = Math.round(basePoints + ratio * scoring.speedBonus)
 
   return { isCorrect: true, pointsEarned }
 }

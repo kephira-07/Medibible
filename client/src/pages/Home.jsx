@@ -28,7 +28,7 @@ export default function Home() {
 
         <div className="mt-8 flex w-full flex-col gap-3">
           <Link to="/join" className="w-full">
-            <Button variant="coral" className="w-full text-base">
+            <Button variant="primary" className="w-full text-base">
               Rejoindre un quiz
             </Button>
           </Link>

@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import api from '../../services/api.js'
 import Button from '../../components/common/Button.jsx'
-import BrandMark from '../../components/common/BrandMark.jsx'
+import AdminLayout from '../../components/admin/AdminLayout.jsx'
 import { useAuth } from '../../context/AuthContext.jsx'
 import {
   FaUserFriends,
@@ -43,14 +43,8 @@ function colorForName(name) {
   return AVATAR_COLORS[Math.abs(hash) % AVATAR_COLORS.length]
 }
 
-const NAV_SECTIONS = [
-  { id: 'dashboard-top', label: 'Tableau de bord' },
-  { id: 'quiz-management', label: 'Gestion des quiz' },
-  { id: 'live-sessions', label: 'Sessions en direct' },
-]
-
 export default function AdminDashboard() {
-  const { user, logout } = useAuth()
+  const { user } = useAuth()
   const navigate = useNavigate()
   const [quizzes, setQuizzes] = useState([])
   const [error, setError] = useState(null)
@@ -185,44 +179,8 @@ export default function AdminDashboard() {
   const visibleOnline = showAllOnline ? online : online.slice(0, 6)
 
   return (
-    <main id="dashboard-top" className="min-h-svh bg-medi-cream px-4 py-5 text-medi-petrol sm:px-6 lg:px-8">
-      <div className="mx-auto flex w-full max-w-7xl flex-col gap-6">
-        {/* NAVIGATION */}
-        <header className="flex flex-wrap items-center justify-between gap-3 rounded-full border-2 border-medi-border bg-white px-4 py-2.5 shadow-[0_10px_24px_rgba(22,50,62,0.06)]">
-          <Link to="/" className="flex items-center gap-2">
-            <BrandMark className="h-9 w-9" />
-            <span className="hidden text-base font-extrabold uppercase tracking-widest text-medi-petrol sm:inline">MediBible</span>
-            <span className="ml-1 rounded-full bg-medi-green-sage/15 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-medi-green-deep">
-              Communauté active
-            </span>
-          </Link>
-
-          <nav className="flex flex-wrap items-center gap-1">
-            {NAV_SECTIONS.map((s) => (
-              <a
-                key={s.id}
-                href={`#${s.id}`}
-                className="whitespace-nowrap rounded-full px-3 py-1.5 text-sm font-semibold text-medi-petrol/65 transition hover:bg-medi-cream hover:text-medi-petrol"
-              >
-                {s.label}
-              </a>
-            ))}
-          </nav>
-
-          <div className="flex items-center gap-3">
-            <div
-              className="flex h-9 w-9 items-center justify-center rounded-full text-sm font-bold text-white"
-              style={{ backgroundColor: colorForName(user?.name) }}
-            >
-              {initialFrom(user?.name)}
-            </div>
-            <span className="hidden text-sm font-semibold text-medi-petrol sm:inline">{user?.name || 'Animateur'}</span>
-            <button type="button" onClick={logout} className="text-sm font-semibold text-medi-coral transition hover:underline">
-              Déconnexion
-            </button>
-          </div>
-        </header>
-
+    <AdminLayout>
+      <div id="dashboard-top" className="mx-auto flex w-full max-w-7xl flex-col gap-6 px-4 py-5 sm:px-6 lg:px-8">
         {/* HERO */}
         <section className="flex flex-col gap-4 rounded-2xl border-2 border-medi-border bg-white p-6 shadow-[0_18px_40px_rgba(22,50,62,0.06)] sm:p-8 lg:flex-row lg:items-center lg:justify-between">
           <div>
@@ -236,7 +194,7 @@ export default function AdminDashboard() {
             </p>
           </div>
           <Link to="/admin/quizzes/new" className="shrink-0">
-            <Button variant="gold" className="w-full text-base sm:w-auto">+ Nouveau quiz</Button>
+            <Button variant="primary" className="w-full text-base sm:w-auto">+ Nouveau quiz</Button>
           </Link>
         </section>
 
@@ -417,34 +375,16 @@ export default function AdminDashboard() {
               </div>
             </div>
 
-            <div className="rounded-2xl border-2 border-medi-border bg-white p-5 shadow-[0_18px_40px_rgba(22,50,62,0.05)] sm:p-6">
-              <div className="mb-4 flex items-center justify-between">
-                <h2 className="text-lg font-bold text-medi-petrol">Derniers gagnants</h2>
-                <Button variant="outline" className="text-sm" onClick={loadAdmin}>Rafraîchir</Button>
+            <Link
+              to="/admin/history"
+              className="flex items-center justify-between gap-3 rounded-2xl border-2 border-medi-border bg-white p-5 transition hover:border-medi-green-sage sm:p-6"
+            >
+              <div>
+                <h2 className="text-lg font-bold text-medi-petrol">Derniers gagnants &amp; historique</h2>
+                <p className="mt-1 text-sm text-medi-petrol/55">Sessions passées et quiz déjà utilisés, sur une page dédiée.</p>
               </div>
-              <div className="space-y-3">
-                {winners.map((w) => (
-                  <div key={w.sessionId || w.accessCode} className="flex items-start gap-3 rounded-lg border-2 border-medi-border bg-medi-cream/50 p-3">
-                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-medi-gold/20 text-medi-gold">
-                      <FaTrophy />
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <div className="flex items-center justify-between gap-2">
-                        <p className="truncate font-bold text-medi-petrol">{w.winner?.displayName || '—'}</p>
-                        <span className="shrink-0 text-sm font-bold text-medi-gold">{w.winner?.totalScore ?? 0} pts</span>
-                      </div>
-                      <p className="truncate text-xs text-medi-petrol/60">{w.quizTitle} • Animé par {w.hostName}</p>
-                      <p className="mt-1 text-[10px] font-semibold uppercase tracking-[0.12em] text-medi-petrol/45">
-                        {w.endedAt ? new Date(w.endedAt).toLocaleString('fr-FR') : '—'}
-                      </p>
-                    </div>
-                  </div>
-                ))}
-                {winners.length === 0 && (
-                  <p className="py-4 text-center text-sm text-medi-petrol/50">Pas encore de session terminée.</p>
-                )}
-              </div>
-            </div>
+              <FaTrophy className="shrink-0 text-2xl text-medi-gold" />
+            </Link>
 
             <div className="rounded-2xl border-2 border-medi-gold/30 bg-medi-gold/8 p-5 sm:p-6">
               <p className="flex items-center gap-2 text-xs font-bold uppercase tracking-wide text-medi-gold">
@@ -475,7 +415,7 @@ export default function AdminDashboard() {
                 />
               </div>
               <Link to="/admin/quizzes/new" className="w-full sm:w-auto">
-                <Button variant="sky" className="w-full sm:w-auto">+ Nouveau quiz</Button>
+                <Button variant="primary" className="w-full sm:w-auto">+ Nouveau quiz</Button>
               </Link>
             </div>
           </div>
@@ -580,6 +520,6 @@ export default function AdminDashboard() {
           </div>
         )}
       </div>
-    </main>
+    </AdminLayout>
   )
 }

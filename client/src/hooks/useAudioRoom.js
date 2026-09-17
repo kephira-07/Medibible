@@ -1,6 +1,11 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { Room, RoomEvent, Track } from 'livekit-client'
+import { Room, RoomEvent, Track, setLogLevel, LogLevel } from 'livekit-client'
 import api from '../services/api.js'
+
+// Le SDK LiveKit journalise par défaut chaque changement d'état de connexion,
+// piste et participant dans la console — bruyant mais sans secret réel (le
+// jeton d'accès y apparaît déjà masqué). On ne garde que warn/error.
+setLogLevel(LogLevel.warn)
 
 // Traduit les erreurs navigateur getUserMedia (souvent obscures : "Permission
 // denied" tel quel) en message actionnable pour l'utilisateur.

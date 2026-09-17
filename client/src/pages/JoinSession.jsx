@@ -2,55 +2,24 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import Button from '../components/common/Button.jsx'
 import AppHeader from '../components/common/AppHeader.jsx'
+import WelcomeIllustration from '../components/common/WelcomeIllustration.jsx'
 
 const BERGERS = ['Charles HE', 'Charles DAKPE', 'Edwige', 'Délali', 'Pascaline', 'Prunelle']
-const EMAIL_STORAGE_KEY = 'medibible_player_email'
-
-function readSavedEmail() {
-  try {
-    return localStorage.getItem(EMAIL_STORAGE_KEY) || ''
-  } catch {
-    return ''
-  }
-}
 
 export default function JoinSession() {
   const navigate = useNavigate()
   const [accessCode, setAccessCode] = useState('')
   const [displayName, setDisplayName] = useState('')
   const [bergerName, setBergerName] = useState('')
-  const [email, setEmail] = useState('')
-  // Une fois connu, l'email n'est plus redemandé aux prochaines visites —
-  // seul un lien "Pas vous ?" permet de le changer.
-  const [savedEmail, setSavedEmail] = useState(readSavedEmail)
 
-  const needsEmail = !savedEmail
-  const effectiveEmail = savedEmail || email
-
-  const forgetEmail = () => {
-    try {
-      localStorage.removeItem(EMAIL_STORAGE_KEY)
-    } catch {
-      // stockage indisponible : on repart quand même avec le champ visible
-    }
-    setSavedEmail('')
-    setEmail('')
-  }
+  const canSubmit = accessCode.trim() && displayName.trim() && bergerName
 
   const handleSubmit = (e) => {
     e.preventDefault()
-    if (!accessCode.trim() || !displayName.trim() || !bergerName || !effectiveEmail.trim()) return
-
-    if (needsEmail) {
-      try {
-        localStorage.setItem(EMAIL_STORAGE_KEY, effectiveEmail.trim())
-      } catch {
-        // stockage indisponible : on continue sans mémoriser, l'email sera redemandé la prochaine fois
-      }
-    }
+    if (!canSubmit) return
 
     navigate(`/session/${accessCode.trim().toUpperCase()}`, {
-      state: { displayName: displayName.trim(), bergerName, email: effectiveEmail.trim() },
+      state: { displayName: displayName.trim(), bergerName },
     })
   }
 
@@ -62,6 +31,10 @@ export default function JoinSession() {
 
       <div className="flex w-full flex-1 items-center justify-center">
         <div className="w-full max-w-md rounded-2xl border-2 border-medi-border bg-medi-surface/95 p-6 shadow-[0_22px_50px_rgba(22,50,62,0.1)] backdrop-blur-sm sm:p-8">
+          <div className="mb-4 flex justify-center">
+            <WelcomeIllustration className="h-32 w-32" />
+          </div>
+
           <div className="mb-6 text-center">
             <p className="text-[11px] font-bold uppercase tracking-[0.28em] text-medi-coral">
               Session en cours
@@ -95,36 +68,6 @@ export default function JoinSession() {
               />
             </label>
 
-            {needsEmail ? (
-              <label className="flex flex-col gap-2 text-sm font-bold text-medi-petrol/75">
-                Votre adresse email
-                <input
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="exemple@email.com"
-                  required
-                  className="min-h-12 rounded-2xl border-2 border-medi-border bg-white px-4 text-medi-petrol outline-none transition focus:border-medi-sky focus:ring-4 focus:ring-medi-sky/20"
-                />
-                <span className="text-xs font-normal text-medi-petrol/45">
-                  Demandée une seule fois — plus besoin de la retaper la prochaine fois.
-                </span>
-              </label>
-            ) : (
-              <div className="flex items-center justify-between rounded-2xl border-2 border-medi-border bg-white px-4 py-2.5 text-sm">
-                <span className="text-medi-petrol/70">
-                  Connecté(e) avec <span className="font-bold text-medi-petrol">{savedEmail}</span>
-                </span>
-                <button
-                  type="button"
-                  onClick={forgetEmail}
-                  className="font-bold text-medi-sky hover:underline"
-                >
-                  Pas vous ?
-                </button>
-              </div>
-            )}
-
             <div className="flex flex-col gap-2 text-sm font-bold text-medi-petrol/75">
               Votre berger
               <div className="flex flex-wrap gap-2">
@@ -146,9 +89,9 @@ export default function JoinSession() {
             </div>
 
             <Button
-              variant="coral"
+              variant="primary"
               type="submit"
-              disabled={!accessCode.trim() || !displayName.trim() || !bergerName || !effectiveEmail.trim()}
+              disabled={!canSubmit}
               className="mt-2 w-full text-base"
             >
               Rejoindre

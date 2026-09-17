@@ -55,6 +55,27 @@ export async function listQuizzes(req, res, next) {
   }
 }
 
+// GET /api/quizzes/bank/questions — questions déjà écrites dans n'importe quel
+// quiz, pour que l'animateur en réutilise une plutôt que de la retaper.
+export async function listQuestionBank(req, res, next) {
+  try {
+    const search = normalizeText(req.query.q || '', 200).toLowerCase()
+    const quizzes = await Quiz.find().sort({ updatedAt: -1 }).select('title questions')
+
+    const bank = []
+    for (const quiz of quizzes) {
+      for (const question of quiz.questions) {
+        if (search && !question.text.toLowerCase().includes(search)) continue
+        bank.push({ quizId: quiz._id, quizTitle: quiz.title, question })
+      }
+    }
+
+    res.json(bank.slice(0, 200))
+  } catch (err) {
+    next(err)
+  }
+}
+
 // GET /api/quizzes/:id — quiz complet, pour édition ou lancement d'une session
 export async function getQuiz(req, res, next) {
   try {

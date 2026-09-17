@@ -1,5 +1,5 @@
 import { FaTimes, FaCopy, FaCheck } from 'react-icons/fa'
-import { HiOutlineBookOpen, HiOutlineClock } from 'react-icons/hi'
+import { HiOutlineBookOpen, HiOutlineClock, HiOutlineStar } from 'react-icons/hi'
 
 const MIN_OPTIONS = 2
 // Doit rester synchronisé avec QUESTION_MAX_OPTIONS côté serveur (server/src/utils/constants.js)
@@ -11,6 +11,10 @@ const OPTION_COLORS = ['bg-medi-coral', 'bg-medi-sky', 'bg-medi-gold', 'bg-medi-
 const TIME_STEP = 5
 const TIME_MIN = 5
 const TIME_MAX = 120
+const POINTS_STEP = 25
+const POINTS_MIN = 0
+const POINTS_MAX = 1000
+const POINTS_DEFAULT = 100
 
 export default function QuestionEditor({ question, index, total, onChange, onRemove, onDuplicate }) {
   const update = (patch) => onChange(index, { ...question, ...patch })
@@ -33,6 +37,11 @@ export default function QuestionEditor({ question, index, total, onChange, onRem
   const adjustTime = (delta) => {
     const next = Math.min(TIME_MAX, Math.max(TIME_MIN, (question.timeLimit || TIME_MIN) + delta))
     update({ timeLimit: next })
+  }
+
+  const adjustPoints = (delta) => {
+    const next = Math.min(POINTS_MAX, Math.max(POINTS_MIN, (question.points ?? POINTS_DEFAULT) + delta))
+    update({ points: next })
   }
 
   return (
@@ -75,8 +84,8 @@ export default function QuestionEditor({ question, index, total, onChange, onRem
         />
       </label>
 
-      <div className="mb-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
-        <label className="block">
+      <div className="mb-4 grid grid-cols-1 gap-3 sm:grid-cols-3">
+        <label className="block sm:col-span-1">
           <span className="mb-1.5 block text-xs font-bold uppercase tracking-wide text-medi-petrol/50">Référence biblique (optionnel)</span>
           <div className="flex items-center gap-2 rounded-xl border-2 border-medi-border bg-white px-3">
             <HiOutlineBookOpen className="shrink-0 text-medi-petrol/40" />
@@ -105,6 +114,29 @@ export default function QuestionEditor({ question, index, total, onChange, onRem
             <button
               type="button"
               onClick={() => adjustTime(TIME_STEP)}
+              className="flex h-8 w-8 items-center justify-center rounded-lg text-lg font-bold text-medi-petrol/60 transition hover:bg-medi-cream"
+            >
+              +
+            </button>
+          </div>
+        </div>
+
+        <div>
+          <span className="mb-1.5 block text-xs font-bold uppercase tracking-wide text-medi-petrol/50">Points (bonne réponse)</span>
+          <div className="flex min-h-12 items-center justify-between rounded-xl border-2 border-medi-border bg-white px-2">
+            <button
+              type="button"
+              onClick={() => adjustPoints(-POINTS_STEP)}
+              className="flex h-8 w-8 items-center justify-center rounded-lg text-lg font-bold text-medi-petrol/60 transition hover:bg-medi-cream"
+            >
+              −
+            </button>
+            <span className="flex items-center gap-1.5 font-bold text-medi-petrol">
+              <HiOutlineStar className="text-medi-gold" /> {question.points ?? POINTS_DEFAULT} pts
+            </span>
+            <button
+              type="button"
+              onClick={() => adjustPoints(POINTS_STEP)}
               className="flex h-8 w-8 items-center justify-center rounded-lg text-lg font-bold text-medi-petrol/60 transition hover:bg-medi-cream"
             >
               +
