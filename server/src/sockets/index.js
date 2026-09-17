@@ -2,10 +2,19 @@ import { Server } from 'socket.io'
 import jwt from 'jsonwebtoken'
 import { env } from '../config/env.js'
 import { registerQuizHandlers } from './quizSocket.js'
+import { isOriginAllowed } from '../utils/allowedOrigins.js'
 
 export function initSocket(httpServer) {
   const io = new Server(httpServer, {
-    cors: { origin: env.clientUrl, credentials: true },
+    cors: {
+      origin(origin, callback) {
+        if (isOriginAllowed(origin)) {
+          return callback(null, true)
+        }
+        return callback(new Error('Origin non autorisée par CORS'))
+      },
+      credentials: true,
+    },
   })
 
   // Auth optionnelle : un token valide identifie l'utilisateur (nécessaire

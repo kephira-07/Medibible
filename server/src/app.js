@@ -5,24 +5,17 @@ import rateLimit from 'express-rate-limit'
 import fs from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { env } from './config/env.js'
 import { notFoundHandler, errorHandler } from './middlewares/errorHandler.js'
 import quizRoutes from './routes/quiz.routes.js'
 import authRoutes from './routes/auth.routes.js'
 import sessionRoutes from './routes/session.routes.js'
 import audioRoutes from './routes/audio.routes.js'
+import { isOriginAllowed } from './utils/allowedOrigins.js'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
 const clientDistPath = path.resolve(__dirname, '../../client/dist')
 const clientBuildExists = fs.existsSync(clientDistPath)
-
-const defaultOrigins = new Set([
-  'http://localhost:5173',
-  'http://127.0.0.1:5173',
-  'https://medibible.vercel.app',
-  env.clientUrl,
-])
 
 export function createApp() {
   const app = express()
@@ -41,7 +34,7 @@ export function createApp() {
   app.use(
     cors({
       origin(origin, callback) {
-        if (!origin || defaultOrigins.has(origin)) {
+        if (isOriginAllowed(origin)) {
           return callback(null, true)
         }
         return callback(new Error('Origin non autorisée par CORS'))
