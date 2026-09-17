@@ -5,14 +5,11 @@ import AdminLayout from '../../components/admin/AdminLayout.jsx'
 import SessionDetailModal from '../../components/admin/SessionDetailModal.jsx'
 import { FaSearch } from 'react-icons/fa'
 
-const PAGE_SIZE = 6
-
 export default function MySessionsPage() {
   const [sessions, setSessions] = useState([])
   const [error, setError] = useState(null)
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
-  const [showAll, setShowAll] = useState(false)
   const [sessionDetail, setSessionDetail] = useState(null)
   const [detailOpen, setDetailOpen] = useState(false)
 
@@ -43,8 +40,6 @@ export default function MySessionsPage() {
         s.hostName?.toLowerCase().includes(q)
     )
   }, [sessions, search])
-
-  const visibleSessions = showAll ? filteredSessions : filteredSessions.slice(0, PAGE_SIZE)
 
   const openSessionDetail = async (sessionId) => {
     try {
@@ -78,10 +73,7 @@ export default function MySessionsPage() {
             id="sessionSearch"
             name="sessionSearch"
             value={search}
-            onChange={(e) => {
-              setSearch(e.target.value)
-              setShowAll(false)
-            }}
+            onChange={(e) => setSearch(e.target.value)}
             placeholder="Rechercher par quiz, code ou animateur…"
             className="min-h-11 w-full rounded-full border-2 border-medi-border bg-white pl-10 pr-4 text-sm text-medi-petrol outline-none focus:border-medi-sky focus:ring-4 focus:ring-medi-sky/15"
           />
@@ -97,12 +89,12 @@ export default function MySessionsPage() {
           <p className="py-10 text-center text-sm text-medi-petrol/50">Chargement…</p>
         ) : (
           <div className="flex flex-col gap-3">
-            {visibleSessions.length === 0 && !error && (
+            {filteredSessions.length === 0 && !error && (
               <p className="rounded-2xl border-2 border-dashed border-medi-border bg-white/60 p-6 text-center text-sm text-medi-petrol/60">
                 {search ? 'Aucune session ne correspond à ta recherche.' : 'Aucune session en attente ou en cours pour le moment.'}
               </p>
             )}
-            {visibleSessions.map((session) => {
+            {filteredSessions.map((session) => {
               const hasProgress = session.status === 'live' && session.currentQuestionIndex >= 0 && session.questionsCount
               const progressPct = hasProgress
                 ? Math.round(((session.currentQuestionIndex + 1) / session.questionsCount) * 100)
@@ -150,16 +142,6 @@ export default function MySessionsPage() {
                 </div>
               )
             })}
-
-            {filteredSessions.length > PAGE_SIZE && (
-              <button
-                type="button"
-                onClick={() => setShowAll((v) => !v)}
-                className="w-full rounded-2xl border-2 border-medi-border py-2.5 text-sm font-bold text-medi-petrol/70 transition hover:bg-medi-cream"
-              >
-                {showAll ? 'Réduire la liste' : 'Lire la suite'}
-              </button>
-            )}
           </div>
         )}
 

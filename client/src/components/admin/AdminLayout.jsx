@@ -5,7 +5,6 @@ import {
   HiOutlineViewGrid,
   HiOutlineBookOpen,
   HiOutlineStatusOnline,
-  HiOutlineClock,
   HiOutlineLogout,
 } from 'react-icons/hi'
 
@@ -25,7 +24,6 @@ const NAV_ITEMS = [
   { key: 'dashboard', to: '/admin', icon: HiOutlineViewGrid, label: 'Tableau de bord' },
   { key: 'quizzes', to: '/admin/quizzes', icon: HiOutlineBookOpen, label: 'Mes quiz' },
   { key: 'sessions', to: '/admin/sessions', icon: HiOutlineStatusOnline, label: 'Mes sessions' },
-  { key: 'history', to: '/admin/history', icon: HiOutlineClock, label: 'Historique' },
 ]
 
 function isActive(item, pathname) {
@@ -46,9 +44,9 @@ export default function AdminLayout({ children }) {
   }
 
   return (
-    <div className="min-h-svh bg-medi-cream text-medi-petrol lg:flex">
-      {/* SIDEBAR — grand écran */}
-      <aside className="hidden w-64 shrink-0 flex-col border-r-2 border-medi-border bg-white px-4 py-6 lg:flex">
+    <div className="min-h-svh bg-medi-cream text-medi-petrol">
+      {/* SIDEBAR — grand écran, fixe : reste immobile pendant que le contenu défile */}
+      <aside className="fixed inset-y-0 left-0 z-30 hidden w-64 flex-col overflow-y-auto border-r-2 border-medi-border bg-white px-4 py-6 lg:flex">
         <Link to="/" className="mb-8 flex items-center gap-2 px-2">
           <BrandMark className="h-9 w-9" />
           <span className="text-base font-extrabold uppercase tracking-widest text-medi-petrol">MediBible</span>
@@ -95,7 +93,7 @@ export default function AdminLayout({ children }) {
         </div>
       </aside>
 
-      <div className="flex min-h-svh flex-1 flex-col">
+      <div className="flex min-h-svh flex-1 flex-col lg:pl-64">
         {/* EN-TÊTE — mobile */}
         <header className="flex items-center justify-between gap-3 border-b-2 border-medi-border bg-white px-4 py-3 lg:hidden">
           <Link to="/" className="flex items-center gap-2">
@@ -118,7 +116,7 @@ export default function AdminLayout({ children }) {
         <main className="flex-1 pb-20 lg:pb-0">{children}</main>
 
         {/* BARRE DE NAVIGATION BASSE — mobile */}
-        <nav className="fixed inset-x-0 bottom-0 z-40 grid grid-cols-4 border-t-2 border-medi-border bg-white shadow-[0_-8px_24px_rgba(22,50,62,0.08)] lg:hidden">
+        <nav className="fixed inset-x-0 bottom-0 z-40 grid grid-cols-3 border-t-2 border-medi-border bg-white shadow-[0_-8px_24px_rgba(22,50,62,0.08)] lg:hidden">
           {NAV_ITEMS.map((item) => {
             const Icon = item.icon
             const active = isActive(item, pathname)

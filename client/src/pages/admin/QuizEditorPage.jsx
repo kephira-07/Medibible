@@ -38,7 +38,7 @@ export default function QuizEditorPage() {
       } else {
         await api.post('/quizzes', quiz)
       }
-      navigate('/admin')
+      navigate('/admin/quizzes')
     } catch (err) {
       setError(extractErrorMessage(err))
     } finally {

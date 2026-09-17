@@ -8,7 +8,6 @@ import {
   FaSatelliteDish,
   FaBookOpen,
   FaCrown,
-  FaTrophy,
   FaMedal,
 } from 'react-icons/fa'
 
@@ -356,17 +355,6 @@ export default function AdminDashboard() {
                 <p className="mt-1 text-sm text-medi-petrol/55">{quizzes.length} quiz créé{quizzes.length > 1 ? 's' : ''} — modifier, lancer, rechercher.</p>
               </div>
               <FaBookOpen className="shrink-0 text-2xl text-medi-sky" />
-            </Link>
-
-            <Link
-              to="/admin/history"
-              className="flex items-center justify-between gap-3 rounded-2xl border-2 border-medi-border bg-white p-5 transition hover:border-medi-green-sage sm:p-6"
-            >
-              <div>
-                <h2 className="text-lg font-bold text-medi-petrol">Derniers gagnants &amp; historique</h2>
-                <p className="mt-1 text-sm text-medi-petrol/55">Sessions passées et quiz déjà utilisés, sur une page dédiée.</p>
-              </div>
-              <FaTrophy className="shrink-0 text-2xl text-medi-gold" />
             </Link>
 
             <div className="rounded-2xl border-2 border-medi-gold/30 bg-medi-gold/8 p-5 sm:p-6">

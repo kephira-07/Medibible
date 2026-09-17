@@ -87,9 +87,13 @@ export default function QuizForm({ initialQuiz, onSubmit, submitting, error }) {
     setExpandedIndex(questions.length)
   }
 
-  const handleSubmit = (e) => {
+  const submitAs = (status) => (e) => {
     e.preventDefault()
 
+    if (!title.trim()) {
+      setLocalError('Le titre du quiz est requis.')
+      return
+    }
     if (questions.length === 0) {
       setLocalError('Le quiz doit contenir au moins une question.')
       return
@@ -113,11 +117,11 @@ export default function QuizForm({ initialQuiz, onSubmit, submitting, error }) {
     }
 
     setLocalError(null)
-    onSubmit({ title, description, questions })
+    onSubmit({ title, description, questions, status })
   }
 
   return (
-    <form onSubmit={handleSubmit} className="flex w-full max-w-2xl flex-col gap-5">
+    <form onSubmit={submitAs('draft')} className="flex w-full max-w-2xl flex-col gap-5">
       <div className="rounded-2xl border-2 border-medi-border bg-white p-5">
         <p className="mb-4 flex items-center gap-2 text-sm font-extrabold text-medi-petrol">
           <HiOutlineAdjustments className="text-medi-green-deep" /> Informations générales
@@ -221,9 +225,29 @@ export default function QuizForm({ initialQuiz, onSubmit, submitting, error }) {
         </p>
       )}
 
-      <Button variant="primary" type="submit" disabled={submitting} className="text-base">
-        {submitting ? 'Enregistrement…' : 'Enregistrer le quiz'}
-      </Button>
+      <div className="flex flex-col gap-3 sm:flex-row">
+        <Button
+          variant="outline"
+          type="button"
+          onClick={submitAs('draft')}
+          disabled={submitting}
+          className="flex-1 text-base"
+        >
+          {submitting ? 'Enregistrement…' : 'Enregistrer comme brouillon'}
+        </Button>
+        <Button
+          variant="primary"
+          type="button"
+          onClick={submitAs('published')}
+          disabled={submitting}
+          className="flex-1 text-base"
+        >
+          {submitting ? 'Enregistrement…' : 'Publier le quiz'}
+        </Button>
+      </div>
+      <p className="text-center text-xs text-medi-petrol/45">
+        Un brouillon reste modifiable et peut toujours être lancé — publie-le quand il est prêt à être annoncé.
+      </p>
     </form>
   )
 }

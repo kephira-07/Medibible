@@ -4,7 +4,7 @@ import api from '../../services/api.js'
 import Button from '../../components/common/Button.jsx'
 import AdminLayout from '../../components/admin/AdminLayout.jsx'
 import { useAuth } from '../../context/AuthContext.jsx'
-import { FaSearch } from 'react-icons/fa'
+import { FaSearch, FaPencilAlt } from 'react-icons/fa'
 
 const PAGE_SIZE = 9
 
@@ -17,7 +17,8 @@ export default function MyQuizzesPage() {
   const [search, setSearch] = useState('')
   const [deletingId, setDeletingId] = useState(null)
   const [launchingId, setLaunchingId] = useState(null)
-  const [showAll, setShowAll] = useState(false)
+  const [showAllDrafts, setShowAllDrafts] = useState(false)
+  const [showAllReady, setShowAllReady] = useState(false)
 
   useEffect(() => {
     api
@@ -33,7 +34,11 @@ export default function MyQuizzesPage() {
     return quizzes.filter((quiz) => quiz.title?.toLowerCase().includes(q))
   }, [quizzes, search])
 
-  const visibleQuizzes = showAll ? filteredQuizzes : filteredQuizzes.slice(0, PAGE_SIZE)
+  const draftQuizzes = useMemo(() => filteredQuizzes.filter((q) => q.status === 'draft'), [filteredQuizzes])
+  const readyQuizzes = useMemo(() => filteredQuizzes.filter((q) => q.status !== 'draft'), [filteredQuizzes])
+
+  const visibleDrafts = showAllDrafts ? draftQuizzes : draftQuizzes.slice(0, PAGE_SIZE)
+  const visibleReady = showAllReady ? readyQuizzes : readyQuizzes.slice(0, PAGE_SIZE)
 
   const handleDelete = async (id) => {
     if (!window.confirm('Supprimer ce quiz définitivement ?')) return
@@ -59,6 +64,62 @@ export default function MyQuizzesPage() {
     }
   }
 
+  const renderCard = (quiz, { draft } = {}) => (
+    <div
+      key={quiz._id}
+      className={`flex flex-col gap-3 rounded-xl border-2 p-4 ${
+        draft ? 'border-medi-gold/40 bg-medi-gold/5' : 'border-medi-border bg-medi-cream/40'
+      }`}
+    >
+      <div className="flex items-center justify-between gap-2">
+        <span
+          className={`rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide ${
+            draft ? 'bg-medi-gold/20 text-medi-petrol' : 'bg-medi-sky/15 text-medi-sky'
+          }`}
+        >
+          {quiz.status === 'published' ? 'Publié' : quiz.status === 'archived' ? 'Archivé' : 'Brouillon'}
+        </span>
+        <span className="text-[10px] font-semibold uppercase tracking-wide text-medi-petrol/40">
+          {quiz.createdAt ? new Date(quiz.createdAt).toLocaleDateString('fr-FR') : ''}
+        </span>
+      </div>
+      <div className="min-w-0">
+        <p className="truncate font-bold text-medi-petrol">{quiz.title}</p>
+        {quiz.description && <p className="mt-1 line-clamp-2 text-xs text-medi-petrol/55">{quiz.description}</p>}
+        <p className="mt-1 text-xs text-medi-petrol/50">{quiz.questions?.length || 0} question(s)</p>
+      </div>
+      <div className="mt-auto flex flex-col gap-2 sm:flex-row">
+        <Link to={`/admin/quizzes/${quiz._id}/edit`} className="flex-1">
+          <Button variant="outline" className="w-full text-sm">
+            {draft ? (
+              <span className="flex items-center justify-center gap-1.5">
+                <FaPencilAlt className="text-xs" /> Compléter
+              </span>
+            ) : (
+              'Modifier'
+            )}
+          </Button>
+        </Link>
+        <Button
+          variant="gold"
+          className="flex-1 text-sm"
+          onClick={() => handleLaunch(quiz._id)}
+          disabled={launchingId === quiz._id}
+        >
+          {launchingId === quiz._id ? 'Lancement…' : 'Lancer'}
+        </Button>
+        <Button
+          variant="coral"
+          className="text-sm"
+          onClick={() => handleDelete(quiz._id)}
+          disabled={deletingId === quiz._id}
+        >
+          {deletingId === quiz._id ? '…' : 'Supprimer'}
+        </Button>
+      </div>
+    </div>
+  )
+
   return (
     <AdminLayout>
       <div className="mx-auto flex w-full max-w-7xl flex-col gap-6 px-4 py-5 sm:px-6 lg:px-8">
@@ -81,10 +142,7 @@ export default function MyQuizzesPage() {
             id="quizSearch"
             name="quizSearch"
             value={search}
-            onChange={(e) => {
-              setSearch(e.target.value)
-              setShowAll(false)
-            }}
+            onChange={(e) => setSearch(e.target.value)}
             placeholder="Rechercher un quiz…"
             className="min-h-11 w-full rounded-full border-2 border-medi-border bg-white pl-10 pr-4 text-sm text-medi-petrol outline-none focus:border-medi-sky focus:ring-4 focus:ring-medi-sky/15"
           />
@@ -99,63 +157,58 @@ export default function MyQuizzesPage() {
         {loading ? (
           <p className="py-10 text-center text-sm text-medi-petrol/50">Chargement…</p>
         ) : (
-          <div className="rounded-2xl border-2 border-medi-border bg-white p-5 shadow-[0_18px_40px_rgba(22,50,62,0.05)] sm:p-6">
-            <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-              {visibleQuizzes.map((quiz) => (
-                <div key={quiz._id} className="flex flex-col gap-3 rounded-xl border-2 border-medi-border bg-medi-cream/40 p-4">
-                  <div className="flex items-center justify-between gap-2">
-                    <span className="rounded-full bg-medi-sky/15 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-medi-sky">
-                      {quiz.status === 'published' ? 'Publié' : quiz.status === 'archived' ? 'Archivé' : 'Brouillon'}
-                    </span>
-                    <span className="text-[10px] font-semibold uppercase tracking-wide text-medi-petrol/40">
-                      {quiz.createdAt ? new Date(quiz.createdAt).toLocaleDateString('fr-FR') : ''}
-                    </span>
-                  </div>
-                  <div className="min-w-0">
-                    <p className="truncate font-bold text-medi-petrol">{quiz.title}</p>
-                    {quiz.description && <p className="mt-1 line-clamp-2 text-xs text-medi-petrol/55">{quiz.description}</p>}
-                    <p className="mt-1 text-xs text-medi-petrol/50">{quiz.questions?.length || 0} question(s)</p>
-                  </div>
-                  <div className="mt-auto flex flex-col gap-2 sm:flex-row">
-                    <Link to={`/admin/quizzes/${quiz._id}/edit`} className="flex-1">
-                      <Button variant="outline" className="w-full text-sm">Modifier</Button>
-                    </Link>
-                    <Button
-                      variant="gold"
-                      className="flex-1 text-sm"
-                      onClick={() => handleLaunch(quiz._id)}
-                      disabled={launchingId === quiz._id}
-                    >
-                      {launchingId === quiz._id ? 'Lancement…' : 'Lancer'}
-                    </Button>
-                    <Button
-                      variant="coral"
-                      className="text-sm"
-                      onClick={() => handleDelete(quiz._id)}
-                      disabled={deletingId === quiz._id}
-                    >
-                      {deletingId === quiz._id ? '…' : 'Supprimer'}
-                    </Button>
-                  </div>
-                </div>
-              ))}
-              {filteredQuizzes.length === 0 && !error && (
-                <p className="col-span-full rounded-xl border-2 border-dashed border-medi-border bg-white/60 p-6 text-center text-sm text-medi-petrol/60">
-                  {search ? 'Aucun quiz ne correspond à ta recherche.' : 'Aucun quiz pour le moment.'}
+          <>
+            {/* MES BROUILLONS */}
+            {draftQuizzes.length > 0 && (
+              <div className="rounded-2xl border-2 border-medi-gold/30 bg-medi-gold/8 p-5 shadow-[0_18px_40px_rgba(22,50,62,0.05)] sm:p-6">
+                <h2 className="text-lg font-bold text-medi-petrol">Mes brouillons</h2>
+                <p className="mt-1 text-sm text-medi-petrol/60">
+                  Des quiz commencés mais pas encore finalisés — reviens les compléter puis publie-les quand ils sont prêts.
                 </p>
+
+                <div className="mt-4 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+                  {visibleDrafts.map((quiz) => renderCard(quiz, { draft: true }))}
+                </div>
+
+                {draftQuizzes.length > PAGE_SIZE && (
+                  <button
+                    type="button"
+                    onClick={() => setShowAllDrafts((v) => !v)}
+                    className="mt-4 w-full rounded-2xl border-2 border-medi-border bg-white py-2.5 text-sm font-bold text-medi-petrol/70 transition hover:bg-medi-cream"
+                  >
+                    {showAllDrafts ? 'Réduire la liste' : 'Lire la suite'}
+                  </button>
+                )}
+              </div>
+            )}
+
+            {/* MES QUIZ PRÊTS */}
+            <div className="rounded-2xl border-2 border-medi-border bg-white p-5 shadow-[0_18px_40px_rgba(22,50,62,0.05)] sm:p-6">
+              <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+                {visibleReady.map((quiz) => renderCard(quiz))}
+                {filteredQuizzes.length === 0 && !error && (
+                  <p className="col-span-full rounded-xl border-2 border-dashed border-medi-border bg-white/60 p-6 text-center text-sm text-medi-petrol/60">
+                    {search ? 'Aucun quiz ne correspond à ta recherche.' : 'Aucun quiz pour le moment.'}
+                  </p>
+                )}
+                {filteredQuizzes.length > 0 && readyQuizzes.length === 0 && (
+                  <p className="col-span-full rounded-xl border-2 border-dashed border-medi-border bg-white/60 p-6 text-center text-sm text-medi-petrol/60">
+                    Tous tes quiz sont encore en brouillon — publie-en un pour le voir ici.
+                  </p>
+                )}
+              </div>
+
+              {readyQuizzes.length > PAGE_SIZE && (
+                <button
+                  type="button"
+                  onClick={() => setShowAllReady((v) => !v)}
+                  className="mt-4 w-full rounded-2xl border-2 border-medi-border py-2.5 text-sm font-bold text-medi-petrol/70 transition hover:bg-medi-cream"
+                >
+                  {showAllReady ? 'Réduire la liste' : 'Lire la suite'}
+                </button>
               )}
             </div>
-
-            {filteredQuizzes.length > PAGE_SIZE && (
-              <button
-                type="button"
-                onClick={() => setShowAll((v) => !v)}
-                className="mt-4 w-full rounded-2xl border-2 border-medi-border py-2.5 text-sm font-bold text-medi-petrol/70 transition hover:bg-medi-cream"
-              >
-                {showAll ? 'Réduire la liste' : 'Lire la suite'}
-              </button>
-            )}
-          </div>
+          </>
         )}
       </div>
     </AdminLayout>
