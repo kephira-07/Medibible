@@ -9,7 +9,7 @@ export default function CountdownRing({ remainingMs, totalMs }) {
   const offset = circumference * (1 - ratio)
   const seconds = Math.ceil(remainingMs / 1000)
   const urgent = seconds <= URGENT_THRESHOLD_S && seconds > 0
-  const ringColor = urgent ? '#FF6B5B' : '#F4B400'
+  const ringColor = urgent ? '#FF6B5B' : '#2FA4E0'
 
   return (
     <div
@@ -21,7 +21,7 @@ export default function CountdownRing({ remainingMs, totalMs }) {
           cx={size / 2}
           cy={size / 2}
           r={radius}
-          stroke="#163445"
+          stroke="#16323E"
           strokeOpacity="0.1"
           strokeWidth={stroke}
           fill="none"

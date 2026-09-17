@@ -107,7 +107,7 @@ async function endSession(io, session) {
 
 export function registerQuizHandlers(io, socket) {
   // Un joueur ou l'hôte rejoint le salon d'une session via son code d'accès
-  socket.on('session:join', async ({ accessCode, displayName }, callback) => {
+  socket.on('session:join', async ({ accessCode, displayName, bergerName }, callback) => {
     try {
       if (!accessCode || !displayName) {
         return callback?.({ error: 'accessCode et displayName sont requis.' })
@@ -121,6 +121,10 @@ export function registerQuizHandlers(io, socket) {
 
       const user = socket.data.user
       const isHost = Boolean(user) && session.host.toString() === user.id && user.role === 'admin'
+
+      if (!isHost && !bergerName?.trim()) {
+        return callback?.({ error: 'bergerName est requis pour rejoindre en tant que participant.' })
+      }
 
       socket.join(roomName(session.id))
       socket.data.sessionId = session.id.toString()
@@ -137,7 +141,13 @@ export function registerQuizHandlers(io, socket) {
 
         const updateExisting = await Session.updateOne(
           { _id: session._id, [identityField]: identityValue },
-          { $set: { 'participants.$.socketId': socket.id, 'participants.$.displayName': displayName } }
+          {
+            $set: {
+              'participants.$.socketId': socket.id,
+              'participants.$.displayName': displayName,
+              'participants.$.bergerName': bergerName,
+            },
+          }
         )
 
         if (updateExisting.matchedCount === 0) {
@@ -152,6 +162,7 @@ export function registerQuizHandlers(io, socket) {
                 participants: {
                   user: user ? user.id : null,
                   displayName,
+                  bergerName,
                   socketId: socket.id,
                   totalScore: 0,
                 },

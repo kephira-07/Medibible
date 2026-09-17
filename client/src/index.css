@@ -1,20 +1,26 @@
+@import url("https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&display=swap");
 @import "tailwindcss";
 
-/* Palette de marque MediBible — moderne, sobre et inspirée du monde biblique */
+/* Palette de marque MediBible v3 — vivante, colorée, esprit "jeu communautaire" */
 @theme {
-  --color-medi-green-deep: #1f2f39;
-  --color-medi-green-sage: #6e7d67;
-  --color-medi-gold: #c9a569;
-  --color-medi-gold-light: #ead5a0;
-  --color-medi-cream: #f5efe5;
-  --color-medi-petrol: #1a2b32;
-  --color-medi-coral: #8c6b58;
-  --color-medi-sky: #dfe8e2;
+  --color-medi-green-deep: #0b5e45;
+  --color-medi-green-sage: #22b783;
+  --color-medi-gold: #f4b400;
+  --color-medi-gold-light: #ffd873;
+  --color-medi-cream: #fff8ec;
+  --color-medi-petrol: #16323e;
+  --color-medi-coral: #ff6b5b;
+  --color-medi-sky: #2fa4e0;
 
-  --font-sans: "Inter", system-ui, "Segoe UI", Roboto, sans-serif;
-  --font-serif: "Georgia", "Times New Roman", serif;
+  /* Surfaces neutres réutilisées à la place des hex bruts dispersés dans les pages */
+  --color-medi-surface: #fffbf2;
+  --color-medi-border: #f0dfb8;
+  --color-medi-chip: #fdecc0;
 
-  --radius-2xl: 1.25rem;
+  --font-sans: "Baloo 2", "Inter", system-ui, "Segoe UI", Roboto, sans-serif;
+  --font-display: "Baloo 2", "Inter", system-ui, sans-serif;
+
+  --radius-2xl: 1rem;
 }
 
 @layer base {
@@ -25,8 +31,9 @@
   body {
    margin: 0;
    background:
-     radial-gradient(circle at top left, rgba(223, 232, 226, 0.8), transparent 20%),
-     linear-gradient(180deg, #f6f1e7 0%, #efe7dc 100%);
+     radial-gradient(circle at top left, rgba(47, 164, 224, 0.14), transparent 24%),
+     radial-gradient(circle at bottom right, rgba(244, 180, 0, 0.16), transparent 26%),
+     linear-gradient(180deg, #fffaf0 0%, #fff3dd 100%);
    color: var(--color-medi-petrol);
    font-family: var(--font-sans);
    -webkit-font-smoothing: antialiased;
@@ -39,8 +46,8 @@
   h4,
   h5,
   h6 {
-   font-family: var(--font-serif);
-   letter-spacing: -0.02em;
+   font-family: var(--font-display);
+   letter-spacing: -0.01em;
   }
 
   #root {
@@ -53,7 +60,7 @@
   }
 
   ::selection {
-   background: rgba(198, 146, 20, 0.23);
+   background: rgba(244, 180, 0, 0.28);
   }
 }
 

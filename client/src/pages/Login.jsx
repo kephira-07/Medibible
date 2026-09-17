@@ -40,12 +40,12 @@ export default function Login() {
       <div className="flex-1 flex flex-col justify-end sm:justify-center items-center px-0 sm:px-6 pt-6 pb-0 sm:pb-6">
         
         {/* Card : Style Sheet sur mobile, Carte suspendue sur Desktop */}
-        <div className="w-full max-w-md rounded-t-[2.5rem] border border-[#d8cdb3] bg-[#faf4eb]/95 p-6 sm:rounded-[2.5rem] sm:p-10 shadow-[0_-12px_35px_rgba(29,43,50,0.04)] sm:shadow-[0_22px_50px_rgba(26,43,50,0.07)] transition-all duration-300">
-          
+        <div className="w-full max-w-md rounded-t-[2.5rem] border-2 border-medi-border bg-medi-surface/95 p-6 sm:rounded-2xl sm:p-10 shadow-[0_-12px_35px_rgba(22,50,62,0.06)] sm:shadow-[0_22px_50px_rgba(22,50,62,0.1)] transition-all duration-300">
+
           {/* Header du formulaire */}
           <div className="flex flex-col items-center text-center mb-8">
-            <span className="inline-flex items-center gap-2 rounded-full bg-medi-green-deep/10 px-3.5 py-1 text-xs font-bold uppercase tracking-[0.18em] text-medi-green-deep">
-              <span className="h-2 w-2 rounded-full bg-medi-green-deep animate-pulse" />
+            <span className="inline-flex items-center gap-2 rounded-full bg-medi-sky/15 px-3.5 py-1 text-xs font-bold uppercase tracking-[0.18em] text-medi-sky">
+              <span className="h-2 w-2 rounded-full bg-medi-sky animate-pulse" />
               Espace Animateur
             </span>
             
@@ -83,7 +83,7 @@ export default function Login() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="exemple@medibible.app"
-                className="w-full min-h-[52px] rounded-2xl border border-medi-green-deep/15 bg-medi-cream/40 px-4 text-medi-petrol placeholder:text-medi-petrol/35 text-base outline-none transition-all duration-200 focus:border-medi-green-deep focus:bg-white focus:ring-4 focus:ring-medi-green-deep/10"
+                className="w-full min-h-[52px] rounded-2xl border-2 border-medi-border bg-white px-4 text-medi-petrol placeholder:text-medi-petrol/35 text-base outline-none transition-all duration-200 focus:border-medi-sky focus:ring-4 focus:ring-medi-sky/15"
               />
             </div>
 
@@ -102,7 +102,7 @@ export default function Login() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"
-                  className="w-full min-h-[52px] rounded-2xl border border-medi-green-deep/15 bg-medi-cream/40 pl-4 pr-12 text-medi-petrol placeholder:text-medi-petrol/35 text-base outline-none transition-all duration-200 focus:border-medi-green-deep focus:bg-white focus:ring-4 focus:ring-medi-green-deep/10"
+                  className="w-full min-h-[52px] rounded-2xl border-2 border-medi-border bg-white pl-4 pr-12 text-medi-petrol placeholder:text-medi-petrol/35 text-base outline-none transition-all duration-200 focus:border-medi-sky focus:ring-4 focus:ring-medi-sky/15"
                 />
                 
                 {/* Bouton pour afficher/masquer le mot de passe */}
@@ -128,8 +128,9 @@ export default function Login() {
             </div>
 
             {/* Bouton Valider */}
-            <Button 
-              type="submit" 
+            <Button
+              type="submit"
+              variant="sky"
               disabled={loading}
               className="mt-3 w-full min-h-[52px] text-base font-bold active:scale-[0.98] transition-transform"
             >

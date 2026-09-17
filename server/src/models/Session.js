@@ -2,16 +2,36 @@ import mongoose from 'mongoose'
 
 // Un participant tel qu'il apparaît dans une session live (snapshot léger,
 // distinct du User pour supporter les invités sans compte)
-const ParticipantSchema = new mongoose.Schema(
-  {
-    user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null },
-    displayName: { type: String, required: true, trim: true },
-    socketId: { type: String, default: null },
-    totalScore: { type: Number, default: 0 },
-    joinedAt: { type: Date, default: Date.now },
+const ParticipantSchema = new mongoose.Schema({
+  user: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    default: null,
   },
-  { _id: false }
-)
+  displayName: {
+    type: String,
+    required: true,
+  },
+  // Nom du "berger"/groupe de maison du participant — affiché en sous-titre
+  // dans le tableau de bord admin. Obligatoire à la jonction (voir la
+  // validation dans quizSocket.js, côté hôte non concerné).
+  bergerName: {
+    type: String,
+    required: true,
+  },
+  socketId: {
+    type: String,
+    default: null,
+  },
+  totalScore: {
+    type: Number,
+    default: 0,
+  },
+  joinedAt: {
+    type: Date,
+    default: Date.now,
+  },
+})
 
 const SessionSchema = new mongoose.Schema(
   {

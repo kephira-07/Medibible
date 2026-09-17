@@ -6,6 +6,8 @@ const QuizSchema = new mongoose.Schema(
   {
     title: { type: String, required: true, trim: true },
     description: { type: String, trim: true, default: '' },
+    // Étiquette libre affichée comme badge dans le back-office (ex: "Histoire", "Paraboles")
+    category: { type: String, trim: true, default: '' },
     questions: {
       type: [QuestionSchema],
       validate: {

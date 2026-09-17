@@ -25,6 +25,11 @@ function formatSessionSummary(session) {
     participants,
     winner,
     playerCount: participants.length,
+    // Utilisés par le tableau de bord admin pour afficher une barre de progression
+    // sans exposer les questions/réponses elles-mêmes.
+    currentQuestionIndex: session.currentQuestionIndex,
+    questionsCount: Array.isArray(session.quiz?.questions) ? session.quiz.questions.length : undefined,
+    currentQuestionEndsAt: session.currentQuestionEndsAt,
   }
 }
 
@@ -32,11 +37,12 @@ export async function listSessions(req, res, next) {
   try {
     const sessions = await Session.find()
       .sort({ updatedAt: -1 })
-      .populate('quiz', 'title')
+      .populate('quiz', 'title questions')
       .populate('host', 'name email role')
 
     res.json(sessions.map((session) => ({
       ...formatSessionSummary(session),
+      quiz: { _id: session.quiz?._id, title: session.quiz?.title },
       quizTitle: session.quiz?.title || 'Quiz inconnu',
       hostName: session.host?.name || 'Inconnu',
     })))
@@ -194,6 +200,7 @@ export async function getOnlineUsers(req, res, next) {
             sessionId: s._id,
             accessCode: s.accessCode,
             displayName: p.displayName,
+            bergerName: p.bergerName || '',
             socketId: p.socketId,
             totalScore: p.totalScore,
             joinedAt: p.joinedAt,

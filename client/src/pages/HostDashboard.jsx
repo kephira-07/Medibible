@@ -54,24 +54,34 @@ export default function HostDashboard() {
       <div className="w-full max-w-3xl space-y-6">
         <div className="flex items-end justify-between gap-3">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.25em] text-medi-green-deep/70">
+            <p className="text-xs font-bold uppercase tracking-[0.25em] text-medi-green-deep">
               Admin
             </p>
-            <h1 className="mt-2 text-2xl font-bold tracking-tight text-medi-petrol">Mes quiz</h1>
+            <h1 className="mt-2 text-2xl font-extrabold tracking-tight text-medi-petrol">Lancer une session</h1>
+            <p className="mt-1 text-sm text-medi-petrol/60">Choisis un quiz à démarrer en direct.</p>
           </div>
         </div>
 
         {error && <p className="text-sm text-red-600">{error}</p>}
 
         <div className="flex w-full flex-col gap-3">
-          {quizzes.map((quiz) => (
+          {quizzes.map((quiz) => {
+            const estimatedMinutes = Math.max(1, Math.round(
+              quiz.questions.reduce((sum, q) => sum + (q.timeLimit || 0) + 10, 0) / 60
+            ))
+            return (
             <div
               key={quiz._id}
-              className="flex flex-col gap-3 rounded-[1.5rem] border border-medi-green-deep/10 bg-white/80 p-4 shadow-[0_12px_25px_rgba(15,50,61,0.04)] sm:flex-row sm:items-center sm:justify-between"
+              className="flex flex-col gap-3 rounded-xl border-2 border-medi-border bg-white/90 p-4 shadow-[0_12px_25px_rgba(22,50,62,0.06)] sm:flex-row sm:items-center sm:justify-between"
             >
               <div className="min-w-0">
-                <p className="truncate font-semibold text-medi-petrol">{quiz.title}</p>
-                <p className="text-xs text-medi-petrol/50">{quiz.questions.length} question(s)</p>
+                {quiz.category && (
+                  <span className="mb-1 inline-block rounded-full bg-medi-green-deep/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-medi-green-deep">
+                    {quiz.category}
+                  </span>
+                )}
+                <p className="truncate font-bold text-medi-petrol">{quiz.title}</p>
+                <p className="text-xs text-medi-petrol/50">{quiz.questions.length} question(s) • ~{estimatedMinutes} min</p>
               </div>
               <Button
                 variant="gold"
@@ -79,13 +89,14 @@ export default function HostDashboard() {
                 onClick={() => launchSession(quiz._id)}
                 disabled={launchingId === quiz._id}
               >
-                Lancer
+                {launchingId === quiz._id ? 'Lancement…' : '🎮 Lancer'}
               </Button>
             </div>
-          ))}
+            )
+          })}
           {quizzes.length === 0 && !error && (
-            <p className="rounded-[1.5rem] border border-dashed border-medi-green-deep/20 bg-white/60 p-6 text-center text-sm text-medi-petrol/60">
-              Aucun quiz pour le moment.
+            <p className="rounded-xl border-2 border-dashed border-medi-border bg-white/70 p-6 text-center text-sm text-medi-petrol/60">
+              Aucun quiz pour le moment — crée ton premier quiz depuis « Gestion des quiz ».
             </p>
           )}
         </div>

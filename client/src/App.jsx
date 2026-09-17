@@ -7,6 +7,7 @@ import AdminDashboard from './pages/admin/AdminDashboard.jsx'
 import QuizEditorPage from './pages/admin/QuizEditorPage.jsx'
 import RequireAuth from './components/common/RequireAuth.jsx'
 import HostDashboard from './pages/HostDashboard.jsx'
+import NotFound from './pages/NotFound.jsx'
 
 function App() {
   return (
@@ -47,6 +48,7 @@ function App() {
         }
       />
       <Route path="/session/:accessCode" element={<LiveQuizRoom />} />
+      <Route path="*" element={<NotFound />} />
     </Routes>
   )
 }

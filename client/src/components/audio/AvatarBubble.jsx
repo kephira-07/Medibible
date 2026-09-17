@@ -1,6 +1,6 @@
 import { FaMicrophoneSlash } from 'react-icons/fa'
 
-const AVATAR_COLORS = ['#2D5A4C', '#3D8B7A', '#D4AF37', '#E5A93C', '#1D3B48']
+const AVATAR_COLORS = ['#FF6B5B', '#2FA4E0', '#F4B400', '#22B783', '#0B5E45']
 
 // Couleur déterministe : le même prénom donne toujours le même avatar
 function colorForName(name) {
