@@ -80,7 +80,7 @@ export default function MySessionsPage() {
         </div>
 
         {error && (
-          <p className="rounded-xl border-2 border-medi-coral/30 bg-medi-coral/10 px-4 py-2 text-sm font-semibold text-medi-coral">
+          <p className="rounded-xl border-2 border-medi-coral/30 bg-medi-coral/9 px-4 py-2 text-sm font-semibold text-medi-coral">
             {error}
           </p>
         )}
