@@ -9,6 +9,7 @@ import {
   FaBookOpen,
   FaCrown,
   FaMedal,
+  FaSyncAlt,
 } from 'react-icons/fa'
 
 // Quelques versets bien connus — un seul est affiché, choisi de façon stable
@@ -38,7 +39,7 @@ export default function AdminDashboard() {
 
   const [allSessions, setAllSessions] = useState([])
   const [winners, setWinners] = useState([])
-
+  const [refreshing, setRefreshing] = useState(false)
 
   const today = useMemo(
     () => new Date().toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }),
@@ -59,6 +60,15 @@ export default function AdminDashboard() {
     }
   }
 
+  async function loadQuizzes() {
+    try {
+      const { data } = await api.get('/quizzes')
+      setQuizzes(data)
+    } catch (err) {
+      setError((prev) => prev || (err.response?.data?.message || 'Impossible de charger les quiz.'))
+    }
+  }
+
   useEffect(() => {
     loadAdmin()
     const id = setInterval(loadAdmin, 8000)
@@ -66,11 +76,15 @@ export default function AdminDashboard() {
   }, [])
 
   useEffect(() => {
-    api
-      .get('/quizzes')
-      .then(({ data }) => setQuizzes(data))
-      .catch((err) => setError(err.response?.data?.message || 'Impossible de charger les quiz.'))
+    loadQuizzes()
   }, [])
+
+  const handleRefresh = async () => {
+    setRefreshing(true)
+    setError(null)
+    await Promise.all([loadAdmin(), loadQuizzes()])
+    setRefreshing(false)
+  }
 
   const sessionsActiveCount = useMemo(
     () => allSessions.filter((s) => ['live', 'lobby'].includes(s.status)).length,
@@ -155,9 +169,20 @@ export default function AdminDashboard() {
               Supervise les sessions en direct, anime ta communauté et gère tes questionnaires bibliques, tout depuis un seul endroit.
             </p>
           </div>
-          <Link to="/admin/quizzes/new" className="shrink-0">
-            <Button variant="primary" className="w-full text-base sm:w-auto">+ Nouveau quiz</Button>
-          </Link>
+          <div className="flex shrink-0 flex-col gap-2.5 sm:flex-row">
+            <button
+              type="button"
+              onClick={handleRefresh}
+              disabled={refreshing}
+              className="flex items-center justify-center gap-2 rounded-xl border-2 border-medi-border bg-white px-4 py-2.5 text-sm font-bold text-medi-petrol transition hover:bg-medi-cream disabled:opacity-60"
+            >
+              <FaSyncAlt className={refreshing ? 'animate-spin' : ''} />
+              {refreshing ? 'Actualisation…' : 'Actualiser'}
+            </button>
+            <Link to="/admin/quizzes/new">
+              <Button variant="primary" className="w-full text-base sm:w-auto">+ Nouveau quiz</Button>
+            </Link>
+          </div>
         </section>
 
         {error && (
