@@ -362,8 +362,9 @@ export default function LiveQuizRoom() {
               </div>
             )}
 
-            {/* SI CLÔTURÉ ET SANS RÉPONSE */}
-            {!hasAnswered && phase === 'closed' && (
+            {/* SI CLÔTURÉ ET SANS RÉPONSE — ne concerne jamais l'animateur,
+                qui n'est pas censé répondre. */}
+            {!hasAnswered && phase === 'closed' && !joined.isHost && (
               <div className="animate-pop-in flex w-full items-center gap-2.5 rounded-xl border border-amber-300 bg-amber-50 px-3.5 py-2 text-sm text-amber-900">
                 <FaClock className="shrink-0 text-base" />
                 <p className="font-semibold">Temps écoulé — aucune réponse soumise.</p>
@@ -376,6 +377,7 @@ export default function LiveQuizRoom() {
               correctOptionIds={correctOptionIds}
               hasAnswered={hasAnswered}
               onSubmit={submitAnswer}
+              readOnly={joined.isHost}
             />
 
             {phase === 'open' && (
@@ -390,7 +392,12 @@ export default function LiveQuizRoom() {
               </p>
             )}
 
-            {phase === 'closed' && <ScoreBoard leaderboard={leaderboard} />}
+            {/* L'animateur voit le classement en direct dès qu'une question
+                démarre (pas seulement après révélation) — il coordonne, il a
+                besoin de suivre qui mène à tout moment. */}
+            {(phase === 'closed' || joined.isHost) && (
+              <ScoreBoard leaderboard={leaderboard} title={phase === 'open' ? 'Classement (en direct)' : 'Classement'} />
+            )}
           </div>
         )}
 

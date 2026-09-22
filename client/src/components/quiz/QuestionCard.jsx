@@ -6,7 +6,10 @@ import { useQuizTimer } from '../../hooks/useQuizTimer.js'
 
 const LETTERS = ['A', 'B', 'C', 'D']
 
-export default function QuestionCard({ question, phase, correctOptionIds, hasAnswered, onSubmit }) {
+// `readOnly` : l'animateur coordonne, il ne joue pas — il voit la question
+// se dérouler (chrono, options, révélation) sans pouvoir cliquer ni valider
+// de réponse.
+export default function QuestionCard({ question, phase, correctOptionIds, hasAnswered, onSubmit, readOnly = false }) {
   const [selectedIds, setSelectedIds] = useState([])
   const remainingMs = useQuizTimer(phase === 'open' ? question.endsAt : null)
   const totalMs = question.timeLimit * 1000
@@ -17,7 +20,7 @@ export default function QuestionCard({ question, phase, correctOptionIds, hasAns
   }, [question.questionIndex])
 
   const toggleOption = (id) => {
-    if (hasAnswered || phase !== 'open') return
+    if (readOnly || hasAnswered || phase !== 'open') return
     setSelectedIds((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]))
   }
 
@@ -52,10 +55,13 @@ export default function QuestionCard({ question, phase, correctOptionIds, hasAns
         <h2 className="mb-1 mt-5 text-xl font-extrabold leading-snug tracking-tight text-medi-petrol">
           « {question.text} »
         </h2>
-        {phase === 'open' && !hasAnswered && (
+        {phase === 'open' && !hasAnswered && !readOnly && (
           <p className="mb-5 text-xs font-semibold text-medi-petrol/45">Touche une réponse pour verrouiller ton choix.</p>
         )}
-        {(phase !== 'open' || hasAnswered) && <div className="mb-5" />}
+        {phase === 'open' && readOnly && (
+          <p className="mb-5 text-xs font-semibold text-medi-petrol/45">Les joueurs répondent en ce moment — tu observes.</p>
+        )}
+        {(phase !== 'open' || hasAnswered) && !readOnly && <div className="mb-5" />}
 
         <div className="grid grid-cols-2 gap-3">
           {question.options.map((option, index) => {
@@ -67,7 +73,7 @@ export default function QuestionCard({ question, phase, correctOptionIds, hasAns
                 letter={LETTERS[index]}
                 colorIndex={index}
                 selected={selectedIds.includes(option.id)}
-                disabled={hasAnswered || phase !== 'open'}
+                disabled={readOnly || hasAnswered || phase !== 'open'}
                 state={optionState(option)}
                 onClick={() => toggleOption(option.id)}
                 className={isLastOdd ? 'col-span-2' : ''}
@@ -76,7 +82,7 @@ export default function QuestionCard({ question, phase, correctOptionIds, hasAns
           })}
         </div>
 
-        {phase === 'open' && !hasAnswered && (
+        {phase === 'open' && !hasAnswered && !readOnly && (
           <Button
             className="mt-6 w-full"
             disabled={selectedIds.length === 0}
@@ -86,7 +92,7 @@ export default function QuestionCard({ question, phase, correctOptionIds, hasAns
           </Button>
         )}
 
-        {hasAnswered && phase === 'open' && (
+        {hasAnswered && phase === 'open' && !readOnly && (
           <p className="mt-6 text-center text-sm text-medi-petrol/60">
             Réponse envoyée — en attente des autres participants…
           </p>
