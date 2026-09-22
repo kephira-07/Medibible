@@ -10,13 +10,11 @@ import Button from '../components/common/Button.jsx'
 import AppHeader from '../components/common/AppHeader.jsx'
 import FloatingBlobs from '../components/common/FloatingBlobs.jsx'
 import ConfirmDialog from '../components/common/ConfirmDialog.jsx'
+import Toast from '../components/common/Toast.jsx'
 import { HiOutlineBookOpen } from 'react-icons/hi'
-import { FaBullseye, FaTimes, FaUsers, FaTrophy, FaClock, FaShareAlt, FaChartBar } from 'react-icons/fa'
+import { FaUsers, FaTrophy, FaClock, FaShareAlt, FaChartBar } from 'react-icons/fa'
 
 const MEDALS = ['🥇', '🥈', '🥉']
-// Doit rester synchronisé avec MAX_PLAYERS_PER_SESSION côté serveur
-// (server/src/utils/constants.js) — l'animateur coordonne, il ne compte pas.
-const MAX_PLAYERS = 25
 const AVATAR_COLORS = ['#C1613C', '#8B6F4E', '#D9924A', '#4C8B3E', '#006414']
 function colorForName(name) {
   let hash = 0
@@ -51,6 +49,10 @@ export default function LiveQuizRoom() {
   const [lastResult, setLastResult] = useState(null)
   const [shareCopied, setShareCopied] = useState(false)
   const [showLeaveConfirm, setShowLeaveConfirm] = useState(false)
+  // Notification flottante (bonne/mauvaise réponse, temps écoulé) — posée sur
+  // le côté de l'écran plutôt qu'intégrée au flux, et repart d'elle-même :
+  // plus visible qu'une bannière discrète, sans encombrer la page en continu.
+  const [toast, setToast] = useState(null)
   // Certains réseaux mobiles bloquent/cassent la connexion temps réel sans
   // jamais déclencher d'erreur explicite (voir SocketContext) : ce délai
   // transforme un blocage silencieux sur "Connexion à la session…" en
@@ -109,6 +111,7 @@ export default function LiveQuizRoom() {
       setAnsweredCount(0)
       setCorrectOptionIds([])
       setLastResult(null)
+      setToast(null)
     }
 
     const handleAnswerReceived = ({ answeredCount: count }) => setAnsweredCount(count)
@@ -141,6 +144,22 @@ export default function LiveQuizRoom() {
       socket.off('quiz:sessionEnded', handleSessionEnded)
     }
   }, [socket])
+
+  // Déclenche la notification flottante dès qu'un résultat de réponse arrive.
+  useEffect(() => {
+    if (hasAnswered && lastResult) {
+      setToast({ type: lastResult.isCorrect ? 'correct' : 'incorrect', pointsEarned: lastResult.pointsEarned, elapsedMs: lastResult.elapsedMs })
+    }
+  }, [lastResult, hasAnswered])
+
+  // Déclenche la notification "temps écoulé" à la clôture d'une question à
+  // laquelle le joueur n'a pas répondu (ne concerne jamais l'animateur, qui
+  // n'est pas censé répondre).
+  useEffect(() => {
+    if (phase === 'closed' && !hasAnswered && joined && !joined.isHost) {
+      setToast({ type: 'timeout' })
+    }
+  }, [phase])
 
   const submitAnswer = useCallback(
     (selectedOptionIds, elapsedMs) => {
@@ -249,6 +268,8 @@ export default function LiveQuizRoom() {
           onCancel={() => setShowLeaveConfirm(false)}
         />
 
+        <Toast toast={toast} onDone={() => setToast(null)} />
+
         {!connected && (
           <div className="animate-pop-in w-full rounded-2xl border-2 border-medi-coral/40 bg-medi-coral/10 px-4 py-2.5 text-center text-sm font-semibold text-medi-coral">
             <span className="mr-2 inline-block h-2 w-2 animate-pulse rounded-full bg-medi-coral" />
@@ -290,7 +311,7 @@ export default function LiveQuizRoom() {
             <div className="w-full rounded-2xl border-2 border-medi-border bg-medi-surface/95 p-5">
               <p className="mb-3 flex items-center justify-between text-sm font-extrabold text-medi-petrol">
                 <span className="flex items-center gap-2"><FaUsers /> Joueurs connectés</span>
-                <span className="text-xs font-semibold text-medi-petrol/45">{leaderboard.length} / {MAX_PLAYERS}</span>
+                <span className="text-xs font-semibold text-medi-petrol/45">{leaderboard.length}</span>
               </p>
               {leaderboard.length > 0 ? (
                 <div className="flex flex-wrap gap-2">
@@ -329,48 +350,6 @@ export default function LiveQuizRoom() {
             key={question.questionIndex || question._id}
             className="animate-fade-in-up flex w-full flex-col items-center gap-6"
           >
-            {/* BANNIÈRE COMPACTE DE CONFIRMATION / RÉSULTAT */}
-            {hasAnswered && lastResult && (
-              <div
-                className={`animate-pop-in flex w-full items-center gap-2.5 rounded-xl border px-3.5 py-2 text-sm transition-all duration-300 ${
-                  lastResult.isCorrect
-                    ? 'border-emerald-300 bg-emerald-50 text-emerald-800'
-                    : 'border-rose-300 bg-rose-50 text-rose-800'
-                }`}
-              >
-                {lastResult.isCorrect ? (
-                  <>
-                    <FaBullseye className="shrink-0 text-base" />
-                    <p className="min-w-0 flex-1 truncate font-semibold">
-                      Bonne réponse !{' '}
-                      {typeof lastResult.elapsedMs === 'number' && (
-                        <span className="font-normal text-emerald-700/70">
-                          ({(lastResult.elapsedMs / 1000).toFixed(1)}s)
-                        </span>
-                      )}
-                    </p>
-                    <span className="shrink-0 rounded-full bg-emerald-200/80 px-2 py-0.5 text-xs font-extrabold text-emerald-900">
-                      +{lastResult.pointsEarned}
-                    </span>
-                  </>
-                ) : (
-                  <>
-                    <FaTimes className="shrink-0 text-base" />
-                    <p className="font-semibold">Mauvaise réponse — pas de points.</p>
-                  </>
-                )}
-              </div>
-            )}
-
-            {/* SI CLÔTURÉ ET SANS RÉPONSE — ne concerne jamais l'animateur,
-                qui n'est pas censé répondre. */}
-            {!hasAnswered && phase === 'closed' && !joined.isHost && (
-              <div className="animate-pop-in flex w-full items-center gap-2.5 rounded-xl border border-amber-300 bg-amber-50 px-3.5 py-2 text-sm text-amber-900">
-                <FaClock className="shrink-0 text-base" />
-                <p className="font-semibold">Temps écoulé — aucune réponse soumise.</p>
-              </div>
-            )}
-
             <QuestionCard
               question={question}
               phase={phase}

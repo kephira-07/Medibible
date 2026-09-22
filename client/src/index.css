@@ -158,6 +158,25 @@
     animation: bounce-in 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) both;
   }
 
+  /* Notification flottante (bonne/mauvaise réponse, temps écoulé) : glisse
+     depuis le côté puis repart d'elle-même après quelques secondes. */
+  @keyframes toast-in {
+    from {
+      transform: translateX(24px) scale(0.95);
+      opacity: 0;
+    }
+    to {
+      transform: translateX(0) scale(1);
+      opacity: 1;
+    }
+  }
+  .animate-toast-in {
+    animation: toast-in 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+  }
+  .animate-toast-out {
+    animation: toast-in 0.25s ease-in reverse both;
+  }
+
   /* Décor de fond qui flotte doucement */
   @keyframes float-slow {
     0%,

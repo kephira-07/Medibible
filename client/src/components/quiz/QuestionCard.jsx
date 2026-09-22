@@ -63,9 +63,8 @@ export default function QuestionCard({ question, phase, correctOptionIds, hasAns
         )}
         {(phase !== 'open' || hasAnswered) && !readOnly && <div className="mb-5" />}
 
-        <div className="grid grid-cols-2 gap-3">
+        <div className="flex flex-col gap-3">
           {question.options.map((option, index) => {
-            const isLastOdd = question.options.length % 2 === 1 && index === question.options.length - 1
             return (
               <OptionButton
                 key={option.id}
@@ -76,7 +75,6 @@ export default function QuestionCard({ question, phase, correctOptionIds, hasAns
                 disabled={readOnly || hasAnswered || phase !== 'open'}
                 state={optionState(option)}
                 onClick={() => toggleOption(option.id)}
-                className={isLastOdd ? 'col-span-2' : ''}
               />
             )
           })}

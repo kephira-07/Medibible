@@ -3,7 +3,6 @@ import Quiz from '../models/Quiz.js'
 import Score from '../models/Score.js'
 import { computeAnswerResult } from './scoreEngine.js'
 import { scheduleQuestionClose, cancelQuestionClose } from './timerEngine.js'
-import { MAX_PLAYERS_PER_SESSION } from '../utils/constants.js'
 
 const roomName = (sessionId) => `session:${sessionId}`
 
@@ -125,20 +124,6 @@ export function registerQuizHandlers(io, socket) {
 
       if (!isHost && !bergerName?.trim()) {
         return callback?.({ error: 'bergerName est requis pour rejoindre en tant que participant.' })
-      }
-
-      if (!isHost) {
-        // L'animateur coordonne, il ne compte pas comme joueur — la limite
-        // ne s'applique qu'aux participants, et pas à quelqu'un qui rejoint
-        // à nouveau (reconnexion) puisqu'il occupe déjà une place.
-        const alreadyJoined = session.participants.some((p) =>
-          user ? p.user?.toString() === user.id : p.displayName === displayName
-        )
-        if (!alreadyJoined && session.participants.length >= MAX_PLAYERS_PER_SESSION) {
-          return callback?.({
-            error: `Cette session a atteint sa capacité maximale de ${MAX_PLAYERS_PER_SESSION} joueurs.`,
-          })
-        }
       }
 
       socket.join(roomName(session.id))
