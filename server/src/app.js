@@ -21,7 +21,26 @@ export function createApp() {
   const app = express()
 
   app.disable('x-powered-by')
-  app.use(helmet({ crossOriginResourcePolicy: false }))
+  app.use(
+    helmet({
+      crossOriginResourcePolicy: false,
+      // Par défaut, Helmet ne définit pas `connect-src`, qui retombe alors
+      // sur `default-src 'self'` — cela bloque silencieusement, côté
+      // navigateur, TOUTE connexion sortante vers un autre domaine, y
+      // compris le vocal LiveKit (appels REST `/settings/regions`,
+      // `/rtc/v1/validate` et le WebSocket `wss://…livekit.cloud`). Sans
+      // cette autorisation explicite, le chat vocal échoue pour tout le
+      // monde, sur n'importe quel réseau, avec "could not establish signal
+      // connection : Failed to fetch" — ce n'est jamais un souci réseau
+      // côté client, la CSP bloque la requête avant même qu'elle ne parte.
+      contentSecurityPolicy: {
+        directives: {
+          ...helmet.contentSecurityPolicy.getDefaultDirectives(),
+          connectSrc: ["'self'", 'https://*.livekit.cloud', 'wss://*.livekit.cloud'],
+        },
+      },
+    })
+  )
   app.use(
     rateLimit({
       windowMs: 15 * 60 * 1000,
