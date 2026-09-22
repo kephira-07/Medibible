@@ -32,7 +32,7 @@ export default function LiveQuizRoom() {
   const { accessCode } = useParams()
   const location = useLocation()
   const navigate = useNavigate()
-  const { socket, connected } = useSocket()
+  const { socket, connected, connectError, retryConnection } = useSocket()
   const { user } = useAuth()
 
   const normalizedCode = accessCode?.toUpperCase()
@@ -51,6 +51,19 @@ export default function LiveQuizRoom() {
   const [lastResult, setLastResult] = useState(null)
   const [shareCopied, setShareCopied] = useState(false)
   const [showLeaveConfirm, setShowLeaveConfirm] = useState(false)
+  // Certains réseaux mobiles bloquent/cassent la connexion temps réel sans
+  // jamais déclencher d'erreur explicite (voir SocketContext) : ce délai
+  // transforme un blocage silencieux sur "Connexion à la session…" en
+  // message actionnable avec bouton "Réessayer", plutôt que de laisser le
+  // joueur bloqué indéfiniment sans aucun retour.
+  const [joinTimedOut, setJoinTimedOut] = useState(false)
+
+  useEffect(() => {
+    if (joined || error) return
+    setJoinTimedOut(false)
+    const timer = setTimeout(() => setJoinTimedOut(true), 8000)
+    return () => clearTimeout(timer)
+  }, [joined, error, connected])
 
   // Redirection si pas de pseudo
   useEffect(() => {
@@ -191,9 +204,25 @@ export default function LiveQuizRoom() {
   }
 
   if (!joined) {
+    const stuck = connectError || joinTimedOut
     return (
-      <main className="flex min-h-svh items-center justify-center bg-medi-cream">
-        <p className="text-medi-petrol/60">Connexion à la session…</p>
+      <main className="flex min-h-svh flex-col items-center justify-center gap-4 bg-medi-cream px-4 text-center">
+        <p className="text-medi-petrol/60">{stuck ? 'La connexion prend trop de temps…' : 'Connexion à la session…'}</p>
+        {stuck && (
+          <>
+            <p className="max-w-xs text-sm text-medi-petrol/50">
+              Ça arrive parfois avec la 4G/5G d'un opérateur mobile. Essaie de basculer sur le Wi-Fi si possible, ou réessaie.
+            </p>
+            <Button
+              onClick={() => {
+                setJoinTimedOut(false)
+                retryConnection()
+              }}
+            >
+              Réessayer
+            </Button>
+          </>
+        )}
       </main>
     )
   }
