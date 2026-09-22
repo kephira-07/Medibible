@@ -1,6 +1,27 @@
-// Emblème abstrait MediBible : un arbre aux branches entrelacées sortant
-// d'un livre ouvert, sur un cercle évoquant le globe — dérivé de la charte.
+// Emblème MediBible — client/public/logo.jpeg. S'affiche automatiquement
+// partout où <BrandMark /> est utilisé (accueil, connexion, en-têtes), à la
+// bonne taille à chaque endroit. Si le fichier venait à manquer (404), le
+// logo SVG généré précédemment reste affiché en repli.
 export default function BrandMark({ className = 'h-10 w-10' }) {
+  return (
+    <span className={`relative inline-block ${className}`}>
+      <FallbackMark className="absolute inset-0 h-full w-full" />
+      <img
+        src="/logo.jpeg"
+        alt="MediBible"
+        className="absolute inset-0 h-full w-full rounded-full object-cover"
+        onError={(e) => {
+          e.currentTarget.style.display = 'none'
+        }}
+      />
+    </span>
+  )
+}
+
+// Repli affiché en dessous du <img> — reste invisible dès que /logo.jpeg se
+// charge avec succès (il recouvre alors ce SVG), retiré automatiquement de
+// la vue si le fichier est absent puisque l'image casse et disparaît.
+function FallbackMark({ className }) {
   return (
     <svg viewBox="0 0 48 48" className={className} fill="none" xmlns="http://www.w3.org/2000/svg">
       <circle cx="24" cy="24" r="21" stroke="#006414" strokeWidth="2.5" />

@@ -132,25 +132,27 @@ export default function JoinSession() {
               />
             </label>
 
-            <div className="flex flex-col gap-2 text-sm font-bold text-medi-petrol/75">
+            <label className="flex flex-col gap-2 text-sm font-bold text-medi-petrol/75">
               Votre berger
-              <div className="flex flex-wrap gap-2">
+              <select
+                id="bergerName"
+                name="bergerName"
+                value={bergerName}
+                onChange={(e) => setBergerName(e.target.value)}
+                className={`min-h-12 appearance-none rounded-2xl border-2 bg-white bg-[url('data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2020%2020%22%20fill%3D%22%2316323E%22%3E%3Cpath%20fill-rule%3D%22evenodd%22%20d%3D%22M5.23%207.21a.75.75%200%20011.06.02L10%2011.168l3.71-3.938a.75.75%200%20111.08%201.04l-4.25%204.5a.75.75%200%2001-1.08%200l-4.25-4.5a.75.75%200%2001.02-1.06z%22%20clip-rule%3D%22evenodd%22%2F%3E%3C%2Fsvg%3E')] bg-[length:1.1rem] bg-[right_1rem_center] bg-no-repeat px-4 pr-10 text-medi-petrol outline-none transition focus:ring-4 ${
+                  bergerName ? 'border-medi-green-deep' : 'border-medi-border'
+                } focus:border-medi-sky focus:ring-medi-sky/20`}
+              >
+                <option value="" disabled>
+                  Choisis ton berger…
+                </option>
                 {BERGERS.map((b) => (
-                  <button
-                    key={b}
-                    type="button"
-                    onClick={() => setBergerName(b)}
-                    className={`rounded-full px-3.5 py-1.5 text-sm font-bold transition ${
-                      bergerName === b
-                        ? 'bg-medi-green-deep text-white'
-                        : 'bg-white border-2 border-medi-border text-medi-petrol/60 hover:border-medi-sky'
-                    }`}
-                  >
+                  <option key={b} value={b}>
                     {b}
-                  </button>
+                  </option>
                 ))}
-              </div>
-            </div>
+              </select>
+            </label>
 
             <Button
               variant="primary"

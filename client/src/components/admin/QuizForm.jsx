@@ -2,7 +2,7 @@ import { useState } from 'react'
 import QuestionEditor from './QuestionEditor.jsx'
 import QuestionBankPicker from './QuestionBankPicker.jsx'
 import Button from '../common/Button.jsx'
-import { HiOutlineAdjustments, HiOutlineLightBulb, HiOutlinePlus, HiOutlinePencil } from 'react-icons/hi'
+import { HiOutlineAdjustments, HiOutlinePlus, HiOutlinePencil } from 'react-icons/hi'
 import { HiOutlineBookOpen, HiOutlineClock } from 'react-icons/hi'
 import { FaBookOpen } from 'react-icons/fa'
 
@@ -210,14 +210,6 @@ export default function QuizForm({ initialQuiz, onSubmit, submitting, error }) {
       {bankOpen && (
         <QuestionBankPicker onAdd={addQuestionFromBank} onClose={() => setBankOpen(false)} />
       )}
-
-      <div className="flex items-start gap-3 rounded-2xl border-2 border-medi-gold/30 bg-medi-gold/8 p-4">
-        <HiOutlineLightBulb className="mt-0.5 shrink-0 text-medi-gold" />
-        <p className="text-sm text-medi-petrol/75">
-          <span className="font-bold">Conseil pour l'animateur : </span>
-          pour garder un rythme convivial, 10 à 15 questions avec un chronomètre de 20 à 30 secondes créent un bon équilibre entre jeu et réflexion.
-        </p>
-      </div>
 
       {(localError || error) && (
         <p className="rounded-xl border-2 border-medi-coral/30 bg-medi-coral/10 px-4 py-2 text-sm font-semibold text-medi-coral">
