@@ -68,6 +68,12 @@ export function AuthProvider({ children }) {
     setAuth(null)
   }, [])
 
+  // Met à jour l'utilisateur en mémoire sans repasser par un login complet —
+  // utilisé après un changement de mot de passe (mustChangePassword: false).
+  const updateUser = useCallback((partialUser) => {
+    setAuth((prev) => (prev ? { ...prev, user: { ...prev.user, ...partialUser } } : prev))
+  }, [])
+
   return (
     <AuthContext.Provider
       value={{
@@ -77,6 +83,7 @@ export function AuthProvider({ children }) {
         login,
         register,
         logout,
+        updateUser,
       }}
     >
       {children}

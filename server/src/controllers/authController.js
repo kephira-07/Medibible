@@ -43,7 +43,7 @@ async function issueTokens(user) {
 }
 
 function toPublicUser(user) {
-  return { id: user.id, name: user.name, email: user.email, role: user.role }
+  return { id: user.id, name: user.name, email: user.email, role: user.role, mustChangePassword: Boolean(user.mustChangePassword) }
 }
 
 async function getStaticEnvUser(email, password) {
@@ -53,22 +53,27 @@ async function getStaticEnvUser(email, password) {
   ]
 
   const matched = candidates.find(
-    (candidate) =>
-      candidate.email &&
-      candidate.password &&
-      candidate.email === normalizedEmail &&
-      candidate.password === password
+    (candidate) => candidate.email && candidate.password && candidate.email === normalizedEmail
   )
-
   if (!matched) return null
 
   let user = await User.findOne({ email: normalizedEmail })
+
+  // Dès que l'admin a défini son propre mot de passe, le mot de passe
+  // d'amorçage (variable d'environnement, connue du développeur qui l'a
+  // configurée) ne doit plus jamais permettre de se connecter à ce compte —
+  // sinon changer son mot de passe depuis l'appli ne servirait à rien.
+  if (user && !user.mustChangePassword) return null
+
+  if (matched.password !== password) return null
+
   if (!user) {
     user = await User.create({
       name: 'Admin Env',
       email: normalizedEmail,
       passwordHash: await bcrypt.hash(matched.password, SALT_ROUNDS),
       role: matched.role,
+      mustChangePassword: true,
     })
   } else if (user.role !== matched.role) {
     user.role = matched.role
@@ -203,6 +208,33 @@ export async function me(req, res, next) {
     const user = await User.findById(req.user.id)
     if (!user) return next(httpError(404, 'Utilisateur introuvable.'))
     res.json(toPublicUser(user))
+  } catch (err) {
+    next(err)
+  }
+}
+
+// POST /api/auth/change-password — protégé par authenticate. Une fois le mot
+// de passe changé, `mustChangePassword` retombe à false : le mot de passe
+// d'amorçage (variable d'environnement) ne fonctionnera plus pour ce compte.
+export async function changePassword(req, res, next) {
+  try {
+    const { currentPassword, newPassword } = req.body || {}
+
+    if (typeof newPassword !== 'string' || newPassword.length < 8 || newPassword.length > 128) {
+      return next(httpError(400, 'Le nouveau mot de passe doit contenir entre 8 et 128 caractères.'))
+    }
+
+    const user = await User.findById(req.user.id)
+    if (!user) return next(httpError(404, 'Utilisateur introuvable.'))
+
+    const valid = await bcrypt.compare(String(currentPassword || ''), user.passwordHash)
+    if (!valid) return next(httpError(401, 'Mot de passe actuel incorrect.'))
+
+    user.passwordHash = await bcrypt.hash(newPassword, SALT_ROUNDS)
+    user.mustChangePassword = false
+    await user.save()
+
+    res.json({ user: toPublicUser(user) })
   } catch (err) {
     next(err)
   }

@@ -7,6 +7,7 @@ import AdminDashboard from './pages/admin/AdminDashboard.jsx'
 import QuizEditorPage from './pages/admin/QuizEditorPage.jsx'
 import MyQuizzesPage from './pages/admin/MyQuizzesPage.jsx'
 import MySessionsPage from './pages/admin/MySessionsPage.jsx'
+import ChangePasswordPage from './pages/admin/ChangePasswordPage.jsx'
 import RequireAuth from './components/common/RequireAuth.jsx'
 import HostDashboard from './pages/HostDashboard.jsx'
 import NotFound from './pages/NotFound.jsx'
@@ -22,6 +23,14 @@ function App() {
         element={
           <RequireAuth>
             <AdminDashboard />
+          </RequireAuth>
+        }
+      />
+      <Route
+        path="/admin/changer-mot-de-passe"
+        element={
+          <RequireAuth>
+            <ChangePasswordPage />
           </RequireAuth>
         }
       />
