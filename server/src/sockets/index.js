@@ -6,14 +6,16 @@ import { isOriginAllowed } from '../utils/allowedOrigins.js'
 
 export function initSocket(httpServer) {
   const io = new Server(httpServer, {
-    cors: {
-      origin(origin, callback) {
-        if (isOriginAllowed(origin)) {
-          return callback(null, true)
-        }
-        return callback(new Error('Origin non autorisée par CORS'))
-      },
-      credentials: true,
+    // Forme "délégué par requête" du package `cors` (utilisée en interne par
+    // Socket.IO/Engine.IO) : contrairement à `{ origin(origin, callback) }`,
+    // elle donne accès à `req`, donc à `req.headers.host` — nécessaire pour
+    // autoriser automatiquement le domaine qui sert l'appli lui-même (voir
+    // allowedOrigins.js).
+    cors: (req, callback) => {
+      if (isOriginAllowed(req.headers.origin, req.headers.host)) {
+        return callback(null, { origin: true, credentials: true })
+      }
+      return callback(new Error('Origin non autorisée par CORS'))
     },
   })
 

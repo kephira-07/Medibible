@@ -1,8 +1,10 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import Button from '../components/common/Button.jsx'
 import AppHeader from '../components/common/AppHeader.jsx'
 import WelcomeIllustration from '../components/common/WelcomeIllustration.jsx'
+import api from '../services/api.js'
+import { HiCheckCircle, HiXCircle } from 'react-icons/hi'
 
 const BERGERS = ['Charles HE', 'Charles DAKPE', 'Edwige', 'Délali', 'Pascaline', 'Prunelle']
 
@@ -11,8 +13,45 @@ export default function JoinSession() {
   const [accessCode, setAccessCode] = useState('')
   const [displayName, setDisplayName] = useState('')
   const [bergerName, setBergerName] = useState('')
+  // idle | checking | valid | invalid — vérifie le code auprès du serveur dès
+  // que 6 caractères sont saisis, pour prévenir tout de suite d'une faute de
+  // frappe plutôt que de laisser le joueur naviguer vers une session qui
+  // n'existe pas et découvrir l'erreur plus tard.
+  const [codeStatus, setCodeStatus] = useState('idle')
+  const [codeInfo, setCodeInfo] = useState(null)
 
-  const canSubmit = accessCode.trim() && displayName.trim() && bergerName
+  useEffect(() => {
+    const normalized = accessCode.trim().toUpperCase()
+    if (normalized.length !== 6) {
+      setCodeStatus('idle')
+      setCodeInfo(null)
+      return
+    }
+
+    let cancelled = false
+    setCodeStatus('checking')
+    const timer = setTimeout(() => {
+      api
+        .get(`/sessions/${normalized}`)
+        .then(({ data }) => {
+          if (cancelled) return
+          setCodeStatus('valid')
+          setCodeInfo(data)
+        })
+        .catch(() => {
+          if (cancelled) return
+          setCodeStatus('invalid')
+          setCodeInfo(null)
+        })
+    }, 350)
+
+    return () => {
+      cancelled = true
+      clearTimeout(timer)
+    }
+  }, [accessCode])
+
+  const canSubmit = codeStatus === 'valid' && displayName.trim() && bergerName
 
   const handleSubmit = (e) => {
     e.preventDefault()
@@ -54,9 +93,30 @@ export default function JoinSession() {
                 value={accessCode}
                 onChange={(e) => setAccessCode(e.target.value)}
                 placeholder="AB12CD"
-                className="min-h-14 rounded-2xl border-2 border-medi-gold/50 bg-medi-gold/10 px-4 text-center text-2xl font-extrabold uppercase tracking-[0.35em] text-medi-petrol outline-none transition focus:border-medi-gold focus:ring-4 focus:ring-medi-gold/25"
+                autoComplete="off"
+                className={`min-h-14 rounded-2xl border-2 bg-medi-gold/10 px-4 text-center text-2xl font-extrabold uppercase tracking-[0.35em] text-medi-petrol outline-none transition focus:ring-4 ${
+                  codeStatus === 'valid'
+                    ? 'border-emerald-400 focus:border-emerald-400 focus:ring-emerald-200/40'
+                    : codeStatus === 'invalid'
+                      ? 'border-medi-coral focus:border-medi-coral focus:ring-medi-coral/20'
+                      : 'border-medi-gold/50 focus:border-medi-gold focus:ring-medi-gold/25'
+                }`}
                 maxLength={6}
               />
+              {codeStatus === 'checking' && (
+                <span className="text-center text-xs font-semibold text-medi-petrol/50">Vérification du code…</span>
+              )}
+              {codeStatus === 'valid' && (
+                <span className="flex items-center justify-center gap-1.5 text-center text-xs font-bold text-emerald-600">
+                  <HiCheckCircle className="text-sm" /> {codeInfo?.quizTitle}
+                  {codeInfo?.status === 'ended' && ' — session terminée'}
+                </span>
+              )}
+              {codeStatus === 'invalid' && (
+                <span className="flex items-center justify-center gap-1.5 text-center text-xs font-bold text-medi-coral">
+                  <HiXCircle className="text-sm" /> Aucune session ne correspond à ce code.
+                </span>
+              )}
             </label>
 
             <label className="flex flex-col gap-2 text-sm font-bold text-medi-petrol/75">

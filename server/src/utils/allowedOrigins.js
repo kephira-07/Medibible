@@ -14,6 +14,18 @@ export const allowedOrigins = new Set([
   env.clientUrl,
 ])
 
-export function isOriginAllowed(origin) {
-  return !origin || allowedOrigins.has(origin)
+// `host` est l'en-tête Host de la requête (ex: "medibible.onrender.com").
+// Le serveur sert lui-même le client buildé (client/dist) sur ce même
+// domaine en production, donc une requête dont l'Origin correspond
+// exactement au domaine qui la sert est forcément légitime — même si
+// CLIENT_URL a été mal configuré (mauvaise valeur, oubli après un
+// changement de nom de domaine sur l'hébergeur, etc.). Ce filet de
+// sécurité évite qu'une simple variable d'environnement mal réglée ne
+// bloque silencieusement tous les joueurs avec "Connexion à la session…"
+// qui ne se termine jamais.
+export function isOriginAllowed(origin, host) {
+  if (!origin) return true
+  if (allowedOrigins.has(origin)) return true
+  if (host && (origin === `https://${host}` || origin === `http://${host}`)) return true
+  return false
 }

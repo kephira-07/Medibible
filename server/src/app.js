@@ -32,14 +32,11 @@ export function createApp() {
     })
   )
   app.use(
-    cors({
-      origin(origin, callback) {
-        if (isOriginAllowed(origin)) {
-          return callback(null, true)
-        }
-        return callback(new Error('Origin non autorisée par CORS'))
-      },
-      credentials: true,
+    cors((req, callback) => {
+      if (isOriginAllowed(req.headers.origin, req.headers.host)) {
+        return callback(null, { origin: true, credentials: true })
+      }
+      return callback(new Error('Origin non autorisée par CORS'))
     })
   )
   app.use(express.json({ limit: '1mb' }))
