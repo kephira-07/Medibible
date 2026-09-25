@@ -4,6 +4,7 @@ import Score from '../models/Score.js'
 import { computeAnswerResult } from './scoreEngine.js'
 import { scheduleQuestionClose, cancelQuestionClose } from './timerEngine.js'
 import { sanitizeAvatar } from '../utils/avatars.js'
+import { isValidReaction } from '../utils/reactions.js'
 
 const roomName = (sessionId) => `session:${sessionId}`
 
@@ -129,6 +130,8 @@ export function registerQuizHandlers(io, socket) {
 
       socket.join(roomName(session.id))
       socket.data.sessionId = session.id.toString()
+      socket.data.displayName = displayName
+      socket.data.avatar = isHost ? '' : sanitizeAvatar(avatar)
 
       if (!isHost) {
         // Écritures Mongo atomiques (updateOne, pas de lire-modifier-écrire
@@ -196,12 +199,47 @@ export function registerQuizHandlers(io, socket) {
                 totalQuestions: quiz.questions.length,
               }
             : null,
+        // Reconnexion / rechargement pendant l'affichage des résultats : sans
+        // ça le joueur retomberait sur la salle d'attente.
+        closedQuestion:
+          session.questionPhase === 'closed' && session.currentQuestionIndex >= 0
+            ? (() => {
+                const q = quiz.questions[session.currentQuestionIndex]
+                return {
+                  ...publicQuestion(q, session),
+                  totalQuestions: quiz.questions.length,
+                  correctOptionIds: q.options.filter((o) => o.isCorrect).map((o) => o._id),
+                  bibleReference: q.bibleReference,
+                }
+              })()
+            : null,
         leaderboard: publicLeaderboard(session),
       })
     } catch (err) {
       console.error('[socket] session:join', err)
       callback?.({ error: 'Impossible de rejoindre la session.' })
     }
+  })
+
+  // Réaction emoji (comme dans une visio) : diffusée à tout le salon. Seuls
+  // les identifiants de la liste blanche passent, et un léger délai par
+  // connexion évite de noyer l'écran des autres.
+  socket.on('reaction:send', ({ reaction } = {}, callback) => {
+    const sessionId = socket.data.sessionId
+    if (!sessionId) return callback?.({ error: "Vous n'avez pas rejoint de session." })
+    if (!isValidReaction(reaction)) return callback?.({ error: 'Réaction inconnue.' })
+
+    const now = Date.now()
+    if (now - (socket.data.lastReactionAt || 0) < 500) return callback?.({ ok: false })
+    socket.data.lastReactionAt = now
+
+    io.to(roomName(sessionId)).emit('reaction:received', {
+      id: `${socket.id}-${now}`,
+      reaction,
+      displayName: socket.data.displayName,
+      avatar: socket.data.avatar || '',
+    })
+    callback?.({ ok: true })
   })
 
   // L'hôte avance le quiz d'un cran : démarre la 1ère question, révèle les

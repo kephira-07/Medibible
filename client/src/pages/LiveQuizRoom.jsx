@@ -12,6 +12,9 @@ import FloatingBlobs from '../components/common/FloatingBlobs.jsx'
 import ConfirmDialog from '../components/common/ConfirmDialog.jsx'
 import Toast from '../components/common/Toast.jsx'
 import Avatar from '../components/common/Avatar.jsx'
+import ErrorBoundary from '../components/common/ErrorBoundary.jsx'
+import ReactionBar from '../components/quiz/ReactionBar.jsx'
+import ReactionLayer from '../components/quiz/ReactionLayer.jsx'
 import { HiOutlineBookOpen } from 'react-icons/hi'
 import { FaUsers, FaTrophy, FaClock, FaShareAlt, FaChartBar } from 'react-icons/fa'
 
@@ -45,6 +48,8 @@ export default function LiveQuizRoom() {
   // le côté de l'écran plutôt qu'intégrée au flux, et repart d'elle-même :
   // plus visible qu'une bannière discrète, sans encombrer la page en continu.
   const [toast, setToast] = useState(null)
+  // Réactions emoji reçues (affichées quelques secondes puis retirées).
+  const [reactions, setReactions] = useState([])
   // Certains réseaux mobiles bloquent/cassent la connexion temps réel sans
   // jamais déclencher d'erreur explicite (voir SocketContext) : ce délai
   // transforme un blocage silencieux sur "Connexion à la session…" en
@@ -86,6 +91,11 @@ export default function LiveQuizRoom() {
       if (res.activeQuestion) {
         setQuestion(res.activeQuestion)
         setPhase('open')
+      } else if (res.closedQuestion) {
+        setQuestion(res.closedQuestion)
+        setCorrectOptionIds(res.closedQuestion.correctOptionIds || [])
+        setBibleReference(res.closedQuestion.bibleReference || '')
+        setPhase('closed')
       } else if (res.session?.status === 'ended') {
         setPhase('ended')
       }
@@ -117,6 +127,11 @@ export default function LiveQuizRoom() {
 
     const handleParticipantsUpdate = (lb) => setLeaderboard(lb || [])
 
+    const handleReaction = (r) => {
+      setReactions((prev) => [...prev.slice(-9), r])
+      setTimeout(() => setReactions((prev) => prev.filter((x) => x.id !== r.id)), 3500)
+    }
+
     const handleSessionEnded = (payload) => {
       setPhase('ended')
       setLeaderboard(payload?.leaderboard || [])
@@ -127,6 +142,7 @@ export default function LiveQuizRoom() {
     socket.on('quiz:questionEnded', handleQuestionEnded)
     socket.on('session:participantsUpdate', handleParticipantsUpdate)
     socket.on('quiz:sessionEnded', handleSessionEnded)
+    socket.on('reaction:received', handleReaction)
 
     return () => {
       socket.off('quiz:questionStarted', handleQuestionStarted)
@@ -134,6 +150,7 @@ export default function LiveQuizRoom() {
       socket.off('quiz:questionEnded', handleQuestionEnded)
       socket.off('session:participantsUpdate', handleParticipantsUpdate)
       socket.off('quiz:sessionEnded', handleSessionEnded)
+      socket.off('reaction:received', handleReaction)
     }
   }, [socket])
 
@@ -152,6 +169,8 @@ export default function LiveQuizRoom() {
       setToast({ type: 'timeout' })
     }
   }, [phase])
+
+  const sendReaction = useCallback((reaction) => socket.emit('reaction:send', { reaction }), [socket])
 
   const submitAnswer = useCallback(
     (selectedOptionIds, elapsedMs) => {
@@ -261,6 +280,8 @@ export default function LiveQuizRoom() {
         />
 
         <Toast toast={toast} onDone={() => setToast(null)} />
+        <ReactionLayer reactions={reactions} />
+        <ReactionBar onReact={sendReaction} />
 
         {!connected && (
           <div className="animate-pop-in w-full rounded-2xl border-2 border-medi-coral/40 bg-medi-coral/10 px-4 py-2.5 text-center text-sm font-semibold text-medi-coral">
@@ -281,7 +302,9 @@ export default function LiveQuizRoom() {
           </div>
         </div>
 
-        <AudioRoom roomName={normalizedCode} displayName={displayName} avatar={avatar} isHost={joined.isHost} />
+        <ErrorBoundary message="Le vocal est momentanément indisponible — la partie continue normalement.">
+          <AudioRoom roomName={normalizedCode} displayName={displayName} avatar={avatar} isHost={joined.isHost} />
+        </ErrorBoundary>
 
         {/* SALLE D'ATTENTE — avant que l'animateur ne lance une question */}
         {phase === 'lobby' && (
