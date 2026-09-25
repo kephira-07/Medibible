@@ -28,6 +28,11 @@ const ParticipantSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
+  // Identifiant d'avatar choisi à l'inscription (voir utils/avatars.js).
+  avatar: {
+    type: String,
+    default: '',
+  },
   socketId: {
     type: String,
     default: null,

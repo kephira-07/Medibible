@@ -1,17 +1,6 @@
 import { useMemo } from 'react'
 import { FaTrophy } from 'react-icons/fa'
-
-function initialFrom(name) {
-  return name?.trim().charAt(0).toUpperCase() || '?'
-}
-
-const AVATAR_COLORS = ['#C1613C', '#8B6F4E', '#D9924A', '#4C8B3E', '#006414']
-function colorForName(name) {
-  let hash = 0
-  const str = name || ''
-  for (let i = 0; i < str.length; i += 1) hash = str.charCodeAt(i) + ((hash << 5) - hash)
-  return AVATAR_COLORS[Math.abs(hash) % AVATAR_COLORS.length]
-}
+import Avatar from '../common/Avatar.jsx'
 
 const MEDALS = ['🥇', '🥈', '🥉']
 
@@ -163,12 +152,7 @@ export default function SessionDetailModal({ session, onClose }) {
                       isWinner ? 'border-medi-gold/50 bg-medi-gold/8' : 'border-transparent bg-white'
                     }`}
                   >
-                    <span
-                      className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-bold text-white"
-                      style={{ backgroundColor: colorForName(p.displayName) }}
-                    >
-                      {initialFrom(p.displayName)}
-                    </span>
+                    <Avatar name={p.displayName} avatar={p.avatar} size={32} />
                     <span className="min-w-0 flex-1">
                       <span className="flex items-center gap-1.5">
                         <span className="truncate font-medium text-medi-petrol">{p.displayName}</span>

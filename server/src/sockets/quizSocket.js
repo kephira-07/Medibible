@@ -3,12 +3,13 @@ import Quiz from '../models/Quiz.js'
 import Score from '../models/Score.js'
 import { computeAnswerResult } from './scoreEngine.js'
 import { scheduleQuestionClose, cancelQuestionClose } from './timerEngine.js'
+import { sanitizeAvatar } from '../utils/avatars.js'
 
 const roomName = (sessionId) => `session:${sessionId}`
 
 function publicLeaderboard(session) {
   return [...session.participants]
-    .map((p) => ({ displayName: p.displayName, totalScore: p.totalScore }))
+    .map((p) => ({ displayName: p.displayName, avatar: p.avatar || '', totalScore: p.totalScore }))
     .sort((a, b) => b.totalScore - a.totalScore)
 }
 
@@ -107,7 +108,7 @@ async function endSession(io, session) {
 
 export function registerQuizHandlers(io, socket) {
   // Un joueur ou l'hôte rejoint le salon d'une session via son code d'accès
-  socket.on('session:join', async ({ accessCode, displayName, bergerName, email }, callback) => {
+  socket.on('session:join', async ({ accessCode, displayName, bergerName, email, avatar }, callback) => {
     try {
       if (!accessCode || !displayName) {
         return callback?.({ error: 'accessCode et displayName sont requis.' })
@@ -146,6 +147,7 @@ export function registerQuizHandlers(io, socket) {
               'participants.$.socketId': socket.id,
               'participants.$.displayName': displayName,
               'participants.$.bergerName': bergerName,
+              'participants.$.avatar': sanitizeAvatar(avatar),
               ...(email ? { 'participants.$.email': email } : {}),
             },
           }
@@ -164,6 +166,7 @@ export function registerQuizHandlers(io, socket) {
                   user: user ? user.id : null,
                   displayName,
                   bergerName,
+                  avatar: sanitizeAvatar(avatar),
                   email: email || '',
                   socketId: socket.id,
                   totalScore: 0,

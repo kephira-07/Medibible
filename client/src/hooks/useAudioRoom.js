@@ -31,6 +31,8 @@ export function useAudioRoom() {
   const [connected, setConnected] = useState(false)
   const [participants, setParticipants] = useState([])
   const [muted, setMuted] = useState(false)
+  // Vrai quand l'animateur a retiré le droit de parler à ce joueur.
+  const [forcedMute, setForcedMute] = useState(false)
   const [error, setError] = useState(null)
 
   const syncParticipants = useCallback(() => {
@@ -39,21 +41,32 @@ export function useAudioRoom() {
 
     const all = [room.localParticipant, ...Array.from(room.remoteParticipants.values())]
     setParticipants(
-      all.map((p) => ({
-        identity: p.identity,
-        name: p.name || p.identity,
-        isLocal: p === room.localParticipant,
-        isSpeaking: p.isSpeaking,
-        isMuted: !(p.isMicrophoneEnabled ?? true),
-      }))
+      all.map((p) => {
+        let meta = {}
+        try {
+          meta = p.metadata ? JSON.parse(p.metadata) : {}
+        } catch {
+          meta = {}
+        }
+        return {
+          identity: p.identity,
+          name: p.name || p.identity,
+          avatar: meta.avatar || '',
+          isHostUser: Boolean(meta.isHost),
+          isLocal: p === room.localParticipant,
+          isSpeaking: p.isSpeaking,
+          isMuted: !(p.isMicrophoneEnabled ?? true),
+          canPublish: p.permissions?.canPublish ?? true,
+        }
+      })
     )
   }, [])
 
   const connect = useCallback(
-    async (roomName, displayName) => {
+    async (roomName, displayName, avatar) => {
       setError(null)
       try {
-        const { data } = await api.post('/audio/token', { roomName, displayName })
+        const { data } = await api.post('/audio/token', { roomName, displayName, avatar })
 
         const room = new Room()
         roomRef.current = room
@@ -64,6 +77,14 @@ export function useAudioRoom() {
           .on(RoomEvent.ActiveSpeakersChanged, syncParticipants)
           .on(RoomEvent.TrackMuted, syncParticipants)
           .on(RoomEvent.TrackUnmuted, syncParticipants)
+          .on(RoomEvent.ParticipantPermissionsChanged, (_prev, participant) => {
+            if (participant === room.localParticipant) {
+              const allowed = participant.permissions?.canPublish ?? true
+              setForcedMute(!allowed)
+              if (!allowed) setMuted(true)
+            }
+            syncParticipants()
+          })
           .on(RoomEvent.TrackSubscribed, (track) => {
             if (track.kind === Track.Kind.Audio) {
               const el = track.attach()
@@ -86,6 +107,12 @@ export function useAudioRoom() {
         // le vocal : on reste connecté (on peut écouter), juste muet, avec un
         // message clair plutôt qu'un échec total.
         try {
+          if (room.localParticipant.permissions?.canPublish === false) {
+            setForcedMute(true)
+            setMuted(true)
+            syncParticipants()
+            return
+          }
           await room.localParticipant.setMicrophoneEnabled(true)
           setMuted(false)
         } catch (micErr) {
@@ -104,13 +131,14 @@ export function useAudioRoom() {
   const disconnect = useCallback(() => {
     roomRef.current?.disconnect()
     roomRef.current = null
+    setForcedMute(false)
     setConnected(false)
     setParticipants([])
   }, [])
 
   const toggleMute = useCallback(async () => {
     const room = roomRef.current
-    if (!room) return
+    if (!room || forcedMute) return
     const next = !muted
     try {
       await room.localParticipant.setMicrophoneEnabled(!next)
@@ -121,9 +149,20 @@ export function useAudioRoom() {
       setError(describeMicError(err))
     }
     syncParticipants()
-  }, [muted, syncParticipants])
+  }, [muted, forcedMute, syncParticipants])
+
+  // Animateur uniquement (le serveur vérifie) : coupe / rend la parole à un
+  // joueur (identity) ou à tous les joueurs (identity absent).
+  const setMicPermission = useCallback(async (accessCode, identity, canPublish) => {
+    try {
+      await api.post('/audio/mic-permission', { accessCode, identity, canPublish })
+      setError(null)
+    } catch (err) {
+      setError(err.response?.data?.message || 'Action impossible.')
+    }
+  }, [])
 
   useEffect(() => () => roomRef.current?.disconnect(), [])
 
-  return { connected, participants, muted, error, connect, disconnect, toggleMute }
+  return { connected, participants, muted, forcedMute, error, connect, disconnect, toggleMute, setMicPermission }
 }

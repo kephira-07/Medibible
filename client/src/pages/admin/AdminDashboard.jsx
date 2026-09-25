@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import api from '../../services/api.js'
 import Button from '../../components/common/Button.jsx'
 import AdminLayout from '../../components/admin/AdminLayout.jsx'
+import Avatar from '../../components/common/Avatar.jsx'
 import {
   FaUserFriends,
   FaSatelliteDish,
@@ -17,18 +18,6 @@ import {
 
 
 
-
-function initialFrom(name) {
-  return name?.trim().charAt(0).toUpperCase() || '?'
-}
-
-const AVATAR_COLORS = ['#C1613C', '#8B6F4E', '#D9924A', '#4C8B3E', '#006414']
-function colorForName(name) {
-  let hash = 0
-  const str = name || ''
-  for (let i = 0; i < str.length; i += 1) hash = str.charCodeAt(i) + ((hash << 5) - hash)
-  return AVATAR_COLORS[Math.abs(hash) % AVATAR_COLORS.length]
-}
 
 export default function AdminDashboard() {
   const [quizzes, setQuizzes] = useState([])
@@ -231,12 +220,7 @@ export default function AdminDashboard() {
                     key={u._id || `${u.displayName}-${u.socketId}`}
                     className="flex items-center gap-3 rounded-lg border-2 border-medi-border bg-medi-cream/50 p-3"
                   >
-                    <div
-                      className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-sm font-bold text-white"
-                      style={{ backgroundColor: colorForName(u.displayName) }}
-                    >
-                      {initialFrom(u.displayName)}
-                    </div>
+                    <Avatar name={u.displayName} avatar={u.avatar} size={40} />
                     <div className="min-w-0 flex-1">
                       <p className="truncate font-bold text-medi-petrol">{u.displayName}</p>
                       <p className="truncate text-xs text-medi-petrol/55">{u.bergerName || '—'}</p>
@@ -281,12 +265,7 @@ export default function AdminDashboard() {
                     return (
                       <div key={p.socketId || p.displayName} className="flex w-24 flex-col items-center gap-2">
                         <span className="text-2xl">{medal}</span>
-                        <div
-                          className={`flex h-12 w-12 items-center justify-center rounded-full text-base font-bold text-white ring-4 ${ring}`}
-                          style={{ backgroundColor: colorForName(p.displayName) }}
-                        >
-                          {initialFrom(p.displayName)}
-                        </div>
+                        <Avatar name={p.displayName} avatar={p.avatar} size={48} className={`ring-4 ${ring}`} />
                         <p className="max-w-full truncate text-sm font-bold text-medi-petrol">{p.displayName}</p>
                         <p className="text-xs font-semibold text-medi-gold">{p.totalScore ?? 0} pts</p>
                         <div className={`w-full rounded-t-xl bg-gradient-to-b from-medi-gold-light/60 to-medi-gold/20 ${height}`} />

@@ -11,20 +11,11 @@ import AppHeader from '../components/common/AppHeader.jsx'
 import FloatingBlobs from '../components/common/FloatingBlobs.jsx'
 import ConfirmDialog from '../components/common/ConfirmDialog.jsx'
 import Toast from '../components/common/Toast.jsx'
+import Avatar from '../components/common/Avatar.jsx'
 import { HiOutlineBookOpen } from 'react-icons/hi'
 import { FaUsers, FaTrophy, FaClock, FaShareAlt, FaChartBar } from 'react-icons/fa'
 
 const MEDALS = ['🥇', '🥈', '🥉']
-const AVATAR_COLORS = ['#C1613C', '#8B6F4E', '#D9924A', '#4C8B3E', '#006414']
-function colorForName(name) {
-  let hash = 0
-  const str = name || ''
-  for (let i = 0; i < str.length; i += 1) hash = str.charCodeAt(i) + ((hash << 5) - hash)
-  return AVATAR_COLORS[Math.abs(hash) % AVATAR_COLORS.length]
-}
-function initialFrom(name) {
-  return name?.trim().charAt(0).toUpperCase() || '?'
-}
 
 export default function LiveQuizRoom() {
   const { accessCode } = useParams()
@@ -36,6 +27,7 @@ export default function LiveQuizRoom() {
   const normalizedCode = accessCode?.toUpperCase()
   const displayName = location.state?.displayName || user?.name
   const bergerName = location.state?.bergerName || ''
+  const avatar = location.state?.avatar || ''
 
   const [error, setError] = useState(null)
   const [joined, setJoined] = useState(null)
@@ -76,7 +68,7 @@ export default function LiveQuizRoom() {
   useEffect(() => {
     if (!connected || !displayName || !normalizedCode) return
 
-    socket.emit('session:join', { accessCode: normalizedCode, displayName, bergerName }, (res) => {
+    socket.emit('session:join', { accessCode: normalizedCode, displayName, bergerName, avatar }, (res) => {
       if (res?.error) {
         setError(res.error)
         return
@@ -98,7 +90,7 @@ export default function LiveQuizRoom() {
         setPhase('ended')
       }
     })
-  }, [connected, displayName, bergerName, normalizedCode, socket])
+  }, [connected, displayName, bergerName, avatar, normalizedCode, socket])
 
   // Écoute des diffusions temps réel
   useEffect(() => {
@@ -289,7 +281,7 @@ export default function LiveQuizRoom() {
           </div>
         </div>
 
-        <AudioRoom roomName={normalizedCode} displayName={displayName} isHost={joined.isHost} />
+        <AudioRoom roomName={normalizedCode} displayName={displayName} avatar={avatar} isHost={joined.isHost} />
 
         {/* SALLE D'ATTENTE — avant que l'animateur ne lance une question */}
         {phase === 'lobby' && (
@@ -320,12 +312,7 @@ export default function LiveQuizRoom() {
                       key={p.displayName}
                       className="flex items-center gap-2 rounded-full border-2 border-medi-border bg-white px-3 py-1.5 text-sm font-semibold text-medi-petrol"
                     >
-                      <span
-                        className="flex h-6 w-6 items-center justify-center rounded-full text-xs font-bold text-white"
-                        style={{ backgroundColor: colorForName(p.displayName) }}
-                      >
-                        {initialFrom(p.displayName)}
-                      </span>
+                      <Avatar name={p.displayName} avatar={p.avatar} size={26} />
                       {p.displayName}
                       {!joined.isHost && p.displayName === displayName && <span className="text-medi-coral"> (Vous)</span>}
                     </span>
@@ -420,12 +407,7 @@ export default function LiveQuizRoom() {
                       return (
                         <div key={p.displayName} className="flex w-24 flex-col items-center gap-1.5">
                           <span className="text-xl">{MEDALS[slot === 1 ? 0 : slot === 0 ? 1 : 2]}</span>
-                          <div
-                            className="flex h-11 w-11 items-center justify-center rounded-full text-sm font-bold text-white"
-                            style={{ backgroundColor: colorForName(p.displayName) }}
-                          >
-                            {initialFrom(p.displayName)}
-                          </div>
+                          <Avatar name={p.displayName} avatar={p.avatar} size={44} />
                           <p className="max-w-full truncate text-sm font-bold text-medi-petrol">
                             {p.displayName}{isMe && <span className="text-medi-coral"> (Vous)</span>}
                           </p>

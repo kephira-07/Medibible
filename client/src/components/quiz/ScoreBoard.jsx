@@ -1,3 +1,5 @@
+import Avatar from '../common/Avatar.jsx'
+
 const MEDALS = ['🥇', '🥈', '🥉']
 
 export default function ScoreBoard({ leaderboard, title = 'Classement' }) {
@@ -21,6 +23,7 @@ export default function ScoreBoard({ leaderboard, title = 'Classement' }) {
           >
             <span className="flex items-center gap-2 font-bold text-medi-petrol">
               <span className="w-6 text-center text-lg">{MEDALS[i] || `#${i + 1}`}</span>
+              <Avatar name={p.displayName} avatar={p.avatar} size={28} />
               {p.displayName}
             </span>
             <span className="font-extrabold text-medi-green-deep">{p.totalScore} pts</span>
