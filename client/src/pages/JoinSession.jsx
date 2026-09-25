@@ -5,8 +5,6 @@ import AppHeader from '../components/common/AppHeader.jsx'
 import WelcomeIllustration from '../components/common/WelcomeIllustration.jsx'
 import api from '../services/api.js'
 import { HiCheckCircle, HiXCircle } from 'react-icons/hi'
-import { AVATARS } from '../utils/avatars.js'
-import Avatar from '../components/common/Avatar.jsx'
 
 const BERGERS = ['Charles HE', 'Charles DAKPE', 'Edwige', 'Délali', 'Pascaline', 'Prunelle']
 
@@ -15,7 +13,6 @@ export default function JoinSession() {
   const [accessCode, setAccessCode] = useState('')
   const [displayName, setDisplayName] = useState('')
   const [bergerName, setBergerName] = useState('')
-  const [avatar, setAvatar] = useState('')
   // idle | checking | valid | invalid — vérifie le code auprès du serveur dès
   // que 6 caractères sont saisis, pour prévenir tout de suite d'une faute de
   // frappe plutôt que de laisser le joueur naviguer vers une session qui
@@ -54,14 +51,14 @@ export default function JoinSession() {
     }
   }, [accessCode])
 
-  const canSubmit = codeStatus === 'valid' && displayName.trim() && bergerName && avatar
+  const canSubmit = codeStatus === 'valid' && displayName.trim() && bergerName
 
   const handleSubmit = (e) => {
     e.preventDefault()
     if (!canSubmit) return
 
     navigate(`/session/${accessCode.trim().toUpperCase()}`, {
-      state: { displayName: displayName.trim(), bergerName, avatar },
+      state: { displayName: displayName.trim(), bergerName },
     })
   }
 
@@ -134,30 +131,6 @@ export default function JoinSession() {
                 maxLength={30}
               />
             </label>
-
-            <div className="flex flex-col gap-2 text-sm font-bold text-medi-petrol/75">
-              Choisis ton avatar
-              <div className="grid grid-cols-6 gap-2" role="radiogroup" aria-label="Avatar">
-                {AVATARS.map((a) => (
-                  <button
-                    key={a.id}
-                    type="button"
-                    role="radio"
-                    aria-checked={avatar === a.id}
-                    aria-label={a.label}
-                    title={a.label}
-                    onClick={() => setAvatar(a.id)}
-                    className={`flex aspect-square items-center justify-center rounded-2xl border-2 transition ${
-                      avatar === a.id
-                        ? 'scale-105 border-medi-green-deep bg-medi-green-deep/10 shadow-md'
-                        : 'border-medi-border bg-white hover:border-medi-sky'
-                    }`}
-                  >
-                    <Avatar name={a.label} avatar={a.id} size={36} />
-                  </button>
-                ))}
-              </div>
-            </div>
 
             <label className="flex flex-col gap-2 text-sm font-bold text-medi-petrol/75">
               Votre berger
