@@ -51,7 +51,6 @@ export function useAudioRoom() {
         return {
           identity: p.identity,
           name: p.name || p.identity,
-          avatar: meta.avatar || '',
           isHostUser: Boolean(meta.isHost),
           isLocal: p === room.localParticipant,
           isSpeaking: p.isSpeaking,
@@ -63,10 +62,10 @@ export function useAudioRoom() {
   }, [])
 
   const connect = useCallback(
-    async (roomName, displayName, avatar) => {
+    async (roomName, displayName) => {
       setError(null)
       try {
-        const { data } = await api.post('/audio/token', { roomName, displayName, avatar })
+        const { data } = await api.post('/audio/token', { roomName, displayName })
 
         const room = new Room()
         roomRef.current = room

@@ -3,14 +3,13 @@ import Quiz from '../models/Quiz.js'
 import Score from '../models/Score.js'
 import { computeAnswerResult } from './scoreEngine.js'
 import { scheduleQuestionClose, cancelQuestionClose } from './timerEngine.js'
-import { sanitizeAvatar } from '../utils/avatars.js'
 import { isValidReaction } from '../utils/reactions.js'
 
 const roomName = (sessionId) => `session:${sessionId}`
 
 function publicLeaderboard(session) {
   return [...session.participants]
-    .map((p) => ({ displayName: p.displayName, avatar: p.avatar || '', totalScore: p.totalScore }))
+    .map((p) => ({ displayName: p.displayName, totalScore: p.totalScore }))
     .sort((a, b) => b.totalScore - a.totalScore)
 }
 
@@ -109,7 +108,7 @@ async function endSession(io, session) {
 
 export function registerQuizHandlers(io, socket) {
   // Un joueur ou l'hôte rejoint le salon d'une session via son code d'accès
-  socket.on('session:join', async ({ accessCode, displayName, bergerName, email, avatar }, callback) => {
+  socket.on('session:join', async ({ accessCode, displayName, bergerName, email }, callback) => {
     try {
       if (!accessCode || !displayName) {
         return callback?.({ error: 'accessCode et displayName sont requis.' })
@@ -131,7 +130,6 @@ export function registerQuizHandlers(io, socket) {
       socket.join(roomName(session.id))
       socket.data.sessionId = session.id.toString()
       socket.data.displayName = displayName
-      socket.data.avatar = isHost ? '' : sanitizeAvatar(avatar)
 
       if (!isHost) {
         // Écritures Mongo atomiques (updateOne, pas de lire-modifier-écrire
@@ -150,7 +148,6 @@ export function registerQuizHandlers(io, socket) {
               'participants.$.socketId': socket.id,
               'participants.$.displayName': displayName,
               'participants.$.bergerName': bergerName,
-              'participants.$.avatar': sanitizeAvatar(avatar),
               ...(email ? { 'participants.$.email': email } : {}),
             },
           }
@@ -169,7 +166,6 @@ export function registerQuizHandlers(io, socket) {
                   user: user ? user.id : null,
                   displayName,
                   bergerName,
-                  avatar: sanitizeAvatar(avatar),
                   email: email || '',
                   socketId: socket.id,
                   totalScore: 0,
@@ -237,7 +233,6 @@ export function registerQuizHandlers(io, socket) {
       id: `${socket.id}-${now}`,
       reaction,
       displayName: socket.data.displayName,
-      avatar: socket.data.avatar || '',
     })
     callback?.({ ok: true })
   })

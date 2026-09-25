@@ -152,7 +152,7 @@ export default function SessionDetailModal({ session, onClose }) {
                       isWinner ? 'border-medi-gold/50 bg-medi-gold/8' : 'border-transparent bg-white'
                     }`}
                   >
-                    <Avatar name={p.displayName} avatar={p.avatar} size={32} />
+                    <Avatar name={p.displayName} size={32} />
                     <span className="min-w-0 flex-1">
                       <span className="flex items-center gap-1.5">
                         <span className="truncate font-medium text-medi-petrol">{p.displayName}</span>

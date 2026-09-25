@@ -30,7 +30,6 @@ export default function LiveQuizRoom() {
   const normalizedCode = accessCode?.toUpperCase()
   const displayName = location.state?.displayName || user?.name
   const bergerName = location.state?.bergerName || ''
-  const avatar = location.state?.avatar || ''
 
   const [error, setError] = useState(null)
   const [joined, setJoined] = useState(null)
@@ -73,7 +72,7 @@ export default function LiveQuizRoom() {
   useEffect(() => {
     if (!connected || !displayName || !normalizedCode) return
 
-    socket.emit('session:join', { accessCode: normalizedCode, displayName, bergerName, avatar }, (res) => {
+    socket.emit('session:join', { accessCode: normalizedCode, displayName, bergerName }, (res) => {
       if (res?.error) {
         setError(res.error)
         return
@@ -100,7 +99,7 @@ export default function LiveQuizRoom() {
         setPhase('ended')
       }
     })
-  }, [connected, displayName, bergerName, avatar, normalizedCode, socket])
+  }, [connected, displayName, bergerName, normalizedCode, socket])
 
   // Écoute des diffusions temps réel
   useEffect(() => {
@@ -303,7 +302,7 @@ export default function LiveQuizRoom() {
         </div>
 
         <ErrorBoundary message="Le vocal est momentanément indisponible — la partie continue normalement.">
-          <AudioRoom roomName={normalizedCode} displayName={displayName} avatar={avatar} isHost={joined.isHost} />
+          <AudioRoom roomName={normalizedCode} displayName={displayName} isHost={joined.isHost} />
         </ErrorBoundary>
 
         {/* SALLE D'ATTENTE — avant que l'animateur ne lance une question */}
@@ -335,7 +334,7 @@ export default function LiveQuizRoom() {
                       key={p.displayName}
                       className="flex items-center gap-2 rounded-full border-2 border-medi-border bg-white px-3 py-1.5 text-sm font-semibold text-medi-petrol"
                     >
-                      <Avatar name={p.displayName} avatar={p.avatar} size={26} />
+                      <Avatar name={p.displayName} size={26} />
                       {p.displayName}
                       {!joined.isHost && p.displayName === displayName && <span className="text-medi-coral"> (Vous)</span>}
                     </span>
@@ -430,7 +429,7 @@ export default function LiveQuizRoom() {
                       return (
                         <div key={p.displayName} className="flex w-24 flex-col items-center gap-1.5">
                           <span className="text-xl">{MEDALS[slot === 1 ? 0 : slot === 0 ? 1 : 2]}</span>
-                          <Avatar name={p.displayName} avatar={p.avatar} size={44} />
+                          <Avatar name={p.displayName} size={44} />
                           <p className="max-w-full truncate text-sm font-bold text-medi-petrol">
                             {p.displayName}{isMe && <span className="text-medi-coral"> (Vous)</span>}
                           </p>

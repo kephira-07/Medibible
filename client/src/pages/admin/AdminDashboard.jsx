@@ -220,7 +220,7 @@ export default function AdminDashboard() {
                     key={u._id || `${u.displayName}-${u.socketId}`}
                     className="flex items-center gap-3 rounded-lg border-2 border-medi-border bg-medi-cream/50 p-3"
                   >
-                    <Avatar name={u.displayName} avatar={u.avatar} size={40} />
+                    <Avatar name={u.displayName} size={40} />
                     <div className="min-w-0 flex-1">
                       <p className="truncate font-bold text-medi-petrol">{u.displayName}</p>
                       <p className="truncate text-xs text-medi-petrol/55">{u.bergerName || '—'}</p>
@@ -265,7 +265,7 @@ export default function AdminDashboard() {
                     return (
                       <div key={p.socketId || p.displayName} className="flex w-24 flex-col items-center gap-2">
                         <span className="text-2xl">{medal}</span>
-                        <Avatar name={p.displayName} avatar={p.avatar} size={48} className={`ring-4 ${ring}`} />
+                        <Avatar name={p.displayName} size={48} className={`ring-4 ${ring}`} />
                         <p className="max-w-full truncate text-sm font-bold text-medi-petrol">{p.displayName}</p>
                         <p className="text-xs font-semibold text-medi-gold">{p.totalScore ?? 0} pts</p>
                         <div className={`w-full rounded-t-xl bg-gradient-to-b from-medi-gold-light/60 to-medi-gold/20 ${height}`} />

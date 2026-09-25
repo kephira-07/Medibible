@@ -3,7 +3,6 @@ import jwt from 'jsonwebtoken'
 import { env } from '../config/env.js'
 import Session from '../models/Session.js'
 import { httpError } from '../utils/httpError.js'
-import { sanitizeAvatar } from '../utils/avatars.js'
 
 const livekitRoom = (accessCode) => `medibible-${accessCode}`
 
@@ -51,7 +50,7 @@ export async function getAudioToken(req, res, next) {
       return next(httpError(500, "LiveKit n'est pas configuré (server/.env)."))
     }
 
-    const { roomName, displayName, avatar } = req.body || {}
+    const { roomName, displayName } = req.body || {}
     if (!roomName || !displayName) {
       return next(httpError(400, 'roomName et displayName sont requis.'))
     }
@@ -73,7 +72,7 @@ export async function getAudioToken(req, res, next) {
       identity,
       name: displayName,
       ttl: '4h',
-      metadata: JSON.stringify({ avatar: sanitizeAvatar(avatar), isHost }),
+      metadata: JSON.stringify({ isHost }),
     })
     at.addGrant({
       room: livekitRoom(accessCode),

@@ -1,5 +1,4 @@
 import { FaMicrophoneSlash } from 'react-icons/fa'
-import { getAvatar } from '../../utils/avatars.js'
 
 const AVATAR_COLORS = ['#C1613C', '#8B6F4E', '#D9924A', '#4C8B3E', '#006414']
 
@@ -16,16 +15,14 @@ function initialFrom(name) {
   return name?.trim().charAt(0).toUpperCase() || '?'
 }
 
-export default function AvatarBubble({ name, avatar, isSpeaking, isMuted, size = 56 }) {
+export default function AvatarBubble({ name, isSpeaking, isMuted, size = 56 }) {
   const color = colorForName(name || '')
-  const found = getAvatar(avatar)
-  const Icon = found?.Icon
 
   return (
     <div className="flex flex-col items-center gap-1">
       <div
         className={`relative flex items-center justify-center rounded-full font-bold text-white transition-transform duration-200 ${isSpeaking ? 'scale-110' : ''}`}
-        style={{ width: size, height: size, backgroundColor: found ? found.color : color }}
+        style={{ width: size, height: size, backgroundColor: color }}
       >
         {isSpeaking && (
           <span
@@ -33,7 +30,7 @@ export default function AvatarBubble({ name, avatar, isSpeaking, isMuted, size =
             style={{ boxShadow: `0 0 0 4px ${color}` }}
           />
         )}
-        {Icon ? <Icon style={{ width: size * 0.45, height: size * 0.45 }} /> : <span style={{ fontSize: size * 0.4 }}>{initialFrom(name)}</span>}
+        <span style={{ fontSize: size * 0.4 }}>{initialFrom(name)}</span>
         {isMuted && (
           <span className="absolute -bottom-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-medi-petrol text-[10px]">
             <FaMicrophoneSlash className="w-3 h-3" />

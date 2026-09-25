@@ -9,7 +9,7 @@ export default function ReactionLayer({ reactions }) {
       {reactions.map((r) => (
         <div key={r.id} className="animate-reaction-fall flex items-center justify-end gap-2">
           <span className="flex min-w-0 items-center gap-1.5 rounded-full bg-white/95 py-1 pl-1 pr-3 text-sm font-bold text-medi-petrol shadow-md">
-            <Avatar name={r.displayName} avatar={r.avatar} size={22} />
+            <Avatar name={r.displayName} size={22} />
             <span className="break-words leading-tight">{r.displayName}</span>
           </span>
           <span className="text-3xl drop-shadow">{getReactionEmoji(r.reaction)}</span>
