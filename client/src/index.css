@@ -228,14 +228,14 @@
 }
 
 @layer utilities {
-  /* Réaction emoji reçue : monte doucement puis s'efface (~3,5 s). */
-  @keyframes reaction-rise {
-    0% { transform: translateY(24px) scale(0.8); opacity: 0; }
+  /* Réaction emoji reçue : descend doucement puis s'efface (~3,4 s). */
+  @keyframes reaction-fall {
+    0% { transform: translateY(-24px) scale(0.8); opacity: 0; }
     12% { transform: translateY(0) scale(1); opacity: 1; }
     80% { opacity: 1; }
-    100% { transform: translateY(-40px) scale(1); opacity: 0; }
+    100% { transform: translateY(40px) scale(1); opacity: 0; }
   }
-  .animate-reaction-rise {
-    animation: reaction-rise 3.4s ease-out both;
+  .animate-reaction-fall {
+    animation: reaction-fall 3.4s ease-out both;
   }
 }

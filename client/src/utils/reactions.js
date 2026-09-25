@@ -7,6 +7,8 @@ export const REACTIONS = [
   { id: 'wow', emoji: '😮', label: 'Surpris' },
   { id: 'pray', emoji: '🙏', label: 'Merci / Prière' },
   { id: 'fire', emoji: '🔥', label: 'Super' },
+  { id: 'sad', emoji: '😢', label: 'Triste' },
+  { id: 'cry', emoji: '😭', label: 'Très triste' },
   { id: 'think', emoji: '🤔', label: 'Je réfléchis' },
 ]
 

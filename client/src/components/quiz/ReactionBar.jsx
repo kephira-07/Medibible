@@ -1,29 +1,13 @@
 import { useState } from 'react'
 import { REACTIONS } from '../../utils/reactions.js'
 
-// Bouton "Réagir" fixé en bas d'écran : ouvre un plateau d'emojis à envoyer
+// Bouton "Réagir" fixé en haut d'écran, sous l'en-tête : ouvre un plateau d'emojis à envoyer
 // sans parler, comme dans une visio.
 export default function ReactionBar({ onReact }) {
   const [open, setOpen] = useState(false)
 
   return (
-    <div className="fixed bottom-4 right-4 z-40 flex flex-col items-end gap-2">
-      {open && (
-        <div className="animate-pop-in grid grid-cols-4 gap-1.5 rounded-2xl border-2 border-medi-border bg-white p-2 shadow-[0_16px_36px_rgba(22,50,62,0.2)]">
-          {REACTIONS.map((r) => (
-            <button
-              key={r.id}
-              type="button"
-              title={r.label}
-              aria-label={r.label}
-              onClick={() => onReact(r.id)}
-              className="flex h-11 min-h-0 w-11 items-center justify-center rounded-xl text-2xl transition hover:bg-medi-cream active:scale-90"
-            >
-              {r.emoji}
-            </button>
-          ))}
-        </div>
-      )}
+    <div className="fixed right-3 top-[4.75rem] z-40 flex flex-col items-end gap-2">
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
@@ -33,6 +17,25 @@ export default function ReactionBar({ onReact }) {
         <span className="text-lg">{open ? '✕' : '😊'}</span>
         {open ? 'Fermer' : 'Réagir'}
       </button>
+      {open && (
+        <div className="animate-pop-in grid grid-cols-5 gap-1.5 rounded-2xl border-2 border-medi-border bg-white p-2 shadow-[0_16px_36px_rgba(22,50,62,0.2)]">
+          {REACTIONS.map((r) => (
+            <button
+              key={r.id}
+              type="button"
+              title={r.label}
+              aria-label={r.label}
+              onClick={() => {
+                onReact(r.id)
+                setOpen(false)
+              }}
+              className="flex h-11 min-h-0 w-11 items-center justify-center rounded-xl text-2xl transition hover:bg-medi-cream active:scale-90"
+            >
+              {r.emoji}
+            </button>
+          ))}
+        </div>
+      )}
     </div>
   )
 }
