@@ -1,7 +1,8 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useLocation, useNavigate, useParams } from 'react-router-dom'
 import { useSocket } from '../hooks/useSocket.js'
 import { useAuth } from '../context/AuthContext.jsx'
+import { getClientId } from '../utils/clientId.js'
 import QuestionCard from '../components/quiz/QuestionCard.jsx'
 import ScoreBoard from '../components/quiz/ScoreBoard.jsx'
 import HostControls from '../components/quiz/HostControls.jsx'
@@ -28,6 +29,9 @@ export default function LiveQuizRoom() {
   const { user } = useAuth()
 
   const normalizedCode = accessCode?.toUpperCase()
+  // Stable d'un rechargement a l'autre : c'est ce qui permet au serveur de
+  // reconnaitre ce joueur apres une reconnexion.
+  const clientId = useMemo(() => getClientId(), [])
   const displayName = location.state?.displayName || user?.name
   const bergerName = location.state?.bergerName || ''
 
@@ -43,6 +47,7 @@ export default function LiveQuizRoom() {
   const [lastResult, setLastResult] = useState(null)
   const [shareCopied, setShareCopied] = useState(false)
   const [showLeaveConfirm, setShowLeaveConfirm] = useState(false)
+  const [showEndConfirm, setShowEndConfirm] = useState(false)
   // Notification flottante (bonne/mauvaise réponse, temps écoulé) — posée sur
   // le côté de l'écran plutôt qu'intégrée au flux, et repart d'elle-même :
   // plus visible qu'une bannière discrète, sans encombrer la page en continu.
@@ -72,7 +77,7 @@ export default function LiveQuizRoom() {
   useEffect(() => {
     if (!connected || !displayName || !normalizedCode) return
 
-    socket.emit('session:join', { accessCode: normalizedCode, displayName, bergerName }, (res) => {
+    socket.emit('session:join', { accessCode: normalizedCode, displayName, bergerName, clientId }, (res) => {
       if (res?.error) {
         setError(res.error)
         return
@@ -84,7 +89,11 @@ export default function LiveQuizRoom() {
       // instable côté mobile) redéclenche ce join sans jamais démonter le
       // composant, donc l'ancien lastResult/hasAnswered resterait sinon
       // affiché par-dessus la question retrouvée.
-      setHasAnswered(false)
+      // Le serveur nous dit si ce joueur a deja repondu a la question en
+      // cours : sinon une reconnexion raffichait le bouton "Valider" sur une
+      // question deja jouee, et le refus du serveur sortait le joueur de la
+      // salle.
+      setHasAnswered(Boolean(res.alreadyAnswered))
       setLastResult(null)
       setCorrectOptionIds([])
       if (res.activeQuestion) {
@@ -99,7 +108,7 @@ export default function LiveQuizRoom() {
         setPhase('ended')
       }
     })
-  }, [connected, displayName, bergerName, normalizedCode, socket])
+  }, [connected, displayName, bergerName, normalizedCode, socket, clientId])
 
   // Écoute des diffusions temps réel
   useEffect(() => {
@@ -179,7 +188,11 @@ export default function LiveQuizRoom() {
         { sessionId, selectedOptionIds },
         (res) => {
           if (res?.error) {
-            setError(res.error)
+            // Un refus de reponse ("temps ecoule", "deja repondu") n'est pas
+            // une panne : il ne doit pas remplacer la salle par un ecran
+            // d'erreur plein, ce qui sortait le joueur de la partie en cours.
+            setToast({ type: 'rejected', message: res.error })
+            setHasAnswered(true)
             return
           }
           setHasAnswered(true)
@@ -213,6 +226,19 @@ export default function LiveQuizRoom() {
       }
     }
   }, [leaderboard, displayName, joined])
+
+  // L'animateur peut clore la partie avant la derniere question. Sans ce
+  // bouton, `host:endSession` existait cote serveur mais n'etait jamais
+  // appelable : la session restait "en cours" indefiniment.
+  const endSession = useCallback(() => {
+    const sessionId = joined?.session?.id || joined?.session?._id
+    if (!sessionId) return
+
+    socket.emit('host:endSession', { sessionId }, (res) => {
+      if (res?.error) setError(res.error)
+      setShowEndConfirm(false)
+    })
+  }, [socket, joined])
 
   const advance = useCallback(() => {
     const sessionId = joined?.session?.id || joined?.session?._id
@@ -482,7 +508,20 @@ export default function LiveQuizRoom() {
           )
         })()}
 
-        {joined.isHost && phase !== 'ended' && <HostControls phase={phase} onNext={advance} />}
+        {joined.isHost && phase !== 'ended' && (
+          <>
+            <HostControls phase={phase} onNext={advance} onEnd={() => setShowEndConfirm(true)} />
+            <ConfirmDialog
+              open={showEndConfirm}
+              title="Terminer la session ?"
+              message="Le classement final sera affiché à tous les joueurs et la partie sera clôturée. Cette action est définitive."
+              confirmLabel="Oui, terminer"
+              cancelLabel="Continuer la partie"
+              onConfirm={endSession}
+              onCancel={() => setShowEndConfirm(false)}
+            />
+          </>
+        )}
       </div>
     </main>
   )

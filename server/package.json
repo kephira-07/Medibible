@@ -7,7 +7,7 @@
     "dev": "nodemon server.js",
     "start": "node server.js",
     "create-user": "node scripts/createHost.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "node tests/e2e.test.js && node tests/regressions.test.js"
   },
   "keywords": [],
   "author": "",

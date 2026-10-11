@@ -25,6 +25,19 @@ function publicQuestion(question, session) {
   }
 }
 
+// Cle d'anti-double-reponse, stable d'une connexion a l'autre : le compte pour
+// un utilisateur connecte, sinon l'identifiant de navigateur. Le repli sur le
+// socketId ne concerne que les clients anciens sans clientId — il repart a
+// zero a chaque reconnexion, donc il ne protege rien : c'est tout l'interet de
+// `clientId`.
+function participantKeyFor(socket, participant) {
+  const user = socket.data.user
+  if (user) return `user:${user.id}`
+  const clientId = socket.data.clientId || participant?.clientId
+  if (clientId) return `guest:${clientId}`
+  return `guest:${participant?.socketId || socket.id}`
+}
+
 // Vérifie que le socket appelant est bien l'administrateur de la session, et renvoie
 // session + quiz déjà chargés pour éviter de les requêter deux fois.
 async function requireHostSession(socket, sessionId) {
@@ -108,7 +121,7 @@ async function endSession(io, session) {
 
 export function registerQuizHandlers(io, socket) {
   // Un joueur ou l'hôte rejoint le salon d'une session via son code d'accès
-  socket.on('session:join', async ({ accessCode, displayName, bergerName, email }, callback) => {
+  socket.on('session:join', async ({ accessCode, displayName, bergerName, email, clientId }, callback) => {
     try {
       if (!accessCode || !displayName) {
         return callback?.({ error: 'accessCode et displayName sont requis.' })
@@ -127,9 +140,15 @@ export function registerQuizHandlers(io, socket) {
         return callback?.({ error: 'bergerName est requis pour rejoindre en tant que participant.' })
       }
 
+      // Identifiant stable du navigateur, genere cote client et conserve en
+      // localStorage : c'est lui qui identifie un invite d'un bout a l'autre
+      // de la partie, y compris apres un rechargement de page.
+      const normalizedClientId = typeof clientId === 'string' ? clientId.trim().slice(0, 64) : ''
+
       socket.join(roomName(session.id))
       socket.data.sessionId = session.id.toString()
       socket.data.displayName = displayName
+      socket.data.clientId = normalizedClientId
 
       if (!isHost) {
         // Écritures Mongo atomiques (updateOne, pas de lire-modifier-écrire
@@ -138,8 +157,19 @@ export function registerQuizHandlers(io, socket) {
         // réseau) ne doivent jamais créer deux entrées. Identité : le compte
         // pour un utilisateur connecté, sinon le pseudo au sein de la
         // session (comme pour Score.displayName).
-        const identityField = user ? 'participants.user' : 'participants.displayName'
-        const identityValue = user ? user.id : displayName
+        // Ordre de preference : le compte si l'utilisateur est connecte, sinon
+        // l'identifiant de navigateur. Le repli sur le prenom ne sert qu'aux
+        // clients anciens qui n'envoient pas encore de clientId : il confond
+        // deux homonymes, d'ou sa place en dernier recours.
+        let identityField = 'participants.displayName'
+        let identityValue = displayName
+        if (user) {
+          identityField = 'participants.user'
+          identityValue = user.id
+        } else if (normalizedClientId) {
+          identityField = 'participants.clientId'
+          identityValue = normalizedClientId
+        }
 
         const updateExisting = await Session.updateOne(
           { _id: session._id, [identityField]: identityValue },
@@ -148,6 +178,7 @@ export function registerQuizHandlers(io, socket) {
               'participants.$.socketId': socket.id,
               'participants.$.displayName': displayName,
               'participants.$.bergerName': bergerName,
+              ...(normalizedClientId ? { 'participants.$.clientId': normalizedClientId } : {}),
               ...(email ? { 'participants.$.email': email } : {}),
             },
           }
@@ -167,6 +198,7 @@ export function registerQuizHandlers(io, socket) {
                   displayName,
                   bergerName,
                   email: email || '',
+                  clientId: normalizedClientId,
                   socketId: socket.id,
                   totalScore: 0,
                 },
@@ -210,6 +242,20 @@ export function registerQuizHandlers(io, socket) {
               })()
             : null,
         leaderboard: publicLeaderboard(session),
+        // Une reconnexion en pleine question doit retrouver l'ecran "reponse
+        // envoyee", pas le bouton "Valider" : sinon le joueur reclique, le
+        // serveur refuse (il a deja repondu) et l'erreur le sortait de la
+        // salle.
+        alreadyAnswered:
+          session.currentQuestionIndex >= 0 &&
+          (await Score.exists({
+            session: session._id,
+            questionIndex: session.currentQuestionIndex,
+            participantKey: participantKeyFor(
+              socket,
+              session.participants.find((p) => p.socketId === socket.id)
+            ),
+          })) !== null,
       })
     } catch (err) {
       console.error('[socket] session:join', err)
@@ -276,6 +322,30 @@ export function registerQuizHandlers(io, socket) {
     }
   })
 
+  // Un joueur qui part (onglet ferme, reseau coupe) doit cesser d'etre compte
+  // comme "en ligne" : sans ce nettoyage, son socketId restait en base pour
+  // toujours et le tableau de bord admin accumulait des connectes fantomes
+  // dont le nombre ne pouvait que croitre.
+  socket.on('disconnect', async () => {
+    const sessionId = socket.data.sessionId
+    if (!sessionId) return
+
+    try {
+      const result = await Session.updateOne(
+        { _id: sessionId, 'participants.socketId': socket.id },
+        { $set: { 'participants.$.socketId': null } }
+      )
+      if (result.modifiedCount > 0) {
+        const session = await Session.findById(sessionId)
+        if (session) {
+          io.to(roomName(session.id)).emit('session:participantsUpdate', publicLeaderboard(session))
+        }
+      }
+    } catch (err) {
+      console.error('[socket] nettoyage a la deconnexion', err)
+    }
+  })
+
   // Un joueur soumet sa réponse à la question actuellement ouverte
   socket.on('player:submitAnswer', async ({ sessionId, selectedOptionIds }, callback) => {
     try {
@@ -294,15 +364,21 @@ export function registerQuizHandlers(io, socket) {
       const question = quiz.questions[session.currentQuestionIndex]
 
       const user = socket.data.user
-      const participant = user
-        ? session.participants.find((p) => p.user && p.user.toString() === user.id)
-        : session.participants.find((p) => p.socketId === socket.id)
+      const clientId = socket.data.clientId
+      let participant = null
+      if (user) {
+        participant = session.participants.find((p) => p.user && p.user.toString() === user.id)
+      } else if (clientId) {
+        participant = session.participants.find((p) => p.clientId === clientId)
+      }
+      // Repli pour un client ancien sans clientId.
+      if (!participant) {
+        participant = session.participants.find((p) => p.socketId === socket.id)
+      }
 
       if (!participant) return callback?.({ error: "Vous n'avez pas rejoint cette session." })
 
-      const participantKey = user
-        ? `user:${user.id}`
-        : `guest:${participant.socketId || socket.id}`
+      const participantKey = participantKeyFor(socket, participant)
 
       const { isCorrect, pointsEarned } = computeAnswerResult({
         question,

@@ -41,12 +41,21 @@ export function createApp() {
       },
     })
   )
+  // Le plafond est compté par IP, donc partagé par TOUS les joueurs derrière
+  // le même réseau (wifi d'une salle, 4G d'un opérateur) : trop bas, il coupe
+  // l'appli à des utilisateurs parfaitement légitimes. 200 req/15 min ne
+  // suffisaient même pas à un seul animateur : son tableau de bord interroge
+  // le serveur 15 fois par minute, soit 225 requêtes sur la fenêtre — il se
+  // bloquait donc tout seul au bout d'environ 13 minutes.
   app.use(
     rateLimit({
       windowMs: 15 * 60 * 1000,
-      max: 200,
+      max: 3000,
       standardHeaders: true,
       legacyHeaders: false,
+      // Le ping de supervision de l'hébergeur ne doit pas consommer le quota
+      // des joueurs.
+      skip: (req) => req.path === '/api/health',
       message: { message: 'Trop de requêtes, veuillez réessayer plus tard.' },
     })
   )

@@ -32,6 +32,16 @@ const ParticipantSchema = new mongoose.Schema({
     type: String,
     default: null,
   },
+  // Identifiant stable du navigateur du joueur (genere une fois cote client
+  // et conserve en localStorage). Le socketId change a chaque reconnexion et
+  // le prenom n'est pas unique : sans cette cle, un invite qui recharge la
+  // page redevient un inconnu — il peut re-repondre a la meme question, et
+  // deux joueurs homonymes se melangent.
+  clientId: {
+    type: String,
+    default: '',
+    index: true,
+  },
   totalScore: {
     type: Number,
     default: 0,

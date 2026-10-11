@@ -5,6 +5,10 @@ const STYLES = {
   correct: { border: 'border-emerald-300', bg: 'bg-emerald-50', text: 'text-emerald-800', icon: HiCheckCircle, iconColor: 'text-emerald-600' },
   incorrect: { border: 'border-rose-300', bg: 'bg-rose-50', text: 'text-rose-800', icon: HiXCircle, iconColor: 'text-rose-600' },
   timeout: { border: 'border-amber-300', bg: 'bg-amber-50', text: 'text-amber-900', icon: HiClock, iconColor: 'text-amber-600' },
+  // Réponse refusée par le serveur (temps écoulé, question déjà répondue) :
+  // on l'explique sur le côté de l'écran au lieu de sortir le joueur de la
+  // salle avec un écran d'erreur plein.
+  rejected: { border: 'border-amber-300', bg: 'bg-amber-50', text: 'text-amber-900', icon: HiClock, iconColor: 'text-amber-600' },
 }
 
 // Notification flottante posée sur le côté de l'écran (pas dans le flux de
@@ -26,7 +30,8 @@ export default function Toast({ toast, duration = 3200, onDone }) {
 
   if (!toast) return null
 
-  const style = STYLES[toast.type]
+  // Un type inconnu ne doit jamais faire planter la salle de jeu.
+  const style = STYLES[toast.type] || STYLES.timeout
   const Icon = style.icon
 
   return (
@@ -48,6 +53,9 @@ export default function Toast({ toast, duration = 3200, onDone }) {
           )}
           {toast.type === 'incorrect' && <p className={`text-sm font-bold ${style.text}`}>Mauvaise réponse — pas de points.</p>}
           {toast.type === 'timeout' && <p className={`text-sm font-bold ${style.text}`}>Temps écoulé — aucune réponse soumise.</p>}
+          {toast.type === 'rejected' && (
+            <p className={`text-sm font-bold ${style.text}`}>{toast.message || 'Réponse non enregistrée.'}</p>
+          )}
         </div>
       </div>
     </div>
