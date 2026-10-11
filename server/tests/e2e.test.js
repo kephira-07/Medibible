@@ -37,6 +37,13 @@ const bcrypt = (await import('bcryptjs')).default
 const jwt = (await import('jsonwebtoken')).default
 
 await connectDB()
+
+// La suite part toujours d'une base vide : un run interrompu (pipe fermé,
+// Ctrl+C) n'atteint pas le nettoyage final, et les comptes laissés derrière
+// faisaient alors échouer le run suivant sur des doublons d'email.
+if (mongoose.connection.name === TEST_DB_NAME) {
+  await mongoose.connection.dropDatabase()
+}
 const app = createApp()
 const httpServer = createServer(app)
 initSocket(httpServer)
@@ -156,6 +163,17 @@ let adminRefresh
   const meBadToken = await req('GET', '/api/auth/me', { token: 'pas-un-jwt' })
   check('GET /api/auth/me avec token bidon -> 401', meBadToken.status === 401)
 
+  // Enchaine deux refresh dans la meme seconde : chaque jeton emis doit etre
+  // unique, sinon l'insertion en base echoue sur l'index de tokenHash.
+  const rapid = await req('POST', '/api/auth/refresh', { body: { refreshToken: adminRefresh } })
+  check('refresh immediatement apres le login -> 200', rapid.status === 200, JSON.stringify(rapid.data)?.slice(0, 160))
+  check(
+    'le nouveau refresh token differe du precedent',
+    Boolean(rapid.data?.refreshToken) && rapid.data.refreshToken !== adminRefresh,
+    'deux emissions dans la meme seconde produisent un JWT identique -> collision sur tokenHash'
+  )
+  adminRefresh = rapid.data?.refreshToken
+
   const refreshed = await req('POST', '/api/auth/refresh', { body: { refreshToken: adminRefresh } })
   check('refresh token valide -> nouveau couple de tokens', refreshed.status === 200 && Boolean(refreshed.data?.token))
   const replay = await req('POST', '/api/auth/refresh', { body: { refreshToken: adminRefresh } })
@@ -262,7 +280,10 @@ let quizId
       questions: [
         {
           text: "Qui a marche sur l'eau ?",
-          timeLimit: 5,
+          // 20 s et non 5 : avec une base distante, les allers-retours des
+          // assertions depassaient le chrono et la question se cloturait en
+          // plein milieu du scenario.
+          timeLimit: 20,
           points: 100,
           bibleReference: 'Matthieu 14:29',
           options: [
@@ -273,7 +294,7 @@ let quizId
         },
         {
           text: 'Quelles sont les deux premieres lettres ?',
-          timeLimit: 5,
+          timeLimit: 20,
           points: 50,
           options: [
             { text: 'A', isCorrect: true },
@@ -472,7 +493,7 @@ section('Question 1 : reponses, score et chrono')
   const fake = await emitAck(p2, 'player:submitAnswer', { sessionId: 'c'.repeat(24), selectedOptionIds: [correctId] })
   check('repondre sur une session inexistante -> refuse', Boolean(fake?.error))
 
-  const ended = await waitEvent(p1, 'quiz:questionEnded', 9000)
+  const ended = await waitEvent(p1, 'quiz:questionEnded', 30000)
   check("la question se clot automatiquement a l'echeance", Array.isArray(ended?.correctOptionIds))
   check('les bonnes reponses sont revelees a la cloture', ended.correctOptionIds.map(String).includes(correctId))
   check('la reference biblique est transmise a la cloture', ended?.bibleReference === 'Matthieu 14:29', `recu "${ended?.bibleReference}"`)
@@ -518,7 +539,7 @@ section('Question 2 : reponses multiples')
   )
   check('Bob reste a 0 point', bob.totalScore === 0, `${bob.totalScore} pts`)
 
-  await waitEvent(p1, 'quiz:questionEnded', 9000)
+  await waitEvent(p1, 'quiz:questionEnded', 30000)
 }
 
 // ------------------------------------------------- 10. reponses simultanees
@@ -677,15 +698,58 @@ section('Fin de session et robustesse')
 // ------------------------------------- 14. quiz supprime, sessions orphelines
 section('Quiz supprime alors que des sessions y pointent')
 {
-  const s4 = await req('POST', '/api/sessions', { token: adminToken, body: { quizId } })
-  const del = await req('DELETE', `/api/quizzes/${quizId}`, { token: adminToken })
-  check('supprimer un quiz -> 204', del.status === 204, `recu ${del.status}`)
+  // Quiz dedie a ce scenario : le quiz principal porte d'autres sessions
+  // ouvertes, ce qui rendrait indeterminee la session nommee dans le refus.
+  const doomed = await req('POST', '/api/quizzes', {
+    token: adminToken,
+    body: {
+      title: 'Quiz a supprimer',
+      questions: [
+        {
+          text: 'Question',
+          timeLimit: 20,
+          options: [
+            { text: 'A', isCorrect: true },
+            { text: 'B', isCorrect: false },
+          ],
+        },
+      ],
+    },
+  })
+  const doomedQuizId = doomed.data?._id
+  const s4 = await req('POST', '/api/sessions', { token: adminToken, body: { quizId: doomedQuizId } })
+
+  // Une session encore ouverte protege son quiz : le supprimer casserait la
+  // partie en cours pour les joueurs deja connectes.
+  const blocked = await req('DELETE', `/api/quizzes/${doomedQuizId}`, { token: adminToken })
+  check(
+    'supprimer un quiz utilise par une session ouverte -> refuse',
+    blocked.status === 409,
+    `recu ${blocked.status} -> la partie en cours se casse sans avertissement`
+  )
+  check(
+    "le refus nomme la session qui bloque",
+    String(blocked.data?.message || '').includes(s4.data?.accessCode),
+    `message = "${blocked.data?.message}"`
+  )
+
+  // Une fois la session terminee, la suppression doit passer.
+  const hostS4 = await socketFor(adminToken)
+  await emitAck(hostS4, 'session:join', { accessCode: s4.data?.accessCode, displayName: 'Animateur' })
+  await emitAck(hostS4, 'host:endSession', { sessionId: s4.data?._id })
+  const del = await req('DELETE', `/api/quizzes/${doomedQuizId}`, { token: adminToken })
+  check('supprimer un quiz dont la session est terminee -> 204', del.status === 204, `recu ${del.status}`)
 
   const orphan = await req('GET', `/api/sessions/${s4.data?.accessCode}`)
   check(
     'rejoindre une session dont le quiz a ete supprime -> erreur propre, pas un 500',
     orphan.status !== 500,
     `recu ${orphan.status} : ${JSON.stringify(orphan.data)?.slice(0, 150)}`
+  )
+  check(
+    "le message explique au joueur que le quiz n'existe plus",
+    String(orphan.data?.message || '').toLowerCase().includes('supprim'),
+    `message = "${orphan.data?.message}"`
   )
   const orphanList = await req('GET', '/api/sessions', { token: adminToken })
   check('la liste des sessions survit a un quiz supprime', orphanList.status === 200, `recu ${orphanList.status}`)
@@ -714,6 +778,51 @@ section('Token expire cote temps reel')
     'un token expire ne bloque pas la connexion temps reel',
     connectedOk,
     `connexion refusee (${message}) -> un visiteur avec un vieux token en localStorage reste bloque sur "Connexion a la session..."`
+  )
+
+  // Un animateur dont le jeton a expire doit comprendre qu'il doit se
+  // reconnecter, et non se voir reclamer un berger.
+  // Le quiz de depart a ete supprime a la section precedente : on en cree un
+  // nouveau pour ce scenario.
+  const freshQuiz = await req('POST', '/api/quizzes', {
+    token: adminToken,
+    body: {
+      title: 'Quiz jeton expire',
+      questions: [
+        {
+          text: 'Question',
+          timeLimit: 5,
+          options: [
+            { text: 'A', isCorrect: true },
+            { text: 'B', isCorrect: false },
+          ],
+        },
+      ],
+    },
+  })
+  const s6 = await req('POST', '/api/sessions', { token: adminToken, body: { quizId: freshQuiz.data?._id } })
+  const staleSocket = await socketFor(expired)
+  const staleJoin = await emitAck(staleSocket, 'session:join', {
+    accessCode: s6.data?.accessCode,
+    displayName: 'Animateur',
+  })
+  check(
+    'un animateur au jeton expire est invite a se reconnecter',
+    String(staleJoin?.error || '').toLowerCase().includes('expir'),
+    `erreur = "${staleJoin?.error}"`
+  )
+
+  // Un invite, lui, rejoint normalement malgre le jeton mort.
+  const guestDespiteToken = await emitAck(staleSocket, 'session:join', {
+    accessCode: s6.data?.accessCode,
+    displayName: 'Invite',
+    bergerName: 'Edwige',
+    clientId: 'invite-token-mort',
+  })
+  check(
+    'un invite rejoint malgre un vieux token dans le navigateur',
+    guestDespiteToken?.session?.id === String(s6.data?._id),
+    JSON.stringify(guestDespiteToken)?.slice(0, 200)
   )
 }
 

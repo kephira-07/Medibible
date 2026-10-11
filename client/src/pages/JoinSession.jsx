@@ -19,12 +19,14 @@ export default function JoinSession() {
   // n'existe pas et découvrir l'erreur plus tard.
   const [codeStatus, setCodeStatus] = useState('idle')
   const [codeInfo, setCodeInfo] = useState(null)
+  const [codeError, setCodeError] = useState(null)
 
   useEffect(() => {
     const normalized = accessCode.trim().toUpperCase()
     if (normalized.length !== 6) {
       setCodeStatus('idle')
       setCodeInfo(null)
+      setCodeError(null)
       return
     }
 
@@ -37,11 +39,17 @@ export default function JoinSession() {
           if (cancelled) return
           setCodeStatus('valid')
           setCodeInfo(data)
+          setCodeError(null)
         })
-        .catch(() => {
+        .catch((err) => {
           if (cancelled) return
           setCodeStatus('invalid')
           setCodeInfo(null)
+          // Le code peut être refusé pour une raison précise — par exemple un
+          // quiz supprimé entre-temps (410). Afficher « aucune session ne
+          // correspond » enverrait alors le joueur vérifier une faute de
+          // frappe inexistante.
+          setCodeError(err.response?.status === 410 ? err.response?.data?.message : null)
         })
     }, 350)
 
@@ -114,7 +122,7 @@ export default function JoinSession() {
               )}
               {codeStatus === 'invalid' && (
                 <span className="flex items-center justify-center gap-1.5 text-center text-xs font-bold text-medi-coral">
-                  <HiXCircle className="text-sm" /> Aucune session ne correspond à ce code.
+                  <HiXCircle className="text-sm" /> {codeError || 'Aucune session ne correspond à ce code.'}
                 </span>
               )}
             </label>

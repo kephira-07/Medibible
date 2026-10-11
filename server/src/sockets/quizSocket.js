@@ -137,6 +137,13 @@ export function registerQuizHandlers(io, socket) {
       const isHost = Boolean(user) && session.host.toString() === user.id && user.role === 'admin'
 
       if (!isHost && !bergerName?.trim()) {
+        // Un animateur arrive sans berger (il ne joue pas). S'il n'est pas
+        // reconnu comme hôte alors que son jeton vient d'être rejeté, le vrai
+        // problème est sa session expirée — le dire, plutôt que de réclamer un
+        // berger qu'il n'a pas à choisir.
+        if (socket.data.authExpired) {
+          return callback?.({ error: 'Ta session a expiré — reconnecte-toi pour animer cette partie.' })
+        }
         return callback?.({ error: 'bergerName est requis pour rejoindre en tant que participant.' })
       }
 

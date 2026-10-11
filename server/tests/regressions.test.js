@@ -26,6 +26,13 @@ const { connectDB } = await import('../src/config/db.js')
 const mongoose = (await import('mongoose')).default
 
 await connectDB()
+
+// La suite part toujours d'une base vide : un run interrompu (pipe fermé,
+// Ctrl+C) n'atteint pas le nettoyage final, et les comptes laissés derrière
+// faisaient alors échouer le run suivant sur des doublons d'email.
+if (mongoose.connection.name === TEST_DB_NAME) {
+  await mongoose.connection.dropDatabase()
+}
 const httpServer = createServer(createApp())
 await new Promise((r) => httpServer.listen(0, r))
 const base = `http://127.0.0.1:${httpServer.address().port}`

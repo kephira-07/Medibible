@@ -34,8 +34,17 @@ export function initSocket(httpServer) {
       socket.data.user = { id: payload.sub, role: payload.role }
       return next()
     } catch {
+      // Un jeton périmé ou invalide ne doit JAMAIS refuser la connexion : il
+      // suffit d'avoir ouvert le back-office il y a plus de 30 jours pour
+      // qu'un jeton mort traîne dans le localStorage du navigateur, et le
+      // refus laissait alors le visiteur bloqué sur « Connexion à la
+      // session… » sans aucune explication — alors qu'il voulait juste
+      // rejoindre un quiz en invité. On poursuit donc sans identité : les
+      // actions d'animateur sont de toute façon revérifiées une à une
+      // (requireHostSession), donc rien n'est accessible sans jeton valide.
       socket.data.user = null
-      return next(new Error('Authentication failed'))
+      socket.data.authExpired = true
+      return next()
     }
   })
 

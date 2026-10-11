@@ -105,6 +105,13 @@ export async function getSessionByCode(req, res, next) {
 
     if (!session) return next(httpError(404, 'Session introuvable.'))
 
+    // `populate` renvoie null si le quiz a été supprimé depuis. Sans ce
+    // garde-fou, lire .title plantait et le joueur qui tapait le code
+    // recevait une erreur 500 incompréhensible.
+    if (!session.quiz) {
+      return next(httpError(410, "Le quiz de cette session a été supprimé — demande un nouveau code à l'animateur."))
+    }
+
     res.json({
       accessCode: session.accessCode,
       status: session.status,
@@ -129,12 +136,16 @@ export async function getSessionDetail(req, res, next) {
 
     if (!session) return next(httpError(404, 'Session introuvable.'))
 
-    // Do not expose correct answers here unless the requester is the host/admin
-    const safeQuiz = {
-      _id: session.quiz._id,
-      title: session.quiz.title,
-      questionsCount: Array.isArray(session.quiz.questions) ? session.quiz.questions.length : 0,
-    }
+    // Do not expose correct answers here unless the requester is the host/admin.
+    // Le quiz peut avoir été supprimé après la fin de la session : on affiche
+    // alors la session telle quelle plutôt que de renvoyer une erreur 500.
+    const safeQuiz = session.quiz
+      ? {
+          _id: session.quiz._id,
+          title: session.quiz.title,
+          questionsCount: Array.isArray(session.quiz.questions) ? session.quiz.questions.length : 0,
+        }
+      : { _id: null, title: 'Quiz supprimé', questionsCount: 0 }
 
     res.json({
       ...formatSessionSummary(session),

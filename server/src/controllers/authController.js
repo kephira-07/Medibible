@@ -8,7 +8,10 @@ import { httpError } from '../utils/httpError.js'
 import { validateAuthInput } from '../utils/validators.js'
 
 const ACCESS_TOKEN_TTL = '30d'
-const REFRESH_TOKEN_TTL = '90d'
+// Durée de vie du refresh token. La même valeur sert à signer le JWT et à
+// dater la ligne en base : elles divergeaient (90 j dans le jeton, 30 j en
+// base), donc le jeton était rejeté bien avant sa date d'expiration annoncée.
+const REFRESH_TOKEN_TTL_DAYS = 90
 const SALT_ROUNDS = 10
 
 function signAccessToken(user) {
@@ -19,10 +22,25 @@ function signAccessToken(user) {
 }
 
 function signRefreshToken(user) {
-  return jwt.sign({ type: 'refresh', role: user.role }, env.jwtSecret, {
-    subject: String(user.id),
-    expiresIn: REFRESH_TOKEN_TTL,
-  })
+  return jwt.sign(
+    {
+      type: 'refresh',
+      role: user.role,
+      // Identifiant unique de ce jeton précis. Sans lui, deux refresh émis
+      // dans la même seconde pour le même compte produisent un JWT identique
+      // au bit près (le champ `iat` est daté à la seconde) : l'insertion en
+      // base échouait alors sur l'index unique de tokenHash, l'utilisateur
+      // recevait une erreur 500 et se retrouvait déconnecté. Deux requêtes qui
+      // expirent en même temps, chacune déclenchant son refresh, suffisent à
+      // provoquer le cas.
+      jti: crypto.randomUUID(),
+    },
+    env.jwtSecret,
+    {
+      subject: String(user.id),
+      expiresIn: `${REFRESH_TOKEN_TTL_DAYS}d`,
+    }
+  )
 }
 
 function hashToken(token) {
@@ -36,7 +54,7 @@ async function issueTokens(user) {
   await RefreshToken.create({
     user: user.id,
     tokenHash: hashToken(refreshToken),
-    expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+    expiresAt: new Date(Date.now() + REFRESH_TOKEN_TTL_DAYS * 24 * 60 * 60 * 1000),
   })
 
   return { token, refreshToken }

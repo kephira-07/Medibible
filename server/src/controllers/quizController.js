@@ -1,4 +1,5 @@
 import Quiz from '../models/Quiz.js'
+import Session from '../models/Session.js'
 import { httpError } from '../utils/httpError.js'
 import { normalizeText, isValidObjectId } from '../utils/validators.js'
 import { DEFAULT_BASE_SCORE, DEFAULT_SPEED_BONUS } from '../utils/constants.js'
@@ -147,6 +148,26 @@ export async function deleteQuiz(req, res, next) {
     const quizId = req.params.id
     if (!isValidObjectId(quizId)) {
       return next(httpError(400, 'Identifiant de quiz invalide.'))
+    }
+
+    // Supprimer un quiz dont une session est encore ouverte casse la partie
+    // en cours : les joueurs déjà connectés ne peuvent plus recevoir de
+    // question, et le code d'accès renvoie une erreur. On refuse donc, en
+    // expliquant quelle session bloque.
+    const blocking = await Session.findOne({
+      quiz: quizId,
+      status: { $in: ['lobby', 'live'] },
+    }).select('accessCode status')
+
+    if (blocking) {
+      return next(
+        httpError(
+          409,
+          `Ce quiz est utilisé par une session ${
+            blocking.status === 'live' ? 'en cours' : 'en attente'
+          } (code ${blocking.accessCode}). Termine-la avant de supprimer le quiz.`
+        )
+      )
     }
 
     const quiz = await Quiz.findByIdAndDelete(quizId)
