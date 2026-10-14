@@ -58,8 +58,9 @@ export default function QuizForm({ initialQuiz, onSubmit, submitting, error }) {
   const [bankOpen, setBankOpen] = useState(false)
 
   const addQuestionFromBank = (question) => {
-    const { _id, ...rest } = question
-    const copy = { ...rest, options: rest.options.map(({ _id: optId, ...opt }) => ({ ...opt })) }
+    const copy = { ...question, options: question.options.map((option) => ({ ...option })) }
+    delete copy._id
+    copy.options.forEach((option) => delete option._id)
     setQuestions((prev) => [...prev, copy])
     setExpandedIndex(questions.length)
   }
@@ -74,11 +75,9 @@ export default function QuizForm({ initialQuiz, onSubmit, submitting, error }) {
 
   const duplicateQuestion = (index) => {
     setQuestions((prev) => {
-      const { _id, ...questionWithoutId } = prev[index]
-      const copy = {
-        ...questionWithoutId,
-        options: questionWithoutId.options.map(({ _id: optionId, ...option }) => ({ ...option })),
-      }
+      const copy = { ...prev[index], options: prev[index].options.map((option) => ({ ...option })) }
+      delete copy._id
+      copy.options.forEach((option) => delete option._id)
       const next = [...prev]
       next.splice(index + 1, 0, copy)
       return next

@@ -14,6 +14,30 @@ function safeReadStorage(key) {
   }
 }
 
+function safeReadSessionStorage(key) {
+  try {
+    return sessionStorage.getItem(key)
+  } catch {
+    return null
+  }
+}
+
+function safeWriteStorage(storage, key, value) {
+  try {
+    storage.setItem(key, value)
+  } catch {
+    // Some mobile browsers disable storage in private browsing mode.
+  }
+}
+
+function safeRemoveStorage(storage, key) {
+  try {
+    storage.removeItem(key)
+  } catch {
+    // Storage may be unavailable or already blocked by the browser.
+  }
+}
+
 export function AuthProvider({ children }) {
   const [auth, setAuth] = useState(() => {
     try {
@@ -26,21 +50,13 @@ export function AuthProvider({ children }) {
 
   useEffect(() => {
     if (auth) {
-      try {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(auth))
-        sessionStorage.setItem(SESSION_ACCESS_KEY, auth.token)
-        localStorage.setItem(REFRESH_KEY, auth.refreshToken)
-      } catch {
-        // Ignore storage quota issues and keep app running in degraded mode.
-      }
+      safeWriteStorage(localStorage, STORAGE_KEY, JSON.stringify(auth))
+      safeWriteStorage(sessionStorage, SESSION_ACCESS_KEY, auth.token)
+      safeWriteStorage(localStorage, REFRESH_KEY, auth.refreshToken)
     } else {
-      try {
-        localStorage.removeItem(STORAGE_KEY)
-        sessionStorage.removeItem(SESSION_ACCESS_KEY)
-        localStorage.removeItem(REFRESH_KEY)
-      } catch {
-        // Ignore storage cleanup issues.
-      }
+      safeRemoveStorage(localStorage, STORAGE_KEY)
+      safeRemoveStorage(sessionStorage, SESSION_ACCESS_KEY)
+      safeRemoveStorage(localStorage, REFRESH_KEY)
     }
   }, [auth])
 
@@ -78,7 +94,7 @@ export function AuthProvider({ children }) {
     <AuthContext.Provider
       value={{
         user: auth?.user ?? null,
-        token: auth?.token ?? sessionStorage.getItem(SESSION_ACCESS_KEY) ?? null,
+        token: auth?.token ?? safeReadSessionStorage(SESSION_ACCESS_KEY),
         refreshToken: auth?.refreshToken ?? safeReadStorage(REFRESH_KEY) ?? null,
         login,
         register,

@@ -24,6 +24,22 @@ function readRefreshToken() {
   }
 }
 
+function safeSetStorage(storage, key, value) {
+  try {
+    storage.setItem(key, value)
+  } catch {
+    // Keep the request result usable when browser storage is unavailable.
+  }
+}
+
+function safeRemoveStorage(storage, key) {
+  try {
+    storage.removeItem(key)
+  } catch {
+    // Nothing else is required when storage is unavailable.
+  }
+}
+
 api.interceptors.request.use((config) => {
   const token = readSessionToken()
   if (token) {
@@ -50,9 +66,10 @@ api.interceptors.response.use(
         originalRequest._retry = true
         const { data } = await api.post('/auth/refresh', { refreshToken })
 
-        sessionStorage.setItem('medibible_access_token', data.token)
-        localStorage.setItem('medibible_refresh_token', data.refreshToken)
-        localStorage.setItem(
+        safeSetStorage(sessionStorage, 'medibible_access_token', data.token)
+        safeSetStorage(localStorage, 'medibible_refresh_token', data.refreshToken)
+        safeSetStorage(
+          localStorage,
           'medibible_auth',
           JSON.stringify({
             user: data.user,
@@ -65,9 +82,9 @@ api.interceptors.response.use(
         originalRequest.headers.Authorization = `Bearer ${data.token}`
         return api(originalRequest)
       } catch {
-        sessionStorage.removeItem('medibible_access_token')
-        localStorage.removeItem('medibible_refresh_token')
-        localStorage.removeItem('medibible_auth')
+        safeRemoveStorage(sessionStorage, 'medibible_access_token')
+        safeRemoveStorage(localStorage, 'medibible_refresh_token')
+        safeRemoveStorage(localStorage, 'medibible_auth')
         return Promise.reject(error)
       }
     }
