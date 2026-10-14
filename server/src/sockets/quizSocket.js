@@ -415,7 +415,10 @@ export function registerQuizHandlers(io, socket) {
         session: session.id,
         questionIndex: session.currentQuestionIndex,
       })
-      io.to(roomName(session.id)).emit('quiz:answerReceived', { answeredCount })
+      io.to(roomName(session.id)).emit('quiz:answerReceived', {
+        answeredCount,
+        leaderboard: publicLeaderboard(session),
+      })
 
       callback?.({ ok: true, isCorrect, pointsEarned })
     } catch (err) {

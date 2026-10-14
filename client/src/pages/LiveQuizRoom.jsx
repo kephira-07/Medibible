@@ -124,7 +124,10 @@ export default function LiveQuizRoom() {
       setToast(null)
     }
 
-    const handleAnswerReceived = ({ answeredCount: count }) => setAnsweredCount(count)
+    const handleAnswerReceived = ({ answeredCount: count, leaderboard: nextLeaderboard }) => {
+      setAnsweredCount(count)
+      if (Array.isArray(nextLeaderboard)) setLeaderboard(nextLeaderboard)
+    }
 
     const handleQuestionEnded = (payload) => {
       setPhase('closed')

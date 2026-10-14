@@ -76,11 +76,17 @@ export function useAudioRoom() {
           .on(RoomEvent.ActiveSpeakersChanged, syncParticipants)
           .on(RoomEvent.TrackMuted, syncParticipants)
           .on(RoomEvent.TrackUnmuted, syncParticipants)
+          .on(RoomEvent.LocalTrackPublished, syncParticipants)
+          .on(RoomEvent.LocalTrackUnpublished, syncParticipants)
+          .on(RoomEvent.ParticipantMetadataChanged, syncParticipants)
           .on(RoomEvent.ParticipantPermissionsChanged, (_prev, participant) => {
             if (participant === room.localParticipant) {
               const allowed = participant.permissions?.canPublish ?? true
               setForcedMute(!allowed)
-              if (!allowed) setMuted(true)
+              if (!allowed) {
+                setMuted(true)
+                room.localParticipant.setMicrophoneEnabled(false).catch(() => {})
+              }
             }
             syncParticipants()
           })
@@ -154,7 +160,11 @@ export function useAudioRoom() {
   // joueur (identity) ou à tous les joueurs (identity absent).
   const setMicPermission = useCallback(async (accessCode, identity, canPublish) => {
     try {
-      await api.post('/audio/mic-permission', { accessCode, identity, canPublish })
+      const { data } = await api.post('/audio/mic-permission', { accessCode, identity, canPublish })
+      if (data?.updated === 0) {
+        setError('Aucun participant vocal correspondant — demande-lui de rejoindre le vocal.')
+        return
+      }
       setError(null)
     } catch (err) {
       setError(err.response?.data?.message || 'Action impossible.')
