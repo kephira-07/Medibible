@@ -1,9 +1,10 @@
 import jwt from 'jsonwebtoken'
 import { env } from '../config/env.js'
 import { httpError } from '../utils/httpError.js'
+import User from '../models/User.js'
 
 // Vérifie le Bearer token et attache { id, role } à req.user.
-export function authenticate(req, res, next) {
+export async function authenticate(req, res, next) {
   const header = req.headers.authorization || ''
   const [scheme, token] = header.split(' ')
 
@@ -13,6 +14,10 @@ export function authenticate(req, res, next) {
 
   try {
     const payload = jwt.verify(token, env.jwtSecret)
+    const user = await User.findById(payload.sub).select('role tokenVersion')
+    if (!user || (payload.tokenVersion ?? 0) !== user.tokenVersion) {
+      return next(httpError(401, 'Token invalide ou expiré.'))
+    }
     req.user = { id: payload.sub, role: payload.role }
     next()
   } catch {

@@ -18,6 +18,36 @@ function normalizeScoring(scoring) {
   }
 }
 
+const QUIZ_STATUSES = ['draft', 'published', 'archived']
+
+function ensureUniqueQuestionIds(questions) {
+  const questionIds = new Set()
+  const optionIds = new Set()
+
+  return questions.map((question) => {
+    const copy = { ...question }
+    if (copy._id) {
+      const id = String(copy._id)
+      if (questionIds.has(id)) delete copy._id
+      else questionIds.add(id)
+    }
+
+    if (Array.isArray(copy.options)) {
+      copy.options = copy.options.map((option) => {
+        const optionCopy = { ...option }
+        if (optionCopy._id) {
+          const id = String(optionCopy._id)
+          if (optionIds.has(id)) delete optionCopy._id
+          else optionIds.add(id)
+        }
+        return optionCopy
+      })
+    }
+
+    return copy
+  })
+}
+
 function validateQuizPayload(payload) {
   if (!payload || typeof payload !== 'object') {
     throw httpError(400, 'Payload de quiz invalide.')
@@ -37,13 +67,22 @@ function validateQuizPayload(payload) {
     throw httpError(400, 'Le quiz doit contenir au moins une question.')
   }
 
+  const status = payload.status === undefined ? 'draft' : payload.status
+  if (!QUIZ_STATUSES.includes(status)) {
+    throw httpError(400, 'Le statut du quiz est invalide.')
+  }
+
   return {
     title,
     description: normalizeText(payload.description || '', 500),
     questions,
     scoring: normalizeScoring(payload.scoring),
-    status: ['draft', 'published', 'archived'].includes(payload.status) ? payload.status : 'draft',
+    status,
   }
+}
+
+function canManageQuiz(quiz, userId) {
+  return quiz.createdBy && String(quiz.createdBy) === String(userId)
 }
 
 // GET /api/quizzes — liste pour le back-office (aperçu, sans détail complet)
@@ -97,7 +136,7 @@ export async function getQuiz(req, res, next) {
 export async function createQuiz(req, res, next) {
   try {
     const validated = validateQuizPayload(req.body)
-    const quiz = await Quiz.create(validated)
+    const quiz = await Quiz.create({ ...validated, createdBy: req.user.id })
     res.status(201).json(quiz)
   } catch (err) {
     next(err)
@@ -114,6 +153,9 @@ export async function updateQuiz(req, res, next) {
 
     const quiz = await Quiz.findById(quizId)
     if (!quiz) return next(httpError(404, `Quiz introuvable : ${quizId}`))
+    if (!canManageQuiz(quiz, req.user.id)) {
+      return next(httpError(403, 'Vous ne pouvez modifier que vos propres quiz.'))
+    }
 
     const { title, description, questions, scoring, status } = req.body || {}
     if (title !== undefined) quiz.title = normalizeText(title, 120)
@@ -122,7 +164,7 @@ export async function updateQuiz(req, res, next) {
       if (!Array.isArray(questions) || questions.length === 0) {
         return next(httpError(400, 'Le quiz doit contenir au moins une question.'))
       }
-      quiz.questions = questions
+      quiz.questions = ensureUniqueQuestionIds(questions)
     }
     if (scoring !== undefined) {
       try {
@@ -132,7 +174,10 @@ export async function updateQuiz(req, res, next) {
       }
     }
     if (status !== undefined) {
-      quiz.status = ['draft', 'published', 'archived'].includes(status) ? status : 'draft'
+      if (!QUIZ_STATUSES.includes(status)) {
+        return next(httpError(400, 'Le statut du quiz est invalide.'))
+      }
+      quiz.status = status
     }
 
     await quiz.save()
@@ -148,6 +193,12 @@ export async function deleteQuiz(req, res, next) {
     const quizId = req.params.id
     if (!isValidObjectId(quizId)) {
       return next(httpError(400, 'Identifiant de quiz invalide.'))
+    }
+
+    const existingQuiz = await Quiz.findById(quizId).select('createdBy')
+    if (!existingQuiz) return next(httpError(404, `Quiz introuvable : ${quizId}`))
+    if (!canManageQuiz(existingQuiz, req.user.id)) {
+      return next(httpError(403, 'Vous ne pouvez supprimer que vos propres quiz.'))
     }
 
     // Supprimer un quiz dont une session est encore ouverte casse la partie

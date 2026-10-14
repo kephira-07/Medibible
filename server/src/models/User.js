@@ -11,6 +11,7 @@ const UserSchema = new mongoose.Schema(
     // de passe à la première connexion pour que ce mot de passe, connu du
     // développeur qui l'a configuré, cesse de fonctionner une fois changé.
     mustChangePassword: { type: Boolean, default: false },
+    tokenVersion: { type: Number, default: 0 },
   },
   { timestamps: true }
 )

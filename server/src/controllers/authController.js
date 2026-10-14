@@ -15,7 +15,7 @@ const REFRESH_TOKEN_TTL_DAYS = 90
 const SALT_ROUNDS = 10
 
 function signAccessToken(user) {
-  return jwt.sign({ role: user.role }, env.jwtSecret, {
+  return jwt.sign({ role: user.role, tokenVersion: user.tokenVersion ?? 0 }, env.jwtSecret, {
     subject: String(user.id),
     expiresIn: ACCESS_TOKEN_TTL,
   })
@@ -250,6 +250,7 @@ export async function changePassword(req, res, next) {
 
     user.passwordHash = await bcrypt.hash(newPassword, SALT_ROUNDS)
     user.mustChangePassword = false
+    user.tokenVersion = (user.tokenVersion ?? 0) + 1
     await user.save()
 
     res.json({ user: toPublicUser(user) })

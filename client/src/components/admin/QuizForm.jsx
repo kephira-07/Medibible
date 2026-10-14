@@ -74,7 +74,11 @@ export default function QuizForm({ initialQuiz, onSubmit, submitting, error }) {
 
   const duplicateQuestion = (index) => {
     setQuestions((prev) => {
-      const copy = { ...prev[index], options: prev[index].options.map((o) => ({ ...o })) }
+      const { _id, ...questionWithoutId } = prev[index]
+      const copy = {
+        ...questionWithoutId,
+        options: questionWithoutId.options.map(({ _id: optionId, ...option }) => ({ ...option })),
+      }
       const next = [...prev]
       next.splice(index + 1, 0, copy)
       return next
