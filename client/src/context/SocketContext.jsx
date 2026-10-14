@@ -1,11 +1,14 @@
 import { createContext, useEffect, useState } from 'react'
 import { io } from 'socket.io-client'
+import { useLocation } from 'react-router-dom'
 import { useAuth } from './AuthContext.jsx'
 
 export const SocketContext = createContext(null)
 
 export function SocketProvider({ children }) {
   const { token } = useAuth()
+  const { pathname } = useLocation()
+  const needsSocket = pathname.startsWith('/session/')
   // En local (VITE_API_URL absent), io(undefined, ...) se connecte à la même
   // origine que la page — géré par le proxy Vite. En production, VITE_API_URL
   // pointe vers le serveur déployé, sur un domaine différent du client.
@@ -32,6 +35,13 @@ export function SocketProvider({ children }) {
   const [connectError, setConnectError] = useState(null)
 
   useEffect(() => {
+    if (!needsSocket) {
+      socket.disconnect()
+      setConnected(false)
+      setConnectError(null)
+      return undefined
+    }
+
     socket.auth = token ? { token } : {}
     socket.connect()
 
@@ -52,11 +62,12 @@ export function SocketProvider({ children }) {
       socket.off('connect_error', handleConnectError)
       socket.disconnect()
     }
-  }, [socket, token])
+  }, [socket, token, needsSocket])
 
   // Force une nouvelle tentative de connexion — utilisé par l'UI quand la
   // connexion reste bloquée trop longtemps (ex: `Réessayer` sur mobile).
   const retryConnection = () => {
+    if (!needsSocket) return
     setConnectError(null)
     socket.disconnect()
     socket.connect()
