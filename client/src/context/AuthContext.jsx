@@ -16,23 +16,31 @@ function safeReadStorage(key) {
 
 function safeReadSessionStorage(key) {
   try {
-    return sessionStorage.getItem(key)
+    return globalThis.sessionStorage?.getItem(key) ?? null
   } catch {
     return null
   }
 }
 
-function safeWriteStorage(storage, key, value) {
+function getStorage(name) {
   try {
-    storage.setItem(key, value)
+    return globalThis[name] || null
+  } catch {
+    return null
+  }
+}
+
+function safeWriteStorage(name, key, value) {
+  try {
+    getStorage(name)?.setItem(key, value)
   } catch {
     // Some mobile browsers disable storage in private browsing mode.
   }
 }
 
-function safeRemoveStorage(storage, key) {
+function safeRemoveStorage(name, key) {
   try {
-    storage.removeItem(key)
+    getStorage(name)?.removeItem(key)
   } catch {
     // Storage may be unavailable or already blocked by the browser.
   }
@@ -50,13 +58,13 @@ export function AuthProvider({ children }) {
 
   useEffect(() => {
     if (auth) {
-      safeWriteStorage(localStorage, STORAGE_KEY, JSON.stringify(auth))
-      safeWriteStorage(sessionStorage, SESSION_ACCESS_KEY, auth.token)
-      safeWriteStorage(localStorage, REFRESH_KEY, auth.refreshToken)
+      safeWriteStorage('localStorage', STORAGE_KEY, JSON.stringify(auth))
+      safeWriteStorage('sessionStorage', SESSION_ACCESS_KEY, auth.token)
+      safeWriteStorage('localStorage', REFRESH_KEY, auth.refreshToken)
     } else {
-      safeRemoveStorage(localStorage, STORAGE_KEY)
-      safeRemoveStorage(sessionStorage, SESSION_ACCESS_KEY)
-      safeRemoveStorage(localStorage, REFRESH_KEY)
+      safeRemoveStorage('localStorage', STORAGE_KEY)
+      safeRemoveStorage('sessionStorage', SESSION_ACCESS_KEY)
+      safeRemoveStorage('localStorage', REFRESH_KEY)
     }
   }, [auth])
 
