@@ -44,7 +44,13 @@ function publicQuestion(question, session) {
 // zero a chaque reconnexion, donc il ne protege rien : c'est tout l'interet de
 // `clientId`.
 function participantKeyFor(socket, participant) {
-  const user = socket.data.user
+  // Un socket arrivé par le formulaire joueur compte comme un invité, même si
+  // son navigateur transporte un jeton de compte parfaitement valide. Sans
+  // ce garde-fou, deux personnes jouant depuis des appareils qui partagent ce
+  // jeton (celui de l'animateur, restauré depuis `localStorage`) recevaient
+  // la MÊME clé : elles étaient fusionnées en un seul participant, et l'index
+  // unique (session, question, clé) faisait rejeter la réponse de la seconde.
+  const user = socket.data.isGuest ? null : socket.data.user
   if (user) return `user:${user.id}`
   const clientId = socket.data.clientId || participant?.clientId
   if (clientId) return `guest:${clientId}`
@@ -205,11 +211,19 @@ export function registerQuizHandlers(io, socket) {
         // l'identifiant de navigateur. Le repli sur le prenom ne sert qu'aux
         // clients anciens qui n'envoient pas encore de clientId : il confond
         // deux homonymes, d'ou sa place en dernier recours.
+        // Même règle que participantKeyFor : qui vient jouer est identifié
+        // par son navigateur, pas par le compte dont le jeton traîne dans ce
+        // navigateur. Deux joueurs partageant le jeton de l'animateur
+        // tombaient sinon sur la même entrée `participants.user`, et le
+        // second écrasait le premier — la salle n'affichait plus qu'une seule
+        // personne alors qu'ils étaient deux.
+        const identityUser = asGuest ? null : user
+
         let identityField = 'participants.displayName'
         let identityValue = displayName
-        if (user) {
+        if (identityUser) {
           identityField = 'participants.user'
-          identityValue = user.id
+          identityValue = identityUser.id
         } else if (normalizedClientId) {
           identityField = 'participants.clientId'
           identityValue = normalizedClientId
@@ -238,7 +252,7 @@ export function registerQuizHandlers(io, socket) {
             {
               $push: {
                 participants: {
-                  user: user ? user.id : null,
+                  user: identityUser ? identityUser.id : null,
                   displayName,
                   bergerName,
                   email: email || '',
@@ -407,7 +421,12 @@ export function registerQuizHandlers(io, socket) {
       const quiz = await Quiz.findById(session.quiz)
       const question = quiz.questions[session.currentQuestionIndex]
 
-      const user = socket.data.user
+      // Même règle que participantKeyFor et que session:join : un joueur
+      // arrivé par le formulaire est retrouvé par son navigateur, jamais par
+      // le compte dont le jeton traîne dans ce navigateur. Sinon deux joueurs
+      // partageant ce jeton pointaient sur le même participant et leurs
+      // réponses se mélangeaient.
+      const user = socket.data.isGuest ? null : socket.data.user
       const clientId = socket.data.clientId
       let participant = null
       if (user) {

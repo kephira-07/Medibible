@@ -765,6 +765,89 @@ section("Un joueur ne doit jamais heriter de l'identite de l'animateur")
   }
 }
 
+// ------------- 11ter. deux joueurs partageant le meme jeton de compte
+section('Deux joueurs sur des appareils partageant le meme jeton')
+{
+  // Signale en production (session 63THHJ) : « il affiche juste une seule
+  // personne alors qu'on etait deux », et « le deuxieme a quitte, il
+  // continuait a lui attribuer le point ». Les deux joueurs passaient par le
+  // formulaire joueur depuis des navigateurs portant tous deux le jeton de
+  // l'animateur. L'identite etait alors resolue sur `participants.user` :
+  // ils etaient fusionnes en UN seul participant (le second ecrasait le
+  // premier) et l'index unique (session, question, cle) faisait rejeter la
+  // reponse du second.
+  const s7 = await req('POST', '/api/sessions', { token: adminToken, body: { quizId } })
+  const code7 = s7.data?.accessCode
+  const sid7 = s7.data?._id
+
+  const j1 = await socketFor(adminToken)
+  const j2 = await socketFor(adminToken)
+
+  await emitAck(j1, 'session:join', {
+    accessCode: code7, displayName: 'Sharon', bergerName: 'Edwige',
+    clientId: 'appareil-sharon', asGuest: true,
+  })
+  const vu2 = await emitAck(j2, 'session:join', {
+    accessCode: code7, displayName: 'Dieu-Donné', bergerName: 'Délali',
+    clientId: 'appareil-dieudonne', asGuest: true,
+  })
+
+  const sess7 = await Session.findById(sid7)
+  check(
+    'les deux joueurs sont deux participants distincts',
+    sess7.participants.length === 2,
+    `${sess7.participants.length} participant(s) : ${JSON.stringify(sess7.participants.map((p) => p.displayName))}`
+  )
+  check(
+    'aucun des deux n est rattache au compte de l animateur',
+    sess7.participants.every((p) => !p.user),
+    JSON.stringify(sess7.participants.map((p) => ({ nom: p.displayName, user: p.user ? String(p.user) : null })))
+  )
+  check(
+    'les deux apparaissent dans le classement',
+    (vu2?.leaderboard || []).length === 2,
+    JSON.stringify(vu2?.leaderboard)
+  )
+
+  // Les deux doivent pouvoir repondre a la MEME question et marquer chacun.
+  // L'ecoute est posee AVANT de lancer la question : sinon l'evenement peut
+  // arriver avant qu'on s'y abonne, et l'attente expire pour rien.
+  const ouverte = waitEvent(j1, 'quiz:questionStarted', 15000)
+  const lance = await emitAck(hostSocket, 'host:nextQuestion', { sessionId: sid7 })
+  check("l'animateur peut ouvrir la question", !lance?.error, JSON.stringify(lance))
+  const q = await ouverte
+  const bonne = String(q.options.find((o) => o.text === 'Pierre')?.id || q.options[0].id)
+
+  const r1 = await emitAck(j1, 'player:submitAnswer', { sessionId: sid7, selectedOptionIds: [bonne] })
+  const r2 = await emitAck(j2, 'player:submitAnswer', { sessionId: sid7, selectedOptionIds: [bonne] })
+  check('le 1er joueur marque ses points', r1?.isCorrect === true && r1?.pointsEarned > 0, JSON.stringify(r1))
+  check(
+    'le 2e joueur marque AUSSI (sa reponse n est pas prise pour un doublon)',
+    r2?.isCorrect === true && r2?.pointsEarned > 0,
+    JSON.stringify(r2)
+  )
+
+  const lignes = await Score.find({ session: sid7, questionIndex: 0 })
+  check(
+    'une ligne de Score par joueur, avec des cles differentes',
+    lignes.length === 2 && new Set(lignes.map((l) => l.participantKey)).size === 2,
+    JSON.stringify(lignes.map((l) => ({ nom: l.displayName, key: l.participantKey })))
+  )
+
+  // Un joueur quitte : ses points restent les siens, et le joueur encore
+  // present continue de marquer pour lui-meme.
+  j2.disconnect()
+  await sleep(600)
+  const apresDepart = await Session.findById(sid7)
+  const sharon = apresDepart.participants.find((p) => p.displayName === 'Sharon')
+  const parti = apresDepart.participants.find((p) => p.displayName === 'Dieu-Donné')
+  check(
+    'le joueur parti garde son propre score, non melange avec celui qui reste',
+    sharon?.totalScore === r1.pointsEarned && parti?.totalScore === r2.pointsEarned,
+    JSON.stringify({ Sharon: sharon?.totalScore, 'Dieu-Donné': parti?.totalScore })
+  )
+}
+
 // -------------------------------------- 12. presence apres deconnexion
 section('Presence : liste des connectes')
 {
