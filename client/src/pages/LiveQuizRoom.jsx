@@ -3,6 +3,7 @@ import { useLocation, useNavigate, useParams } from 'react-router-dom'
 import { useSocket } from '../hooks/useSocket.js'
 import { useAuth } from '../context/AuthContext.jsx'
 import { getClientId } from '../utils/clientId.js'
+import { isGuestSession } from '../utils/sessionRole.js'
 import QuestionCard from '../components/quiz/QuestionCard.jsx'
 import ScoreBoard from '../components/quiz/ScoreBoard.jsx'
 import HostControls from '../components/quiz/HostControls.jsx'
@@ -34,6 +35,11 @@ export default function LiveQuizRoom() {
   const clientId = useMemo(() => getClientId(), [])
   const displayName = location.state?.displayName || user?.name
   const bergerName = location.state?.bergerName || ''
+  // Cet onglet a-t-il rejoint par le formulaire joueur ? On le declare au
+  // serveur au lieu de le laisser deduire le role du jeton present dans le
+  // navigateur : un jeton d'animateur traine dans localStorage promouvait
+  // sinon ce joueur en hote (voir utils/sessionRole.js).
+  const asGuest = useMemo(() => isGuestSession(normalizedCode), [normalizedCode])
 
   const [error, setError] = useState(null)
   const [joined, setJoined] = useState(null)
@@ -77,7 +83,7 @@ export default function LiveQuizRoom() {
   useEffect(() => {
     if (!connected || !displayName || !normalizedCode) return
 
-    socket.emit('session:join', { accessCode: normalizedCode, displayName, bergerName, clientId }, (res) => {
+    socket.emit('session:join', { accessCode: normalizedCode, displayName, bergerName, clientId, asGuest }, (res) => {
       if (res?.error) {
         setError(res.error)
         return
@@ -108,7 +114,7 @@ export default function LiveQuizRoom() {
         setPhase('ended')
       }
     })
-  }, [connected, displayName, bergerName, normalizedCode, socket, clientId])
+  }, [connected, displayName, bergerName, normalizedCode, socket, clientId, asGuest])
 
   // Écoute des diffusions temps réel
   useEffect(() => {
@@ -340,7 +346,7 @@ export default function LiveQuizRoom() {
         </div>
 
         <ErrorBoundary message="Le vocal est momentanément indisponible — la partie continue normalement.">
-          <AudioRoom roomName={normalizedCode} displayName={displayName} isHost={joined.isHost} />
+          <AudioRoom roomName={normalizedCode} displayName={displayName} isHost={joined.isHost} asGuest={asGuest} />
         </ErrorBoundary>
 
         {/* SALLE D'ATTENTE — avant que l'animateur ne lance une question */}

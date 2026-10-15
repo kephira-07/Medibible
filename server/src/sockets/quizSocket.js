@@ -134,7 +134,7 @@ async function endSession(io, session) {
 
 export function registerQuizHandlers(io, socket) {
   // Un joueur ou l'hôte rejoint le salon d'une session via son code d'accès
-  socket.on('session:join', async ({ accessCode, displayName, bergerName, email, clientId }, callback) => {
+  socket.on('session:join', async ({ accessCode, displayName, bergerName, email, clientId, asGuest }, callback) => {
     try {
       if (!accessCode || !displayName) {
         return callback?.({ error: 'accessCode et displayName sont requis.' })
@@ -147,7 +147,18 @@ export function registerQuizHandlers(io, socket) {
       if (!quiz) return callback?.({ error: 'Quiz associé introuvable.' })
 
       const user = socket.data.user
-      const isHost = Boolean(user) && session.host.toString() === user.id && user.role === 'admin'
+      // `asGuest` : le client a rejoint par le formulaire joueur et déclare
+      // qu'il vient jouer. Sans cette déclaration, le rôle était déduit du
+      // seul jeton présent dans le navigateur — or AuthContext le restaure
+      // depuis `localStorage`, partagé par tous les onglets et persistant.
+      // Il suffisait donc qu'un animateur se soit connecté une fois sur
+      // l'appareil pour que tout joueur suivant soit promu hôte à son insu :
+      // il récupérait les commandes de l'animateur et n'était jamais ajouté
+      // aux participants, d'où une salle qui affichait « 0 joueur » alors
+      // que quelqu'un venait d'entrer. Le jeton reste vérifié : déclarer
+      // l'inverse ne donne aucun droit.
+      const isHost =
+        !asGuest && Boolean(user) && session.host.toString() === user.id && user.role === 'admin'
 
       if (!isHost && !bergerName?.trim()) {
         // Un animateur arrive sans berger (il ne joue pas). S'il n'est pas

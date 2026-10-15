@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import api from '../services/api.js'
+import { clearGuestSession } from '../utils/sessionRole.js'
 import Button from '../components/common/Button.jsx'
 import AppHeader from '../components/common/AppHeader.jsx'
 import { useAuth } from '../context/AuthContext.jsx'
@@ -23,6 +24,7 @@ export default function HostDashboard() {
     setLaunchingId(quizId)
     try {
       const { data } = await api.post('/sessions', { quizId })
+      clearGuestSession()
       navigate(`/session/${data.accessCode}`, { state: { displayName: user?.name || 'Admin' } })
     } catch (err) {
       setError(err.response?.data?.message || 'Impossible de créer la session.')

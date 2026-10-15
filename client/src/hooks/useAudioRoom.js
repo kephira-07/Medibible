@@ -62,10 +62,14 @@ export function useAudioRoom() {
   }, [])
 
   const connect = useCallback(
-    async (roomName, displayName) => {
+    async (roomName, displayName, asGuest = false) => {
       setError(null)
       try {
-        const { data } = await api.post('/audio/token', { roomName, displayName })
+        // `asGuest` dit explicitement au serveur de ne pas tenir compte du
+        // jeton d'animateur qui peut trainer dans ce navigateur : sans lui,
+        // un joueur arrive par le formulaire recevait un jeton vocal marque
+        // "animateur" (etiquette sous son avatar, micro non coupable).
+        const { data } = await api.post('/audio/token', { roomName, displayName, asGuest })
 
         const room = new Room()
         roomRef.current = room

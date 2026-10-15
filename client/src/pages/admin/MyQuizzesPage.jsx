@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import api from '../../services/api.js'
+import { clearGuestSession } from '../../utils/sessionRole.js'
 import Button from '../../components/common/Button.jsx'
 import AdminLayout from '../../components/admin/AdminLayout.jsx'
 import { useAuth } from '../../context/AuthContext.jsx'
@@ -57,6 +58,9 @@ export default function MyQuizzesPage() {
     setLaunchingId(quizId)
     try {
       const { data } = await api.post('/sessions', { quizId })
+      // Cet onglet a pu servir a jouer en invite : on efface ce reste, sinon
+      // l'animateur rejoindrait sa propre session en simple participant.
+      clearGuestSession()
       navigate(`/session/${data.accessCode}`, { state: { displayName: user?.name || 'Animateur' } })
     } catch (err) {
       setError(err.response?.data?.message || 'Impossible de créer la session.')

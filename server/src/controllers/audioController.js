@@ -50,7 +50,7 @@ export async function getAudioToken(req, res, next) {
       return next(httpError(500, "LiveKit n'est pas configuré (server/.env)."))
     }
 
-    const { roomName, displayName } = req.body || {}
+    const { roomName, displayName, asGuest } = req.body || {}
     if (!roomName || !displayName) {
       return next(httpError(400, 'roomName et displayName sont requis.'))
     }
@@ -60,9 +60,16 @@ export async function getAudioToken(req, res, next) {
     if (!session) return next(httpError(404, 'Session introuvable.'))
 
     // Seul le véritable animateur de cette session est marqué "hôte" — ce
-    // statut ne vient jamais du corps de la requête.
+    // statut ne vient jamais du corps de la requête. `asGuest` ne peut que
+    // RETIRER ce statut, jamais l'accorder : un joueur arrivé par le
+    // formulaire déclare qu'il vient jouer, pour que le jeton d'animateur
+    // éventuellement présent dans son navigateur (AuthContext le restaure
+    // depuis `localStorage`, partagé entre onglets) ne le fasse pas passer
+    // pour l'animateur — étiquette « Animateur » sous son avatar et micro
+    // que l'hôte ne pouvait pas couper.
     const user = readOptionalUser(req)
-    const isHost = Boolean(user) && user.role === 'admin' && session.host.toString() === user.id
+    const isHost =
+      !asGuest && Boolean(user) && user.role === 'admin' && session.host.toString() === user.id
 
     // L'identité doit être unique dans le salon (deux invités peuvent choisir
     // le même prénom) ; `name` reste le nom affiché tel quel.

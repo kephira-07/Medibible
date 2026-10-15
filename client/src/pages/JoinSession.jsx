@@ -4,6 +4,7 @@ import Button from '../components/common/Button.jsx'
 import AppHeader from '../components/common/AppHeader.jsx'
 import WelcomeIllustration from '../components/common/WelcomeIllustration.jsx'
 import api from '../services/api.js'
+import { markGuestSession } from '../utils/sessionRole.js'
 import { HiCheckCircle, HiXCircle } from 'react-icons/hi'
 
 const BERGERS = ['Charles HE', 'Charles DAKPE', 'Edwige', 'Délali', 'Pascaline', 'Prunelle']
@@ -102,7 +103,13 @@ export default function JoinSession() {
     e.preventDefault()
     if (!canSubmit) return
 
-    navigate(`/session/${accessCode.trim().toUpperCase()}`, {
+    const code = accessCode.trim().toUpperCase()
+    // Entrer par ce formulaire, c'est jouer — jamais animer. Sans cette
+    // déclaration, un jeton d'animateur resté dans le navigateur promouvait
+    // ce joueur en hôte à son insu (voir utils/sessionRole.js).
+    markGuestSession(code)
+
+    navigate(`/session/${code}`, {
       state: { displayName: displayName.trim(), bergerName },
     })
   }

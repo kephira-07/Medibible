@@ -7,7 +7,7 @@ import { FaMicrophone, FaMicrophoneSlash } from 'react-icons/fa'
 // Aucune fenêtre d'appel, aucune interface tierce : juste des avatars qui
 // réagissent quand quelqu'un parle, comme un chat vocal de jeu en ligne.
 // L'animateur peut couper (ou rendre) le micro d'un joueur, ou de tous.
-export default function AudioRoom({ roomName, displayName, isHost }) {
+export default function AudioRoom({ roomName, displayName, isHost, asGuest }) {
   const { connected, participants, muted, forcedMute, error, connect, disconnect, toggleMute, setMicPermission } =
     useAudioRoom()
   const [connecting, setConnecting] = useState(false)
@@ -18,7 +18,7 @@ export default function AudioRoom({ roomName, displayName, isHost }) {
       return
     }
     setConnecting(true)
-    await connect(roomName, displayName)
+    await connect(roomName, displayName, asGuest)
     setConnecting(false)
   }
 

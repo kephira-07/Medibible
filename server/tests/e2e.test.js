@@ -673,6 +673,98 @@ section("Reconnexion d'un invite")
   await emitAck(host3, 'host:endSession', { sessionId: sid3 })
 }
 
+// ------------------------- 11bis. fuite d'identite animateur -> joueur
+section("Un joueur ne doit jamais heriter de l'identite de l'animateur")
+{
+  // Signale en production : « il met animateur pour tout le monde au niveau
+  // du micro » et « si un joueur est connecte, ca ne s'affiche pas ».
+  // AuthContext restaure la session depuis localStorage, partage par tous les
+  // onglets et persistant : des qu'un animateur s'etait connecte une fois sur
+  // l'appareil, le jeton partait aussi sur les requetes d'un joueur. Le
+  // serveur le reconnaissait comme l'hote, il recuperait les commandes de
+  // l'animateur et n'etait JAMAIS ajoute aux participants.
+  const s6 = await req('POST', '/api/sessions', { token: adminToken, body: { quizId } })
+  const code6 = s6.data?.accessCode
+  const sid6 = s6.data?._id
+
+  // Un joueur dont le navigateur porte le jeton de l'animateur, mais qui est
+  // passe par le formulaire joueur : il declare asGuest.
+  const joueur = await socketFor(adminToken)
+  const vu = await emitAck(joueur, 'session:join', {
+    accessCode: code6,
+    displayName: 'Julie',
+    bergerName: 'Edwige',
+    clientId: 'julie-device',
+    asGuest: true,
+  })
+  check(
+    "un joueur declare invite n'est pas promu animateur malgre le jeton admin",
+    vu?.isHost === false,
+    JSON.stringify({ isHost: vu?.isHost })
+  )
+
+  const apres = await Session.findById(sid6)
+  check(
+    'ce joueur figure bien dans la liste des participants',
+    apres.participants.some((p) => p.displayName === 'Julie'),
+    `${apres.participants.length} participant(s) : ${JSON.stringify(apres.participants.map((p) => p.displayName))}`
+  )
+  check(
+    'il apparait comme connecte dans le classement',
+    (vu?.leaderboard || []).some((p) => p.displayName === 'Julie' && p.connected === true),
+    JSON.stringify(vu?.leaderboard)
+  )
+
+  // Il ne doit pas non plus pouvoir piloter la partie.
+  const tentative = await emitAck(joueur, 'host:nextQuestion', { sessionId: sid6 })
+  check(
+    "ce joueur ne peut pas lancer les questions",
+    Boolean(tentative?.error),
+    JSON.stringify(tentative)
+  )
+
+  // Le vrai animateur, lui, garde son statut : asGuest n'est pas envoye.
+  const anim = await socketFor(adminToken)
+  const vuAnim = await emitAck(anim, 'session:join', { accessCode: code6, displayName: 'Animateur' })
+  check("l'animateur reste reconnu comme hote", vuAnim?.isHost === true, JSON.stringify({ isHost: vuAnim?.isHost }))
+
+  // Et declarer asGuest ne donne aucun droit a qui n'en a pas : un invite
+  // sans jeton reste un invite.
+  const sansJeton = await socketFor(null)
+  const vuSans = await emitAck(sansJeton, 'session:join', {
+    accessCode: code6,
+    displayName: 'Marc',
+    bergerName: 'Délali',
+    clientId: 'marc-device',
+    asGuest: false,
+  })
+  check(
+    "declarer asGuest:false sans jeton valide ne donne pas le statut d'hote",
+    vuSans?.isHost === false,
+    JSON.stringify({ isHost: vuSans?.isHost })
+  )
+
+  // Cote vocal : meme regle, le jeton admin ne doit pas marquer le joueur.
+  const jetonJoueur = await req('POST', '/api/audio/token', {
+    token: adminToken,
+    body: { roomName: code6, displayName: 'Julie', asGuest: true },
+  })
+  if (jetonJoueur.status === 200 && jetonJoueur.data?.token) {
+    const payload = JSON.parse(
+      Buffer.from(jetonJoueur.data.token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/'), 'base64').toString()
+    )
+    check(
+      "le jeton vocal d'un joueur n'est pas marque animateur",
+      payload.metadata === JSON.stringify({ isHost: false }),
+      `metadata = ${payload.metadata}`
+    )
+    check("le jeton vocal porte le prenom du joueur", payload.name === 'Julie', `name = ${payload.name}`)
+  } else {
+    // LiveKit non configure dans cet environnement : on ne bloque pas la suite.
+    console.log('  SKIP  jeton vocal (LiveKit non configure ici)')
+  }
+}
+
 // -------------------------------------- 12. presence apres deconnexion
 section('Presence : liste des connectes')
 {
