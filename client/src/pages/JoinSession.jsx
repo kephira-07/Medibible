@@ -13,13 +13,21 @@ export default function JoinSession() {
   const [accessCode, setAccessCode] = useState('')
   const [displayName, setDisplayName] = useState('')
   const [bergerName, setBergerName] = useState('')
-  // idle | checking | valid | invalid — vérifie le code auprès du serveur dès
-  // que 6 caractères sont saisis, pour prévenir tout de suite d'une faute de
-  // frappe plutôt que de laisser le joueur naviguer vers une session qui
-  // n'existe pas et découvrir l'erreur plus tard.
+  // idle | checking | valid | invalid | unreachable — vérifie le code auprès
+  // du serveur dès que 6 caractères sont saisis, pour prévenir tout de suite
+  // d'une faute de frappe plutôt que de laisser le joueur naviguer vers une
+  // session qui n'existe pas et découvrir l'erreur plus tard.
   const [codeStatus, setCodeStatus] = useState('idle')
   const [codeInfo, setCodeInfo] = useState(null)
   const [codeError, setCodeError] = useState(null)
+  // L'instance gratuite de l'hébergeur s'endort après quelques minutes sans
+  // trafic : la première requête peut alors mettre 50 secondes ou plus à
+  // revenir. Sans ce signal, le joueur n'a sous les yeux qu'un bouton grisé
+  // et conclut que l'application est cassée.
+  const [serverIsWakingUp, setServerIsWakingUp] = useState(false)
+  // Une panne réseau ne change pas le code saisi : sans ce compteur, l'effet
+  // ne se rejouerait jamais et le joueur resterait bloqué sans recours.
+  const [retryCount, setRetryCount] = useState(0)
 
   useEffect(() => {
     const normalized = accessCode.trim().toUpperCase()
@@ -27,11 +35,18 @@ export default function JoinSession() {
       setCodeStatus('idle')
       setCodeInfo(null)
       setCodeError(null)
+      setServerIsWakingUp(false)
       return
     }
 
     let cancelled = false
     setCodeStatus('checking')
+    setServerIsWakingUp(false)
+
+    const wakeUpNotice = setTimeout(() => {
+      if (!cancelled) setServerIsWakingUp(true)
+    }, 4000)
+
     const timer = setTimeout(() => {
       api
         .get(`/sessions/${normalized}`)
@@ -43,23 +58,45 @@ export default function JoinSession() {
         })
         .catch((err) => {
           if (cancelled) return
-          setCodeStatus('invalid')
           setCodeInfo(null)
+          // Sans réponse HTTP, le serveur est injoignable : le code saisi n'y
+          // est pour rien. Annoncer « aucune session ne correspond » enverrait
+          // le joueur chercher une faute de frappe inexistante, alors que le
+          // vrai geste utile est de réessayer.
+          if (!err.response) {
+            setCodeStatus('unreachable')
+            setCodeError(null)
+            return
+          }
+          setCodeStatus('invalid')
           // Le code peut être refusé pour une raison précise — par exemple un
-          // quiz supprimé entre-temps (410). Afficher « aucune session ne
-          // correspond » enverrait alors le joueur vérifier une faute de
-          // frappe inexistante.
-          setCodeError(err.response?.status === 410 ? err.response?.data?.message : null)
+          // quiz supprimé entre-temps (410).
+          setCodeError(err.response.status === 410 ? err.response.data?.message : null)
+        })
+        .finally(() => {
+          if (!cancelled) setServerIsWakingUp(false)
         })
     }, 350)
 
     return () => {
       cancelled = true
       clearTimeout(timer)
+      clearTimeout(wakeUpNotice)
     }
-  }, [accessCode])
+  }, [accessCode, retryCount])
 
-  const canSubmit = codeStatus === 'valid' && displayName.trim() && bergerName
+  // Le bouton était simplement grisé quand l'une des trois conditions
+  // manquait, sans jamais dire laquelle — on énumère donc ce qui reste à
+  // faire plutôt que de laisser le joueur deviner.
+  const missing = []
+  if (codeStatus !== 'valid') missing.push('un code de session valide')
+  if (!displayName.trim()) missing.push('ton prénom')
+  if (!bergerName) missing.push('ton berger')
+  const canSubmit = missing.length === 0
+  const missingText =
+    missing.length > 1
+      ? `${missing.slice(0, -1).join(', ')} et ${missing[missing.length - 1]}`
+      : missing[0]
 
   const handleSubmit = (e) => {
     e.preventDefault()
@@ -105,14 +142,32 @@ export default function JoinSession() {
                 className={`min-h-14 rounded-2xl border-2 bg-medi-gold/10 px-4 text-center text-2xl font-extrabold uppercase tracking-[0.35em] text-medi-petrol outline-none transition focus:ring-4 ${
                   codeStatus === 'valid'
                     ? 'border-emerald-400 focus:border-emerald-400 focus:ring-emerald-200/40'
-                    : codeStatus === 'invalid'
+                    : codeStatus === 'invalid' || codeStatus === 'unreachable'
                       ? 'border-medi-coral focus:border-medi-coral focus:ring-medi-coral/20'
                       : 'border-medi-gold/50 focus:border-medi-gold focus:ring-medi-gold/25'
                 }`}
                 maxLength={6}
               />
               {codeStatus === 'checking' && (
-                <span className="text-center text-xs font-semibold text-medi-petrol/50">Vérification du code…</span>
+                <span className="text-center text-xs font-semibold text-medi-petrol/50">
+                  {serverIsWakingUp
+                    ? 'Le serveur se réveille, cela peut prendre jusqu’à une minute…'
+                    : 'Vérification du code…'}
+                </span>
+              )}
+              {codeStatus === 'unreachable' && (
+                <span className="flex flex-col items-center gap-1 text-center text-xs font-bold text-medi-coral">
+                  <span className="flex items-center gap-1.5">
+                    <HiXCircle className="text-sm" /> Serveur injoignable — vérifie ta connexion.
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setRetryCount((count) => count + 1)}
+                    className="font-bold text-medi-petrol/70 underline underline-offset-2 transition hover:text-medi-petrol"
+                  >
+                    Réessayer
+                  </button>
+                </span>
               )}
               {codeStatus === 'valid' && (
                 <span className="flex items-center justify-center gap-1.5 text-center text-xs font-bold text-emerald-600">
@@ -170,6 +225,12 @@ export default function JoinSession() {
             >
               Rejoindre
             </Button>
+
+            {!canSubmit && (
+              <p className="-mt-2 text-center text-xs font-semibold text-medi-petrol/55">
+                Il manque {missingText} pour pouvoir rejoindre.
+              </p>
+            )}
           </form>
         </div>
       </div>
