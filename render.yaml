@@ -1,47 +1,60 @@
-# Blueprint Render — fige la configuration de déploiement dans le dépôt
-# plutôt que dans l'interface web, où un réglage modifié à la main (branche,
-# commande de build, version de Node) ne laisse aucune trace et ne se voit
-# qu'au moment où un déploiement ne part plus.
+# Blueprint Render. Ce fichier avait déjà existé et a été supprimé par erreur
+# le 2026-09-22 (commit 98dbb42) — alors que le service, lui, est resté
+# « Blueprint managed » côté Render. Le restaurer n'est donc pas un ajout :
+# c'est remettre en place la source de vérité dont le service dépend.
 #
-# ATTENTION : ce fichier ne prend effet que si le service est rattaché à un
-# Blueprint (Render > Blueprints > New Blueprint Instance, en pointant sur ce
-# dépôt). Un service créé à la main ne le lit pas : il faut soit l'adopter via
-# un Blueprint, soit recopier ces valeurs dans ses Settings.
+# Un seul service web sert l'API *et* le client : server/src/app.js monte
+# `express.static(../../client/dist)`. Client et API partagent ainsi la même
+# origine, ce qui évite un aller-retour cross-origin (DNS + TLS vers un 2e
+# domaine) à chaque requête et à chaque connexion temps réel — beaucoup plus
+# fragile sur une connexion mobile faible. Ne PAS définir VITE_API_URL ici :
+# son absence fait que le client appelle '/api' en chemin relatif, donc la
+# même origine que la page elle-même.
 
 services:
   - type: web
-    name: medibible-api
+    name: medibible
     runtime: node
+    plan: free
+    rootDir: server
 
-    # Le déclencheur : sans branche explicite, un service peut rester accroché
-    # à une branche oubliée et ne plus jamais voir les nouveaux commits.
+    # Le déclencheur. Sans branche explicite, un service peut rester accroché
+    # à une branche oubliée — il y a 4 branches `agents/*` sur ce dépôt, toutes
+    # figées depuis août.
     branch: master
     autoDeploy: true
 
-    # Un seul service sert l'API *et* le client : server/src/app.js monte
-    # `express.static(../../client/dist)`. Ce dossier est gitignoré, il n'est
-    # donc jamais dans le dépôt — si cette commande ne lance pas Vite, Render
-    # redémarre avec un `dist` périmé (ou sans dist du tout) et le site reste
-    # bloqué sur une version ancienne, sans que le build n'échoue pour autant.
-    buildCommand: npm ci --prefix server && npm ci --prefix client && npm run build --prefix client
-    startCommand: node server/server.js
+    # `--include=dev` n'est PAS cosmétique : Render exécute le build avec
+    # NODE_ENV=production, et dans ce mode `npm install` ignore les
+    # devDependencies. Or `@vitejs/plugin-react`, importé par
+    # client/vite.config.js, en est une. Sans ce drapeau le build casse sur
+    # « Cannot find package '@vitejs/plugin-react' » — et de façon trompeuse,
+    # car `vite` lui-même reste installé (il arrive en dépendance transitive
+    # de `@tailwindcss/vite`, qui est en dependencies). Vérifié en rejouant le
+    # build à l'identique sur un clone propre.
+    #
+    # Ce build est aussi ce qui produit `client/dist`, qui est gitignoré donc
+    # jamais présent dans le dépôt : si cette étape saute, le serveur redémarre
+    # sur un dist périmé *sans que le déploiement échoue*.
+    buildCommand: npm install --include=dev --prefix ../client && npm run build --prefix ../client && npm install
+    startCommand: npm start
 
     healthCheckPath: /api/health
 
     envVars:
       # Vite 8 et React 19 exigent un Node récent. Sans cette variable, Render
-      # impose la version par défaut qu'il avait le jour de la création du
-      # service, qui vieillit toute seule.
+      # garde la version par défaut du jour où le service a été créé, qui
+      # vieillit toute seule.
       - key: NODE_VERSION
         value: "22"
 
-      # validateEnv() (server/src/config/env.js) refuse de démarrer en
-      # production si MONGO_URI, JWT_SECRET ou CLIENT_URL manquent.
       - key: NODE_ENV
         value: production
 
-      # CLIENT_URL doit être l'origine qui sert réellement le client, donc ce
-      # service lui-même, et non un ancien domaine : elle alimente la liste
+      # validateEnv() (server/src/config/env.js) refuse de démarrer en
+      # production si CLIENT_URL manque — on la fixe donc ici plutôt que de
+      # dépendre du dashboard. Elle doit désigner l'origine qui sert réellement
+      # le client, c'est-à-dire ce service lui-même : elle alimente la liste
       # CORS partagée par l'API REST et Socket.IO.
       - key: CLIENT_URL
         value: https://medibible-api.onrender.com
