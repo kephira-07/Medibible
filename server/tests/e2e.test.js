@@ -276,7 +276,7 @@ let quizId
     body: {
       title: '  Quiz de test  ',
       description: 'Parcours complet',
-      scoring: { base: 100, speedBonus: 100 },
+      scoring: { base: 100 },
       questions: [
         {
           text: "Qui a marche sur l'eau ?",
@@ -482,7 +482,7 @@ section('Question 1 : reponses, score et chrono')
   const wrongId = String(q1.options[1].id)
 
   const r1 = await emitAck(p1, 'player:submitAnswer', { sessionId, selectedOptionIds: [correctId] })
-  check('Alice repond juste -> points > 100', r1?.isCorrect === true && r1?.pointsEarned > 100, JSON.stringify(r1))
+  check('Alice repond juste -> exactement les points de la question (100)', r1?.isCorrect === true && r1?.pointsEarned === 100, JSON.stringify(r1))
 
   const dup = await emitAck(p1, 'player:submitAnswer', { sessionId, selectedOptionIds: [wrongId] })
   check("deuxieme reponse d'Alice refusee (anti double-reponse)", Boolean(dup?.error), JSON.stringify(dup))
@@ -522,7 +522,7 @@ section('Question 2 : reponses multiples')
 
   const full = await emitAck(p1, 'player:submitAnswer', { sessionId, selectedOptionIds: [A, B] })
   check('reponse multiple complete comptee comme juste', full?.isCorrect === true, JSON.stringify(full))
-  check('points bases sur question.points (50) + bonus', full?.pointsEarned >= 50 && full?.pointsEarned <= 150, `${full?.pointsEarned} pts`)
+  check('points = question.points (50), sans bonus de vitesse', full?.pointsEarned === 50, `${full?.pointsEarned} pts`)
 
   const scores = await Score.find({ session: sessionId, questionIndex: 1 })
   check('une ligne de Score par joueur et par question', scores.length === 2, `${scores.length} lignes`)

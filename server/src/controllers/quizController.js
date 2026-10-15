@@ -2,20 +2,20 @@ import Quiz from '../models/Quiz.js'
 import Session from '../models/Session.js'
 import { httpError } from '../utils/httpError.js'
 import { normalizeText, isValidObjectId } from '../utils/validators.js'
-import { DEFAULT_BASE_SCORE, DEFAULT_SPEED_BONUS } from '../utils/constants.js'
+import { DEFAULT_BASE_SCORE } from '../utils/constants.js'
 
+// `base` ne sert que de repli pour une question sans champ `points`. Le
+// réglage `speedBonus` a été retiré avec le bonus de vitesse : une bonne
+// réponse vaut désormais le même nombre de points pour tous les joueurs.
+// Un `speedBonus` envoyé par un ancien client est simplement ignoré.
 function normalizeScoring(scoring) {
   const baseValue = Number(scoring?.base ?? DEFAULT_BASE_SCORE)
-  const speedBonusValue = Number(scoring?.speedBonus ?? DEFAULT_SPEED_BONUS)
 
-  if (!Number.isFinite(baseValue) || !Number.isFinite(speedBonusValue)) {
+  if (!Number.isFinite(baseValue)) {
     throw httpError(400, 'La configuration de score est invalide.')
   }
 
-  return {
-    base: baseValue,
-    speedBonus: speedBonusValue,
-  }
+  return { base: baseValue }
 }
 
 const QUIZ_STATUSES = ['draft', 'published', 'archived']

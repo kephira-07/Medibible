@@ -1,6 +1,17 @@
-// Score = Base + (tempsRestant / tempsTotal) * Bonus, uniquement si la réponse
-// est exacte : toutes les bonnes options cochées, et aucune mauvaise.
-export function computeAnswerResult({ question, selectedOptionIds, endsAt, answeredAt, scoring }) {
+import { DEFAULT_BASE_SCORE } from '../utils/constants.js'
+
+// Une bonne réponse vaut les points de la question, à l'identique pour tout
+// le monde. Une réponse n'est exacte que si toutes les bonnes options sont
+// cochées et aucune mauvaise.
+//
+// Il n'y a volontairement AUCUN bonus de vitesse. La formule précédente
+// ajoutait `(tempsRestant / tempsTotal) * bonus` : avec les valeurs par
+// défaut (100 points, 100 de bonus), deux joueurs donnant la même bonne
+// réponse marquaient 198 points à une seconde et 100 points à la dernière —
+// du simple au double. L'écart n'était expliqué nulle part dans l'interface
+// et passait pour une erreur de calcul. Pour moduler la valeur d'une
+// question, c'est son champ `points` qu'on ajuste dans l'éditeur.
+export function computeAnswerResult({ question, selectedOptionIds, scoring }) {
   const correctIds = question.options.filter((o) => o.isCorrect).map((o) => o._id.toString())
   const selectedIds = [...new Set((selectedOptionIds || []).map(String))]
 
@@ -11,11 +22,7 @@ export function computeAnswerResult({ question, selectedOptionIds, endsAt, answe
     return { isCorrect: false, pointsEarned: 0 }
   }
 
-  const totalMs = question.timeLimit * 1000
-  const remainingMs = Math.max(0, endsAt - answeredAt)
-  const ratio = totalMs > 0 ? remainingMs / totalMs : 0
-  const basePoints = question.points ?? scoring.base
-  const pointsEarned = Math.round(basePoints + ratio * scoring.speedBonus)
+  const basePoints = question.points ?? scoring?.base ?? DEFAULT_BASE_SCORE
 
-  return { isCorrect: true, pointsEarned }
+  return { isCorrect: true, pointsEarned: Math.round(basePoints) }
 }

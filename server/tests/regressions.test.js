@@ -134,6 +134,64 @@ console.log('\n== Rate limit global (200 requetes / 15 min, toutes IP confondues
   )
 }
 
+// Signale en production : « le point pour une question est le meme pour tout
+// le monde, mais ca ne marche pas ». La formule portait un bonus de vitesse
+// (base + tempsRestant/tempsTotal * bonus) qui faisait varier le gain de 198
+// a 100 points pour une MEME bonne reponse, selon la seconde ou le joueur
+// cliquait. Ce test fige le comportement attendu : le temps n'influe plus.
+{
+  console.log('\n== Points identiques quel que soit le temps de reponse')
+  const { computeAnswerResult } = await import('../src/sockets/scoreEngine.js')
+
+  const question = {
+    options: [
+      { _id: 'opt-a', isCorrect: true },
+      { _id: 'opt-b', isCorrect: true },
+      { _id: 'opt-c', isCorrect: false },
+    ],
+    timeLimit: 45,
+    points: 70,
+  }
+  const scoring = { base: 100 }
+
+  // Le meme joueur-type repondant a differents moments de la question.
+  const gains = [0, 1000, 15000, 30000, 44999].map(
+    (answeredAt) =>
+      computeAnswerResult({
+        question,
+        selectedOptionIds: ['opt-a', 'opt-b'],
+        endsAt: 45000,
+        answeredAt,
+        scoring,
+      }).pointsEarned
+  )
+  check(
+    'une bonne reponse vaut le meme nombre de points a 0 s comme a 45 s',
+    new Set(gains).size === 1,
+    `gains observes : ${gains.join(', ')}`
+  )
+  check('ce nombre est exactement le champ points de la question (70)', gains[0] === 70, `${gains[0]} pts`)
+
+  const sansPoints = computeAnswerResult({
+    question: { ...question, points: undefined },
+    selectedOptionIds: ['opt-a', 'opt-b'],
+    scoring,
+  }).pointsEarned
+  check('une question sans champ points retombe sur scoring.base (100)', sansPoints === 100, `${sansPoints} pts`)
+
+  const faux = computeAnswerResult({ question, selectedOptionIds: ['opt-a'], scoring })
+  check('une reponse incomplete vaut toujours 0', faux.isCorrect === false && faux.pointsEarned === 0, JSON.stringify(faux))
+
+  // Un quiz enregistre avant le changement porte encore speedBonus en base :
+  // il ne doit plus avoir le moindre effet.
+  const vieuxReglage = computeAnswerResult({
+    question,
+    selectedOptionIds: ['opt-a', 'opt-b'],
+    scoring: { base: 100, speedBonus: 100 },
+  }).pointsEarned
+  check('un speedBonus herite d un ancien quiz est ignore', vieuxReglage === 70, `${vieuxReglage} pts`)
+}
+
 console.log(`\n${'='.repeat(72)}`)
 console.log(`${passed} test(s) reussi(s), ${failures.length} echec(s)`)
 failures.forEach((f, i) => console.log(`  ${i + 1}. ${f}`))

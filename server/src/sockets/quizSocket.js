@@ -390,8 +390,6 @@ export function registerQuizHandlers(io, socket) {
       const { isCorrect, pointsEarned } = computeAnswerResult({
         question,
         selectedOptionIds,
-        endsAt: session.currentQuestionEndsAt.getTime(),
-        answeredAt: now,
         scoring: quiz.scoring,
       })
 
