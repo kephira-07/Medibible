@@ -49,7 +49,7 @@ export default function AdminLayout({ children }) {
       <aside className="fixed inset-y-0 left-0 z-30 hidden w-64 flex-col overflow-y-auto border-r-2 border-medi-border bg-white px-4 py-6 lg:flex">
         <Link to="/" className="mb-8 flex items-center gap-2 px-2">
           <BrandMark className="h-9 w-9" />
-          <span className="text-base font-extrabold uppercase tracking-widest text-medi-petrol">MediBible</span>
+          <span className="text-base font-extrabold  tracking-widest text-medi-petrol">MediBible</span>
         </Link>
 
         <nav className="flex flex-1 flex-col gap-1">
