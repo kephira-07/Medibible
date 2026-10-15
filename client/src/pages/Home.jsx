@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom'
 import Button from '../components/common/Button.jsx'
 import BrandMark from '../components/common/BrandMark.jsx'
 import FloatingBlobs from '../components/common/FloatingBlobs.jsx'
+import InstallPrompt from '../components/common/InstallPrompt.jsx'
 
 export default function Home() {
   return (
@@ -33,6 +34,8 @@ export default function Home() {
             </Button>
           </Link>
         </div>
+
+        <InstallPrompt />
 
         <Link
           to="/login"
