@@ -501,6 +501,37 @@ section('Question 1 : reponses, score et chrono')
   check('le classement est transmis a la cloture', Array.isArray(ended?.leaderboard) && ended.leaderboard.length >= 2)
   check('Alice est en tete du classement', ended?.leaderboard?.[0]?.displayName === 'Alice', JSON.stringify(ended?.leaderboard))
   check('les deux homonymes figurent au classement', ended?.leaderboard?.length === 3, `${ended?.leaderboard?.length} entrees`)
+  // Signale en production : « si un joueur est connecte, ca ne montre pas
+  // qu'il est connecte ». Le classement ne portait aucune information de
+  // presence, et le prenom servait de cle React — deux homonymes partageaient
+  // donc la meme cle. Il faut un identifiant stable ET un etat de connexion.
+  check(
+    'chaque entree du classement porte un id unique',
+    new Set((ended?.leaderboard || []).map((p) => p.id)).size === (ended?.leaderboard || []).length &&
+      (ended?.leaderboard || []).every((p) => typeof p.id === 'string' && p.id.length > 0),
+    JSON.stringify((ended?.leaderboard || []).map((p) => p.id))
+  )
+  check(
+    'les homonymes ont des id differents malgre le meme prenom',
+    new Set((ended?.leaderboard || []).filter((p) => p.displayName === 'Bob').map((p) => p.id)).size ===
+      (ended?.leaderboard || []).filter((p) => p.displayName === 'Bob').length,
+    JSON.stringify((ended?.leaderboard || []).filter((p) => p.displayName === 'Bob'))
+  )
+  // Alice et Bob gardent leur socket ouvert ; la seconde Alice (l'homonyme)
+  // s'est deconnectee juste apres avoir rejoint. La presence doit donc les
+  // distinguer un a un, meme entre deux joueurs portant le meme prenom.
+  const presents = (ended?.leaderboard || []).filter((p) => p.connected === true)
+  const absents = (ended?.leaderboard || []).filter((p) => p.connected === false)
+  check(
+    'le classement distingue les joueurs en ligne des joueurs partis',
+    presents.length === 2 && absents.length === 1,
+    JSON.stringify((ended?.leaderboard || []).map((p) => `${p.displayName}:${p.connected}`))
+  )
+  check(
+    'entre deux homonymes, seul celui qui est parti est marque hors ligne',
+    absents.length === 1 && absents[0].displayName === 'Alice' && presents.some((p) => p.displayName === 'Alice'),
+    JSON.stringify((ended?.leaderboard || []).map((p) => `${p.displayName}:${p.connected}`))
+  )
 
   const late = await emitAck(p2, 'player:submitAnswer', { sessionId, selectedOptionIds: [correctId] })
   check('repondre apres la cloture -> refuse', Boolean(late?.error), JSON.stringify(late))
@@ -659,6 +690,30 @@ section('Presence : liste des connectes')
     ghosts.length === 0,
     `${ghosts.length} fantome(s) dans /api/sessions/admin/online -> socketId jamais nettoye a la deconnexion`
   )
+
+  // La salle garde le joueur affiche (sur mobile, verrouiller l'ecran coupe
+  // la connexion et le joueur revient), mais il doit apparaitre comme
+  // deconnecte et non se confondre avec ceux qui sont presents.
+  const resteObs = await socketFor(null)
+  const vu = await emitAck(resteObs, 'session:join', {
+    accessCode: code5,
+    displayName: 'Observateur',
+    bergerName: 'Edwige',
+    clientId: 'observateur-device',
+  })
+  const parti = (vu?.leaderboard || []).find((p) => p.displayName === 'Ephemere')
+  const present = (vu?.leaderboard || []).find((p) => p.displayName === 'Observateur')
+  check(
+    'le joueur deconnecte reste listE mais marque connected: false',
+    parti?.connected === false,
+    JSON.stringify(vu?.leaderboard)
+  )
+  check(
+    'le joueur present est marque connected: true',
+    present?.connected === true,
+    JSON.stringify(vu?.leaderboard)
+  )
+  resteObs.disconnect()
 }
 
 // -------------------------------------------------- 13. fin de session & robustesse

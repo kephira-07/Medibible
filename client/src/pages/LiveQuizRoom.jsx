@@ -181,6 +181,15 @@ export default function LiveQuizRoom() {
     }
   }, [phase])
 
+  // Nombre de joueurs réellement en ligne. La liste contient aussi ceux qui
+  // ont quitté la salle : sur mobile, verrouiller l'écran ou changer
+  // d'application coupe la connexion temps réel, et le joueur reviendra.
+  // On les garde donc affichés, mais distingués des présents.
+  const connectedCount = useMemo(
+    () => leaderboard.filter((p) => p.connected !== false).length,
+    [leaderboard]
+  )
+
   const sendReaction = useCallback((reaction) => socket.emit('reaction:send', { reaction }), [socket])
 
   const submitAnswer = useCallback(
@@ -353,24 +362,44 @@ export default function LiveQuizRoom() {
 
             <div className="w-full rounded-2xl border-2 border-medi-border bg-medi-surface/95 p-5">
               <p className="mb-3 flex items-center justify-between text-sm font-extrabold text-medi-petrol">
-                <span className="flex items-center gap-2"><FaUsers /> Joueurs connectés</span>
-                <span className="text-xs font-semibold text-medi-petrol/45">{leaderboard.length}</span>
+                <span className="flex items-center gap-2"><FaUsers /> Joueurs</span>
+                <span className="text-xs font-semibold text-medi-petrol/45">
+                  {connectedCount} en ligne
+                  {leaderboard.length > connectedCount && ` · ${leaderboard.length} au total`}
+                </span>
               </p>
               {leaderboard.length > 0 ? (
                 <div className="flex flex-wrap gap-2">
-                  {leaderboard.map((p) => (
-                    <span
-                      key={p.displayName}
-                      className="flex items-center gap-2 rounded-full border-2 border-medi-border bg-white px-3 py-1.5 text-sm font-semibold text-medi-petrol"
-                    >
-                      <Avatar name={p.displayName} size={26} />
-                      {p.displayName}
-                      {!joined.isHost && p.displayName === displayName && <span className="text-medi-coral"> (Vous)</span>}
-                    </span>
-                  ))}
+                  {leaderboard.map((p) => {
+                    // `connected` absent = ancien serveur : on ne barre
+                    // personne sur la foi d'une information qu'on n'a pas.
+                    const isOnline = p.connected !== false
+                    return (
+                      <span
+                        key={p.id ?? p.displayName}
+                        className={`flex items-center gap-2 rounded-full border-2 px-3 py-1.5 text-sm font-semibold transition ${
+                          isOnline
+                            ? 'border-medi-border bg-white text-medi-petrol'
+                            : 'border-medi-border/50 bg-medi-cream/60 text-medi-petrol/45'
+                        }`}
+                        title={isOnline ? 'En ligne' : 'Déconnecté — peut revenir à tout moment'}
+                      >
+                        <span
+                          className={`h-2 w-2 shrink-0 rounded-full ${
+                            isOnline ? 'bg-medi-green-deep' : 'bg-medi-petrol/25'
+                          }`}
+                          aria-hidden="true"
+                        />
+                        <Avatar name={p.displayName} size={26} />
+                        {p.displayName}
+                        <span className="sr-only">{isOnline ? ' (en ligne)' : ' (déconnecté)'}</span>
+                        {!joined.isHost && p.displayName === displayName && <span className="text-medi-coral"> (Vous)</span>}
+                      </span>
+                    )
+                  })}
                 </div>
               ) : (
-                <p className="text-sm text-medi-petrol/50">Aucun joueur connecté pour le moment.</p>
+                <p className="text-sm text-medi-petrol/50">Aucun joueur n’a encore rejoint la salle.</p>
               )}
             </div>
           </div>

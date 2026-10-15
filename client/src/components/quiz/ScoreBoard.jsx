@@ -9,7 +9,7 @@ export default function ScoreBoard({ leaderboard, title = 'Classement' }) {
       <ol className="flex max-h-80 flex-col gap-2 overflow-y-auto pr-1">
         {leaderboard.map((p, i) => (
           <li
-            key={p.displayName}
+            key={p.id ?? `${p.displayName}-${i}`}
             className={`animate-fade-in-up flex items-center justify-between rounded-xl px-4 py-2.5 ${
               i === 0
                 ? 'bg-gradient-to-r from-medi-gold-light/50 to-medi-gold/10 shadow-sm ring-2 ring-medi-gold/40'

@@ -9,7 +9,20 @@ const roomName = (sessionId) => `session:${sessionId}`
 
 function publicLeaderboard(session) {
   return [...session.participants]
-    .map((p) => ({ displayName: p.displayName, totalScore: p.totalScore }))
+    .map((p) => ({
+      // Identifiant stable du participant. Le prénom servait de clé React
+      // côté client, or deux joueurs peuvent porter le même : les homonymes
+      // partageaient alors la même clé et se chevauchaient à l'affichage.
+      id: p._id.toString(),
+      displayName: p.displayName,
+      totalScore: p.totalScore,
+      // `socketId` est remis à null à la déconnexion : c'est la seule source
+      // de vérité sur la présence réelle. Sans ce champ, la liste intitulée
+      // « Joueurs connectés » mélangeait indistinctement les joueurs présents
+      // et ceux qui avaient quitté la salle, et n'indiquait nulle part qui
+      // était réellement en ligne.
+      connected: Boolean(p.socketId),
+    }))
     .sort((a, b) => b.totalScore - a.totalScore)
 }
 
