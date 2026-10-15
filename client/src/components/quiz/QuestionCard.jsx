@@ -56,7 +56,9 @@ export default function QuestionCard({ question, phase, correctOptionIds, hasAns
           « {question.text} »
         </h2>
         {phase === 'open' && !hasAnswered && !readOnly && (
-          <p className="mb-5 text-xs font-semibold text-medi-petrol/45">Touche une réponse pour verrouiller ton choix.</p>
+          <p className="mb-5 text-xs font-semibold text-medi-petrol/45">
+            Touche une ou plusieurs réponses, puis valide ton choix.
+          </p>
         )}
         {phase === 'open' && readOnly && (
           <p className="mb-5 text-xs font-semibold text-medi-petrol/45">Les joueurs répondent en ce moment — tu observes.</p>
@@ -80,13 +82,23 @@ export default function QuestionCard({ question, phase, correctOptionIds, hasAns
           })}
         </div>
 
+        {phase === 'open' && !hasAnswered && !readOnly && selectedIds.length > 0 && (
+          <div
+            role="status"
+            aria-live="polite"
+            className="mt-4 rounded-xl border-2 border-medi-green-deep/25 bg-medi-green-deep/10 px-3 py-2 text-center text-sm font-extrabold text-medi-green-deep"
+          >
+            ✓ Choix sélectionné — {selectedIds.length} réponse{selectedIds.length > 1 ? 's' : ''}
+          </div>
+        )}
+
         {phase === 'open' && !hasAnswered && !readOnly && (
           <Button
             className="mt-6 w-full"
             disabled={selectedIds.length === 0}
             onClick={handleSubmit}
           >
-            Valider ma réponse
+            Valider ma réponse{selectedIds.length > 0 ? ` (${selectedIds.length})` : ''}
           </Button>
         )}
 
