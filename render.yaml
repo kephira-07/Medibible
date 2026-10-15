@@ -1,0 +1,63 @@
+# Blueprint Render — fige la configuration de déploiement dans le dépôt
+# plutôt que dans l'interface web, où un réglage modifié à la main (branche,
+# commande de build, version de Node) ne laisse aucune trace et ne se voit
+# qu'au moment où un déploiement ne part plus.
+#
+# ATTENTION : ce fichier ne prend effet que si le service est rattaché à un
+# Blueprint (Render > Blueprints > New Blueprint Instance, en pointant sur ce
+# dépôt). Un service créé à la main ne le lit pas : il faut soit l'adopter via
+# un Blueprint, soit recopier ces valeurs dans ses Settings.
+
+services:
+  - type: web
+    name: medibible-api
+    runtime: node
+
+    # Le déclencheur : sans branche explicite, un service peut rester accroché
+    # à une branche oubliée et ne plus jamais voir les nouveaux commits.
+    branch: master
+    autoDeploy: true
+
+    # Un seul service sert l'API *et* le client : server/src/app.js monte
+    # `express.static(../../client/dist)`. Ce dossier est gitignoré, il n'est
+    # donc jamais dans le dépôt — si cette commande ne lance pas Vite, Render
+    # redémarre avec un `dist` périmé (ou sans dist du tout) et le site reste
+    # bloqué sur une version ancienne, sans que le build n'échoue pour autant.
+    buildCommand: npm ci --prefix server && npm ci --prefix client && npm run build --prefix client
+    startCommand: node server/server.js
+
+    healthCheckPath: /api/health
+
+    envVars:
+      # Vite 8 et React 19 exigent un Node récent. Sans cette variable, Render
+      # impose la version par défaut qu'il avait le jour de la création du
+      # service, qui vieillit toute seule.
+      - key: NODE_VERSION
+        value: "22"
+
+      # validateEnv() (server/src/config/env.js) refuse de démarrer en
+      # production si MONGO_URI, JWT_SECRET ou CLIENT_URL manquent.
+      - key: NODE_ENV
+        value: production
+
+      # CLIENT_URL doit être l'origine qui sert réellement le client, donc ce
+      # service lui-même, et non un ancien domaine : elle alimente la liste
+      # CORS partagée par l'API REST et Socket.IO.
+      - key: CLIENT_URL
+        value: https://medibible-api.onrender.com
+
+      # `sync: false` = valeur saisie dans le dashboard, jamais écrite ici.
+      - key: MONGO_URI
+        sync: false
+      - key: JWT_SECRET
+        sync: false
+      - key: LIVEKIT_URL
+        sync: false
+      - key: LIVEKIT_API_KEY
+        sync: false
+      - key: LIVEKIT_API_SECRET
+        sync: false
+      - key: ADMIN_EMAIL
+        sync: false
+      - key: ADMIN_PASSWORD
+        sync: false
