@@ -54,6 +54,15 @@ function participantKeyFor(socket, participant) {
 // Vérifie que le socket appelant est bien l'administrateur de la session, et renvoie
 // session + quiz déjà chargés pour éviter de les requêter deux fois.
 async function requireHostSession(socket, sessionId) {
+  // Ce socket a rejoint par le formulaire joueur : il vient jouer, pas
+  // animer. Le jeton d'animateur que son navigateur transporte peut être
+  // parfaitement valide (AuthContext le restaure depuis `localStorage`,
+  // partagé entre onglets), mais l'intention déclarée prime — sinon un
+  // onglet « joueur » pourrait piloter la partie.
+  if (socket.data.isGuest) {
+    throw new Error('Action réservée à l’animateur de la session.')
+  }
+
   const user = socket.data.user
   if (!user || user.role !== 'admin') {
     throw new Error('Action réservée à l’administrateur.')
@@ -159,6 +168,10 @@ export function registerQuizHandlers(io, socket) {
       // l'inverse ne donne aucun droit.
       const isHost =
         !asGuest && Boolean(user) && session.host.toString() === user.id && user.role === 'admin'
+
+      // Mémorisé sur la connexion : toutes les actions d'animateur passées
+      // ensuite par ce socket seront refusées (voir requireHostSession).
+      socket.data.isGuest = Boolean(asGuest)
 
       if (!isHost && !bergerName?.trim()) {
         // Un animateur arrive sans berger (il ne joue pas). S'il n'est pas
