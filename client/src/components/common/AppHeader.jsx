@@ -19,7 +19,7 @@ export default function AppHeader({ right, onBrandClick }) {
     <header className="flex w-full items-center justify-between rounded-full border-2 border-medi-border bg-white/90 px-4 py-2.5 shadow-[0_10px_24px_rgba(22,50,62,0.06)] backdrop-blur-sm">
       <Link to="/" onClick={handleBrandClick} className="flex items-center gap-2 transition-transform hover:scale-105">
         <BrandMark className="h-9 w-9" />
-        <span className="text-base font-extrabold tracking-widest text-medi-petrol uppercase">MediBible</span>
+        <span className="text-base font-extrabold tracking-widest text-medi-petrol">MediBible</span>
       </Link>
       {right && <div className="flex items-center gap-4">{right}</div>}
     </header>
